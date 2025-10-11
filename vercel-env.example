@@ -1,0 +1,46 @@
+# Vercel Environment Variables
+# Copy these to your Vercel project settings
+
+# App Configuration
+APP_ID=ponte-property-management
+APP_NAME=Ponte Property Management
+APP_DOMAIN=your-domain.vercel.app
+
+# Admin Configuration
+ADMIN_EMAIL=admin@yourdomain.com
+MASTER_ADMIN_EMAIL=admin@yourdomain.com
+IS_MASTER_ADMIN=false
+MASTER_ADMIN_URL=https://admin.yourdomain.com
+
+# Database (Supabase PostgreSQL)
+DATABASE_URL=postgresql://postgres:[YOUR-PASSWORD]@[YOUR-SUPABASE-PROJECT].supabase.co:5432/postgres
+
+# NextAuth.js
+NEXTAUTH_SECRET=your-secret-key-here
+NEXTAUTH_URL=https://your-domain.vercel.app
+
+# Google OAuth (optional)
+GOOGLE_CLIENT_ID=your-google-client-id
+GOOGLE_CLIENT_SECRET=your-google-client-secret
+
+# Stripe
+STRIPE_SECRET_KEY=sk_live_...
+STRIPE_PUBLISHABLE_KEY=pk_live_...
+STRIPE_WEBHOOK_SECRET=whsec_...
+NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_live_...
+
+# Google Maps API (for geocoding and distance matrix)
+GOOGLE_MAPS_API_KEY=your-google-maps-api-key
+GOOGLE_MAPS_GEOCODING_API_KEY=your-google-maps-geocoding-api-key
+NEXT_PUBLIC_GOOGLE_MAPS_API_KEY=your-google-maps-api-key
+
+# OpenAI API (for AI-powered property analysis)
+OPENAI_API_KEY=your-openai-api-key
+
+# Feature Flags
+ENABLE_GOOGLE_OAUTH=true
+ENABLE_STRIPE=true
+ENABLE_REGISTRATION=true
+
+# Bundle Analyzer
+ANALYZE=false

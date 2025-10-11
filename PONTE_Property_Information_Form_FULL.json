@@ -1,0 +1,486 @@
+{
+  "title": "PONTE Property Information Form",
+  "description": "Please complete all fields below to submit a property for review by the PONTE team.",
+  "sections": [
+    {
+      "section_title": "SECTION 1 – Property Identification",
+      "questions": [
+        {
+          "title": "Property Name / Reference ID",
+          "type": "SHORT_ANSWER"
+        },
+        {
+          "title": "Full Address (Street, Town, Province, Postal Code)",
+          "type": "PARAGRAPH_TEXT"
+        },
+        {
+          "title": "Region",
+          "type": "DROPDOWN",
+          "options": [
+            "Marche",
+            "Tuscany",
+            "Umbria",
+            "Puglia",
+            "Abruzzo",
+            "Sicily",
+            "Sardinia",
+            "Other"
+          ]
+        },
+        {
+          "title": "Province / Comune",
+          "type": "SHORT_ANSWER"
+        },
+        {
+          "title": "GPS Coordinates (latitude, longitude)",
+          "type": "SHORT_ANSWER"
+        },
+        {
+          "title": "Listing Type",
+          "type": "MULTIPLE_CHOICE",
+          "options": [
+            "For Sale",
+            "For Rent",
+            "Both"
+          ]
+        },
+        {
+          "title": "Property Type",
+          "type": "DROPDOWN",
+          "options": [
+            "Villa",
+            "Country House",
+            "Apartment",
+            "Palazzo",
+            "Farmhouse",
+            "Trullo",
+            "Historical Building",
+            "Other"
+          ]
+        },
+        {
+          "title": "Year Built / Last Renovated",
+          "type": "SHORT_ANSWER"
+        },
+        {
+          "title": "Ownership Type",
+          "type": "MULTIPLE_CHOICE",
+          "options": [
+            "Private",
+            "Company",
+            "Historical Building",
+            "Agricultural Land"
+          ]
+        }
+      ]
+    },
+    {
+      "section_title": "SECTION 2 – Property Description",
+      "questions": [
+        {
+          "title": "Short Summary (2–3 sentences describing key features)",
+          "type": "PARAGRAPH_TEXT"
+        },
+        {
+          "title": "Full Description",
+          "type": "PARAGRAPH_TEXT"
+        },
+        {
+          "title": "Architectural Style",
+          "type": "DROPDOWN",
+          "options": [
+            "Modern",
+            "Rustic",
+            "Historical",
+            "Contemporary",
+            "Mediterranean",
+            "Other"
+          ]
+        },
+        {
+          "title": "Orientation",
+          "type": "DROPDOWN",
+          "options": [
+            "North",
+            "South",
+            "East",
+            "West",
+            "Multiple Directions"
+          ]
+        },
+        {
+          "title": "Condition",
+          "type": "MULTIPLE_CHOICE",
+          "options": [
+            "New",
+            "Recently Renovated",
+            "Needs Renovation",
+            "Requires Full Restoration"
+          ]
+        },
+        {
+          "title": "Energy Efficiency Class",
+          "type": "DROPDOWN",
+          "options": [
+            "A4",
+            "A3",
+            "A2",
+            "A1",
+            "B",
+            "C",
+            "D",
+            "E",
+            "F",
+            "G",
+            "Unknown"
+          ]
+        }
+      ]
+    },
+    {
+      "section_title": "SECTION 3 – Size & Layout",
+      "questions": [
+        {
+          "title": "Total Living Area (m²)",
+          "type": "SHORT_ANSWER"
+        },
+        {
+          "title": "Total Land Size (m² or hectares)",
+          "type": "SHORT_ANSWER"
+        },
+        {
+          "title": "Number of Floors / Levels",
+          "type": "SHORT_ANSWER"
+        },
+        {
+          "title": "Number of Bedrooms",
+          "type": "SHORT_ANSWER"
+        },
+        {
+          "title": "Number of Bathrooms",
+          "type": "SHORT_ANSWER"
+        },
+        {
+          "title": "Kitchen(s)",
+          "type": "MULTIPLE_CHOICE",
+          "options": [
+            "Yes – Open Layout",
+            "Yes – Closed Layout",
+            "No"
+          ]
+        },
+        {
+          "title": "Living / Dining Areas",
+          "type": "MULTIPLE_CHOICE",
+          "options": [
+            "Combined",
+            "Separate"
+          ]
+        },
+        {
+          "title": "Office / Study Room",
+          "type": "YES_NO"
+        },
+        {
+          "title": "Cellar / Basement",
+          "type": "YES_NO"
+        },
+        {
+          "title": "Attic / Loft",
+          "type": "YES_NO"
+        },
+        {
+          "title": "Garage / Covered Parking (capacity)",
+          "type": "SHORT_ANSWER"
+        },
+        {
+          "title": "Outbuildings (guesthouse, barn, etc.)",
+          "type": "PARAGRAPH_TEXT"
+        },
+        {
+          "title": "Terrace(s) / Balcony(ies)",
+          "type": "YES_NO"
+        },
+        {
+          "title": "Laundry / Utility Room",
+          "type": "YES_NO"
+        }
+      ]
+    },
+    {
+      "section_title": "SECTION 4 – Utilities & Infrastructure",
+      "questions": [
+        {
+          "title": "Water Source",
+          "type": "MULTIPLE_CHOICE",
+          "options": [
+            "Municipal",
+            "Private Well",
+            "Shared Well"
+          ]
+        },
+        {
+          "title": "Heating System",
+          "type": "CHECKBOXES",
+          "options": [
+            "Gas",
+            "Fireplace",
+            "Pellet Stove",
+            "Heat Pump",
+            "Radiators",
+            "Other"
+          ]
+        },
+        {
+          "title": "Cooling / Air Conditioning",
+          "type": "YES_NO"
+        },
+        {
+          "title": "Electricity Connection",
+          "type": "YES_NO"
+        },
+        {
+          "title": "Sewage Type",
+          "type": "MULTIPLE_CHOICE",
+          "options": [
+            "Public",
+            "Septic Tank"
+          ]
+        },
+        {
+          "title": "Internet Availability",
+          "type": "DROPDOWN",
+          "options": [
+            "Fiber",
+            "ADSL",
+            "Mobile",
+            "None"
+          ]
+        },
+        {
+          "title": "Solar / Renewable Energy Systems",
+          "type": "PARAGRAPH_TEXT"
+        },
+        {
+          "title": "Road Access Condition",
+          "type": "DROPDOWN",
+          "options": [
+            "Paved",
+            "Gravel",
+            "Steep/Unpaved",
+            "Limited"
+          ]
+        }
+      ]
+    },
+    {
+      "section_title": "SECTION 5 – Outdoor Features & Amenities",
+      "questions": [
+        {
+          "title": "Swimming Pool",
+          "type": "MULTIPLE_CHOICE",
+          "options": [
+            "Yes – In-ground",
+            "Yes – Above-ground",
+            "No"
+          ]
+        },
+        {
+          "title": "Garden / Landscaping",
+          "type": "PARAGRAPH_TEXT"
+        },
+        {
+          "title": "Olive Grove / Vineyard / Orchard",
+          "type": "PARAGRAPH_TEXT"
+        },
+        {
+          "title": "Patio / Courtyard",
+          "type": "YES_NO"
+        },
+        {
+          "title": "Outdoor Kitchen / BBQ Area",
+          "type": "YES_NO"
+        },
+        {
+          "title": "Views",
+          "type": "CHECKBOXES",
+          "options": [
+            "Sea",
+            "Countryside",
+            "Mountains",
+            "Town",
+            "Valley",
+            "Other"
+          ]
+        },
+        {
+          "title": "Fencing / Gates",
+          "type": "MULTIPLE_CHOICE",
+          "options": [
+            "None",
+            "Manual",
+            "Electric"
+          ]
+        },
+        {
+          "title": "Parking Spaces (number)",
+          "type": "SHORT_ANSWER"
+        }
+      ]
+    },
+    {
+      "section_title": "SECTION 6 – Location & Proximity",
+      "questions": [
+        {
+          "title": "Nearest Town / Village",
+          "type": "SHORT_ANSWER"
+        },
+        {
+          "title": "Distance to Nearest Town (km)",
+          "type": "SHORT_ANSWER"
+        },
+        {
+          "title": "Distance to Coast (km)",
+          "type": "SHORT_ANSWER"
+        },
+        {
+          "title": "Distance to Nearest Airport (name + km)",
+          "type": "SHORT_ANSWER"
+        },
+        {
+          "title": "Distance to Train Station (km)",
+          "type": "SHORT_ANSWER"
+        },
+        {
+          "title": "Distance to Shops / Restaurants / Medical / Schools",
+          "type": "PARAGRAPH_TEXT"
+        },
+        {
+          "title": "Notable Nearby Attractions (historic centers, beaches, wineries, etc.)",
+          "type": "PARAGRAPH_TEXT"
+        }
+      ]
+    },
+    {
+      "section_title": "SECTION 7 – Legal & Financial Details",
+      "questions": [
+        {
+          "title": "Asking Price (€)",
+          "type": "SHORT_ANSWER"
+        },
+        {
+          "title": "Negotiable",
+          "type": "YES_NO"
+        },
+        {
+          "title": "Agency Commission (% and who pays)",
+          "type": "SHORT_ANSWER"
+        },
+        {
+          "title": "Annual Property Tax (IMU)",
+          "type": "SHORT_ANSWER"
+        },
+        {
+          "title": "Utility Costs Estimate (€ / month or year)",
+          "type": "SHORT_ANSWER"
+        },
+        {
+          "title": "Ownership Documents Available",
+          "type": "YES_NO"
+        },
+        {
+          "title": "Urban Planning Compliance Verified",
+          "type": "MULTIPLE_CHOICE",
+          "options": [
+            "Yes",
+            "No",
+            "Unknown"
+          ]
+        },
+        {
+          "title": "Property Currently Occupied",
+          "type": "YES_NO"
+        },
+        {
+          "title": "Easements or Restrictions",
+          "type": "PARAGRAPH_TEXT"
+        }
+      ]
+    },
+    {
+      "section_title": "SECTION 8 – Visuals & Media",
+      "questions": [
+        {
+          "title": "Upload Property Photos (interior & exterior)",
+          "type": "FILE_UPLOAD"
+        },
+        {
+          "title": "Upload Floor Plan(s)",
+          "type": "FILE_UPLOAD"
+        },
+        {
+          "title": "Upload Drone Photos / Videos",
+          "type": "FILE_UPLOAD"
+        },
+        {
+          "title": "Upload Energy Certificate (APE)",
+          "type": "FILE_UPLOAD"
+        },
+        {
+          "title": "Virtual Tour Link",
+          "type": "SHORT_ANSWER"
+        }
+      ]
+    },
+    {
+      "section_title": "SECTION 9 – Agent / Submitter Details",
+      "questions": [
+        {
+          "title": "Agent Name",
+          "type": "SHORT_ANSWER"
+        },
+        {
+          "title": "Agency Name",
+          "type": "SHORT_ANSWER"
+        },
+        {
+          "title": "Email",
+          "type": "SHORT_ANSWER"
+        },
+        {
+          "title": "Phone / WhatsApp",
+          "type": "SHORT_ANSWER"
+        },
+        {
+          "title": "Website / Instagram",
+          "type": "SHORT_ANSWER"
+        },
+        {
+          "title": "Authorization to Share Photos & Details",
+          "type": "MULTIPLE_CHOICE",
+          "options": [
+            "Yes, I authorize PONTE to share this listing with clients",
+            "No"
+          ]
+        }
+      ]
+    },
+    {
+      "section_title": "SECTION 10 – Additional Notes",
+      "questions": [
+        {
+          "title": "Anything else we should know about this property?",
+          "type": "PARAGRAPH_TEXT"
+        },
+        {
+          "title": "Recommended Selling Points (unique features, strengths)",
+          "type": "PARAGRAPH_TEXT"
+        },
+        {
+          "title": "Suggested Renovation Potential",
+          "type": "PARAGRAPH_TEXT"
+        }
+      ]
+    }
+  ]
+}

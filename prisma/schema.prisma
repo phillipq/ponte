@@ -1,0 +1,578 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String    @unique
+  emailVerified DateTime?
+  image         String?
+  password      String?
+  role          String    @default("user") // "user" or "admin"
+  appId         String    @default("default") // Distinguish between apps
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  accounts Account[]
+  sessions Session[]
+  subscription Subscription?
+  properties Property[]
+  destinations Destination[]
+  tags Tag[]
+  clients Client[]
+  questionnaireSections QuestionnaireSection[]
+  propertyAuditTrail PropertyAuditTrail[]
+  tours Tour[]
+  evaluations PropertyEvaluation[]
+  questionnaireInvites QuestionnaireInvite[]
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+model Subscription {
+  id                String   @id @default(cuid())
+  userId            String   @unique
+  appId             String   @default("default") // Distinguish between apps
+  stripeCustomerId  String?  @unique
+  stripeSubscriptionId String? @unique
+  stripePriceId     String?
+  stripeCurrentPeriodEnd DateTime?
+  status            String?  // active, canceled, past_due, etc.
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Product {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  appId       String   @default("default") // Distinguish between apps
+  active      Boolean  @default(true)
+  metadata    Json?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  prices Price[]
+}
+
+model Price {
+  id       String  @id @default(cuid())
+  productId String
+  active   Boolean @default(true)
+  currency String
+  type     String  // one_time, recurring
+  unitAmount Int?  // amount in cents
+  interval String? // month, year for recurring
+  intervalCount Int? @default(1)
+  trialPeriodDays Int?
+  metadata Json?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+}
+
+// Property mapping application models
+model Property {
+  id          String   @id @default(cuid())
+  userId      String
+  partnerId   String?  // Optional partner who submitted this property
+  latitude    Float
+  longitude   Float
+  name        String   // Required property name
+  tags        String[] // Custom tags for the property
+  propertyType String  @default("house") // Property type: house, building, beach, etc.
+  
+  // Italian address fields (now primary)
+  recipientName String?  // Recipient name or company
+  streetAddress String? // Via Roma, 10 or Casella Postale 456
+  postalCode    String? // 00185
+  city          String? // Roma
+  province      String? // RM (two-letter code, optional)
+  country       String  @default("ITALY") // Always ITALY for Italian properties
+  
+  // SECTION 1 - Property Identification (from JSON form)
+  fullAddress   String? // Full address from JSON form
+  region        String? // Region (Marche, Tuscany, etc.)
+  gpsCoordinates String? // GPS coordinates as string
+  listingType   String? // For Sale, For Rent, Both
+  yearBuiltNew  String? // Year built or last renovated (from JSON form)
+  ownershipType String? // Private, Company, Historical Building, Agricultural Land
+  
+  // SECTION 2 - Property Description (from JSON form)
+  shortSummary  String? // Short summary (2-3 sentences)
+  fullDescription String? // Full description
+  architecturalStyle String? // Modern, Rustic, Historical, etc.
+  orientation   String? // North, South, East, West, Multiple
+  condition     String? // New, Recently Renovated, Needs Renovation, etc.
+  energyEfficiencyClass String? // A4, A3, A2, A1, B, C, D, E, F, G, Unknown
+  
+  // SECTION 3 - Size & Layout (from JSON form)
+  totalLivingArea String? // Total living area in m²
+  totalLandSize   String? // Total land size in m² or hectares
+  numberOfFloors  String? // Number of floors/levels
+  numberOfBedrooms String? // Number of bedrooms
+  numberOfBathrooms String? // Number of bathrooms
+  kitchen        String? // Open Layout, Closed Layout, No
+  livingDiningAreas String? // Combined, Separate
+  officeStudyRoom Boolean? // Office/Study Room
+  cellarBasement Boolean? // Cellar/Basement
+  atticLoft      Boolean? // Attic/Loft
+  garageParking  String? // Garage/Covered Parking capacity
+  outbuildings   String? // Outbuildings description
+  terracesBalconies Boolean? // Terrace(s)/Balcony(ies)
+  laundryUtilityRoom Boolean? // Laundry/Utility Room
+  
+  // SECTION 4 - Utilities & Infrastructure (from JSON form)
+  waterSource   String? // Municipal, Private Well, Shared Well
+  heatingSystem String[] // Array of heating options
+  coolingAirConditioning Boolean? // Cooling/Air Conditioning
+  electricityConnection Boolean? // Electricity Connection
+  sewageType    String? // Public, Septic Tank
+  internetAvailability String? // Fiber, ADSL, Mobile, None
+  solarRenewableEnergy String? // Solar/Renewable Energy Systems
+  roadAccessCondition String? // Paved, Gravel, Steep/Unpaved, Limited
+  
+  // SECTION 5 - Outdoor Features & Amenities (from JSON form)
+  swimmingPool  String? // In-ground, Above-ground, No
+  gardenLandscaping String? // Garden/Landscaping description
+  oliveGroveVineyard String? // Olive Grove/Vineyard/Orchard
+  patioCourtyard Boolean? // Patio/Courtyard
+  outdoorKitchenBBQ Boolean? // Outdoor Kitchen/BBQ Area
+  viewTypes     String[] // Array of view types
+  fencingGates String? // None, Manual, Electric
+  parkingSpaces String? // Parking Spaces number
+  
+  // SECTION 6 - Location & Proximity (from JSON form)
+  nearestTown   String? // Nearest Town/Village
+  distanceToNearestTown String? // Distance to nearest town
+  distanceToCoast String? // Distance to coast
+  distanceToAirport String? // Distance to airport
+  distanceToTrainStation String? // Distance to train station
+  distanceToServices String? // Distance to shops/restaurants/medical/schools
+  notableAttractions String? // Notable nearby attractions
+  
+  // SECTION 7 - Legal & Financial Details (from JSON form)
+  askingPrice   String? // Asking price in EUR
+  negotiable    Boolean? // Negotiable
+  agencyCommission String? // Agency commission
+  annualPropertyTax String? // Annual property tax (IMU)
+  utilityCostsEstimate String? // Utility costs estimate
+  ownershipDocumentsAvailable Boolean? // Ownership documents available
+  urbanPlanningCompliance String? // Urban planning compliance
+  propertyCurrentlyOccupied Boolean? // Property currently occupied
+  easementsRestrictions String? // Easements or restrictions
+  
+  // SECTION 8 - Visuals & Media (from JSON form)
+  propertyPhotos String[] // Array of property photo URLs
+  floorPlans     String[] // Array of floor plan URLs
+  dronePhotos    String[] // Array of drone photo URLs
+  energyCertificate String[] // Array of energy certificate URLs
+  virtualTourLink String? // Virtual tour link
+  
+  // SECTION 9 - Agent/Submitter Details (from JSON form)
+  agentName      String? // Agent name
+  agencyName     String? // Agency name
+  email          String? // Email
+  phone          String? // Phone/WhatsApp
+  website        String? // Website/Instagram
+  authorizationToShare String? // Authorization to share
+  
+  // SECTION 10 - Additional Notes (from JSON form)
+  additionalNotes String? // Additional notes
+  recommendedSellingPoints String? // Recommended selling points
+  suggestedRenovationPotential String? // Suggested renovation potential
+  
+  // New comprehensive property fields from Google Sheet
+  // Basic Information
+  propertyNumber Int @unique // Auto-incrementing property number starting from 10000
+  whoProvided   String? // Who provided the property info
+  dateProvided  DateTime? // Date property was provided
+  propertyLink  String? // Link to property listing
+  pictures      String? // Link to pictures folder or uploaded images
+  picturesUploaded String[] // Array of uploaded image URLs
+  featuredImage String? // Featured image URL for property preview
+  comune        String? // Municipality
+  dateAdded     DateTime? // Date property was added to system
+  
+  // Decision Making
+  decision      String? // Yes, No, Maybe
+  peterNotes    String? // Peter's notes
+  wesNotes      String? // Wes's notes  
+  elenaNotes    String? // Elena's notes
+  hazelNotes    String? // Hazel's notes
+  
+  // Financial Information
+  sellPrice     Float? // Sell price in EUR
+  homeSizeM2    Float? // Home size in square meters
+  pricePerM2    Float? // Price per square meter
+  landSizeM2    Float? // Land size in square meters
+  yearBuilt     Int? // Year built
+  renovationCost Float? // Renovation cost estimate
+  totalInvestment Float? // Total investment including renovation
+  
+  // Property Condition
+  foundationGood Boolean? // Foundation condition
+  roofGood       Boolean? // Roof condition
+  extraBuildings Boolean? // Has extra buildings
+  rooms          Int? // Number of rooms
+  bathrooms      Int? // Number of bathrooms
+  
+  // Location & Distance
+  kmToTown      Float? // Kilometers to town
+  kmToBeaches   Float? // Kilometers to beaches
+  kmToAirport   Float? // Kilometers to airport
+  kmToTransit   Float? // Kilometers to transit
+  
+  // Utilities
+  gasOnSite     Boolean? // Gas available on site
+  waterOnSite   Boolean? // Water available on site
+  electricalOnSite Boolean? // Electrical available on site
+  views         Boolean? // Has views
+  
+  // Scoring System
+  manualScore   Int? // Manual score (1-10)
+  aiScore       Float? // AI-generated score
+  portfolioPotential String? // Portfolio potential assessment
+  
+  // Property Status
+  status        String @default("active") // active, sold, rejected, under_contract, etc.
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  partner     Partner? @relation(fields: [partnerId], references: [id], onDelete: SetNull)
+  distances   PropertyDistance[]
+  auditTrail  PropertyAuditTrail[]
+  evaluations PropertyEvaluation[]
+  keywordRelations PropertyKeyword[]
+}
+
+model PropertyAuditTrail {
+  id          String   @id @default(cuid())
+  propertyId  String
+  userId      String
+  fieldName   String   // Name of the field that was changed
+  oldValue    String?  // Previous value
+  newValue    String?  // New value
+  changeType  String   // 'create', 'update', 'delete'
+  changedBy   String   // User who made the change
+  createdAt   DateTime @default(now())
+
+  property    Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// Property evaluation system
+model PropertyEvaluation {
+  id              String   @id @default(cuid())
+  propertyId      String
+  userId          String
+  clientName      String?
+  date            DateTime @default(now())
+  createdBy       String
+  propertyAddress String?
+  
+  // Overall scoring
+  totalScore      Float    @default(0)
+  maxScore        Float    @default(0)
+  overallPercentage Float  @default(0)
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  property        Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  evaluationItems PropertyEvaluationItem[]
+}
+
+model PropertyEvaluationItem {
+  id              String   @id @default(cuid())
+  evaluationId    String
+  category        String   // LEGAL_STATUS, SEISMIC_ACTIVITY, etc.
+  item            String   // The evaluation item text
+  notes           String?  // Notes for this item
+  score           Int      @default(0) // 1-10 score
+  date            DateTime? // Date of evaluation
+  evaluatedBy     String?  // Who evaluated this item
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  evaluation      PropertyEvaluation @relation(fields: [evaluationId], references: [id], onDelete: Cascade)
+}
+
+model Destination {
+  id          String   @id @default(cuid())
+  userId      String
+  name        String
+  address     String
+  latitude    Float
+  longitude   Float
+  category    String   // e.g., "Beaches", "Museums", "Restaurants", "Schools"
+  placeId     String?  // Google Places ID if imported from API
+  metadata    Json?    // Additional data from Google Places
+  tags        String[] // Custom tags for the destination
+  keywords    String[] // Descriptive keywords like "family friendly", "great sand"
+  description String?  // Detailed description of the destination
+  
+  // Italian address fields (aligned with Property)
+  streetAddress String? // Via Roma, 10 or Casella Postale 456
+  postalCode    String? // 00185
+  city          String? // Roma
+  province      String? // RM (two-letter code, optional)
+  country       String  @default("ITALY") // Always ITALY for Italian destinations
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  distances   PropertyDistance[]
+  keywordRelations DestinationKeyword[]
+}
+
+model PropertyDistance {
+  id              String   @id @default(cuid())
+  propertyId      String
+  destinationId   String
+  drivingDistance Int?     // Distance in meters
+  drivingDuration Int?     // Duration in seconds
+  trafficDuration Int?     // Traffic-adjusted duration in seconds
+  distanceMiles  Float?    // Distance in miles
+  distanceKm     Float?    // Distance in kilometers
+  durationMinutes Float?   // Duration in minutes
+  walkingDistance Int?     // Walking distance in meters
+  walkingDuration Int?     // Walking duration in seconds
+  walkingDurationMinutes Float? // Walking duration in minutes
+  transitDistance Int?     // Transit distance in meters
+  transitDuration Int?     // Transit duration in seconds
+  transitDurationMinutes Float? // Transit duration in minutes
+  calculatedAt    DateTime @default(now())
+
+  property        Property    @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  destination     Destination @relation(fields: [destinationId], references: [id], onDelete: Cascade)
+
+  @@unique([propertyId, destinationId])
+}
+
+// Partner model for property submissions
+model Partner {
+  id          String   @id @default(cuid())
+  name        String   // Partner name
+  email       String   @unique // Login email
+  password    String   // Hashed password
+  company     String?  // Company name
+  phone       String?  // Contact phone
+  isActive    Boolean  @default(true) // Whether partner account is active
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  // Relations
+  properties  Property[] // Properties submitted by this partner
+}
+
+model Tag {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  color     String?  // Optional color for the tag
+  userId    String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Client {
+  id          String   @id @default(cuid())
+  name        String
+  email       String?
+  phone       String?
+  company     String?
+  notes       String?
+  questionnaireResponses Json? // Store questionnaire responses as JSON (legacy)
+  preferredProperties Json? // Array of preferred property IDs
+  userId      String
+  createdAt   DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  questionnaireResponseSets QuestionnaireResponseSet[]
+  aiAnalyses ClientAiAnalysis[]
+  questionnaireInvites QuestionnaireInvite[]
+}
+
+
+model QuestionnaireSection {
+  id              String   @id @default(cuid())
+  title           String
+  order           Int
+  userId          String
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  user           User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  questions      QuestionnaireQuestion[]
+}
+
+model QuestionnaireQuestion {
+  id          String   @id @default(cuid())
+  question    String
+  questionType String  @default("text") // text, ranking, yesno
+  order       Int
+  sectionId   String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  section QuestionnaireSection @relation(fields: [sectionId], references: [id], onDelete: Cascade)
+  responses QuestionnaireResponse[]
+}
+
+model QuestionnaireResponseSet {
+  id          String   @id @default(cuid())
+  clientId    String
+  version     Int      @default(1)
+  status      String   @default("submitted") // draft, submitted, final
+  source      String   @default("manual") // manual, import, api
+  submittedAt DateTime @default(now())
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  client Client @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  responses QuestionnaireResponse[]
+  aiAnalyses ClientAiAnalysis[]
+}
+
+model QuestionnaireResponse {
+  id          String   @id @default(cuid())
+  responseSetId String
+  questionId  String
+  answer      String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  responseSet QuestionnaireResponseSet @relation(fields: [responseSetId], references: [id], onDelete: Cascade)
+  question    QuestionnaireQuestion @relation(fields: [questionId], references: [id], onDelete: Cascade)
+}
+
+model ClientAiAnalysis {
+  id          String   @id @default(cuid())
+  clientId    String
+  responseSetId String?
+  summary     String
+  preferences Json     // Array of preference strings
+  recommendations String
+  propertyRankings Json // Array of property ranking objects
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  client Client @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  responseSet QuestionnaireResponseSet? @relation(fields: [responseSetId], references: [id], onDelete: SetNull)
+}
+
+model QuestionnaireInvite {
+  id          String   @id @default(cuid())
+  clientId    String
+  token       String   @unique
+  expiresAt   DateTime
+  status      String   @default("pending") // pending, completed, expired
+  userId      String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  client Client @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Tour {
+  id          String   @id @default(cuid())
+  userId      String
+  name        String
+  startingPoint Json   // Store starting point data as JSON
+  steps       Json     // Store tour steps as JSON array
+  route       Json     // Store calculated route as JSON array
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Keyword {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  color     String   @default("#7A8664")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations to properties and destinations
+  properties    PropertyKeyword[]
+  destinations  DestinationKeyword[]
+}
+
+model PropertyKeyword {
+  id         String   @id @default(cuid())
+  propertyId String
+  keywordId  String
+  createdAt  DateTime @default(now())
+
+  property Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  keyword  Keyword  @relation(fields: [keywordId], references: [id], onDelete: Cascade)
+
+  @@unique([propertyId, keywordId])
+}
+
+model DestinationKeyword {
+  id            String   @id @default(cuid())
+  destinationId String
+  keywordId     String
+  createdAt     DateTime @default(now())
+
+  destination Destination @relation(fields: [destinationId], references: [id], onDelete: Cascade)
+  keyword     Keyword     @relation(fields: [keywordId], references: [id], onDelete: Cascade)
+
+  @@unique([destinationId, keywordId])
+}

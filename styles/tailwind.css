@@ -1,0 +1,156 @@
+@import 'tailwindcss';
+
+/*
+  The default border color has changed to `currentColor` in Tailwind CSS v4,
+  so we've added these compatibility styles to make sure everything still
+  looks the same as it did with Tailwind CSS v3.
+
+  If we ever want to remove these styles, we need to add an explicit border
+  color utility to any element that depends on these defaults.
+*/
+@layer base {
+  *,
+  ::after,
+  ::before,
+  ::backdrop,
+  ::file-selector-button {
+    border-color: var(--color-gray-200, currentColor);
+  }
+}
+
+/*
+  Ponte Custom Color Palette
+  Mediterranean/Tuscan inspired color scheme
+*/
+@layer base {
+  :root {
+    /* Ponte Colors */
+    --color-ponte-black: #222222;
+    --color-ponte-sand: #D3BFA4;
+    --color-ponte-olive: #7A8664;
+    --color-ponte-cream: #FDF9F3;
+    --color-ponte-terracotta: #C1664A;
+    
+    /* Extended Primary Scale (Olive-based) */
+    --color-primary-50: #FDF9F3;
+    --color-primary-100: #F5F0E8;
+    --color-primary-200: #E8DCC8;
+    --color-primary-300: #D3BFA4;
+    --color-primary-400: #B8A68A;
+    --color-primary-500: #7A8664;
+    --color-primary-600: #6B7557;
+    --color-primary-700: #5C644A;
+    --color-primary-800: #4D533D;
+    --color-primary-900: #222222;
+    
+    /* Extended Accent Scale (Terracotta-based) */
+    --color-accent-50: #FDF9F3;
+    --color-accent-100: #F5F0E8;
+    --color-accent-200: #E8DCC8;
+    --color-accent-300: #D3BFA4;
+    --color-accent-400: #B8A68A;
+    --color-accent-500: #C1664A;
+    --color-accent-600: #A8553A;
+    --color-accent-700: #8F4428;
+    --color-accent-800: #763316;
+    --color-accent-900: #222222;
+  }
+}
+
+@layer utilities {
+  /* Ponte Color Utilities */
+  .bg-ponte-black { background-color: var(--color-ponte-black); }
+  .bg-ponte-sand { background-color: var(--color-ponte-sand); }
+  .bg-ponte-olive { background-color: var(--color-ponte-olive); }
+  .bg-ponte-cream { background-color: var(--color-ponte-cream); }
+  .bg-ponte-terracotta { background-color: var(--color-ponte-terracotta); }
+  
+  .text-ponte-black { color: var(--color-ponte-black); }
+  .text-ponte-sand { color: var(--color-ponte-sand); }
+  .text-ponte-olive { color: var(--color-ponte-olive); }
+  .text-ponte-cream { color: var(--color-ponte-cream); }
+  .text-ponte-terracotta { color: var(--color-ponte-terracotta); }
+  
+  .border-ponte-black { border-color: var(--color-ponte-black); }
+  .border-ponte-sand { border-color: var(--color-ponte-sand); }
+  .border-ponte-olive { border-color: var(--color-ponte-olive); }
+  .border-ponte-cream { border-color: var(--color-ponte-cream); }
+  .border-ponte-terracotta { border-color: var(--color-ponte-terracotta); }
+  
+  /* Primary Scale Utilities */
+  .bg-primary-50 { background-color: var(--color-primary-50); }
+  .bg-primary-100 { background-color: var(--color-primary-100); }
+  .bg-primary-200 { background-color: var(--color-primary-200); }
+  .bg-primary-300 { background-color: var(--color-primary-300); }
+  .bg-primary-400 { background-color: var(--color-primary-400); }
+  .bg-primary-500 { background-color: var(--color-primary-500); }
+  .bg-primary-600 { background-color: var(--color-primary-600); }
+  .bg-primary-700 { background-color: var(--color-primary-700); }
+  .bg-primary-800 { background-color: var(--color-primary-800); }
+  .bg-primary-900 { background-color: var(--color-primary-900); }
+  
+  .text-primary-50 { color: var(--color-primary-50); }
+  .text-primary-100 { color: var(--color-primary-100); }
+  .text-primary-200 { color: var(--color-primary-200); }
+  .text-primary-300 { color: var(--color-primary-300); }
+  .text-primary-400 { color: var(--color-primary-400); }
+  .text-primary-500 { color: var(--color-primary-500); }
+  .text-primary-600 { color: var(--color-primary-600); }
+  .text-primary-700 { color: var(--color-primary-700); }
+  .text-primary-800 { color: var(--color-primary-800); }
+  .text-primary-900 { color: var(--color-primary-900); }
+  
+  /* Accent Scale Utilities */
+  .bg-accent-50 { background-color: var(--color-accent-50); }
+  .bg-accent-100 { background-color: var(--color-accent-100); }
+  .bg-accent-200 { background-color: var(--color-accent-200); }
+  .bg-accent-300 { background-color: var(--color-accent-300); }
+  .bg-accent-400 { background-color: var(--color-accent-400); }
+  .bg-accent-500 { background-color: var(--color-accent-500); }
+  .bg-accent-600 { background-color: var(--color-accent-600); }
+  .bg-accent-700 { background-color: var(--color-accent-700); }
+  .bg-accent-800 { background-color: var(--color-accent-800); }
+  .bg-accent-900 { background-color: var(--color-accent-900); }
+  
+  .text-accent-50 { color: var(--color-accent-50); }
+  .text-accent-100 { color: var(--color-accent-100); }
+  .text-accent-200 { color: var(--color-accent-200); }
+  .text-accent-300 { color: var(--color-accent-300); }
+  .text-accent-400 { color: var(--color-accent-400); }
+  .text-accent-500 { color: var(--color-accent-500); }
+  .text-accent-600 { color: var(--color-accent-600); }
+  .text-accent-700 { color: var(--color-accent-700); }
+  .text-accent-800 { color: var(--color-accent-800); }
+  .text-accent-900 { color: var(--color-accent-900); }
+  
+  /* Font Family Utilities */
+  .font-header-elegant { font-family: 'The Seasons', serif; }
+  .font-body-elegant { font-family: 'Montserrat', sans-serif; }
+  .font-accent-elegant { font-family: 'Cormorant', serif; }
+  
+  .font-header-minimalist { font-family: 'Playfair Display', serif; }
+  .font-body-minimalist { font-family: 'Lato', sans-serif; }
+  .font-accent-minimalist { font-family: 'Italiana', serif; }
+  
+  .font-header-luxury { font-family: 'Libre Baskerville', serif; }
+  .font-body-luxury { font-family: 'Inter', sans-serif; }
+  .font-accent-luxury { font-family: 'Poppins', sans-serif; }
+  
+  /* Default Font Classes */
+  .font-header { font-family: 'The Seasons', serif; }
+  .font-body { font-family: 'Montserrat', sans-serif; }
+  .font-accent { font-family: 'Cormorant', serif; }
+  
+  /* Button Hover Fixes */
+  .btn-secondary:hover {
+    background-color: var(--color-ponte-terracotta) !important;
+    color: white !important;
+  }
+  
+  /* More specific button hover fixes */
+  button.btn-secondary:hover,
+  a.btn-secondary:hover {
+    background-color: var(--color-ponte-terracotta) !important;
+    color: white !important;
+  }
+}

@@ -1,8 +1,9 @@
 "use client"
 
-import { useState, useEffect } from "react"
-import { useSession } from "next-auth/react"
+import { useEffect, useState } from "react"
 import { useRouter, useParams } from "next/navigation"
+import Image from "next/image"
+import { useSession } from "next-auth/react"
 import Navigation from "components/Navigation"
 
 interface Client {
@@ -72,7 +73,7 @@ const PROCESS_STEPS: ProcessStep[] = [
 ]
 
 export default function ClientProcessPage() {
-  const { data: session, status } = useSession()
+  const { data: _session, status } = useSession()
   const router = useRouter()
   const params = useParams()
   const [client, setClient] = useState<Client | null>(null)
@@ -198,9 +199,11 @@ export default function ClientProcessPage() {
               >
                 <div className="flex items-center justify-between mb-3">
                   <div className="w-12 h-12 rounded-lg bg-ponte-cream flex items-center justify-center">
-                    <img 
+                    <Image 
                       src={`/logos/icon-step${step.id}.png`} 
                       alt={`Step ${step.id}`}
+                      width={32}
+                      height={32}
                       className="w-8 h-8"
                       onError={(e) => {
                         // Fallback to number if icon doesn't exist

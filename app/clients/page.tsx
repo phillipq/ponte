@@ -1,8 +1,9 @@
 "use client"
 
-import { useState, useEffect } from "react"
-import { useSession } from "next-auth/react"
+import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
+import Image from "next/image"
+import { useSession } from "next-auth/react"
 import { Button } from "components/Button"
 import Navigation from "components/Navigation"
 
@@ -18,7 +19,7 @@ interface Client {
 }
 
 export default function ClientsPage() {
-  const { data: session, status } = useSession()
+  const { data: _session, status } = useSession()
   const router = useRouter()
   const [clients, setClients] = useState<Client[]>([])
   const [loading, setLoading] = useState(true)
@@ -151,7 +152,7 @@ export default function ClientsPage() {
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-3xl font-bold text-ponte-black flex items-center">
-                <img src="/logos/icon-destination.png" alt="Clients" className="w-8 h-8 mr-3" />
+                <Image src="/logos/icon-destination.png" alt="Clients" width={32} height={32} className="w-8 h-8 mr-3" />
                 Clients
               </h1>
               <p className="mt-2 text-ponte-olive">Manage your client information and preferences</p>

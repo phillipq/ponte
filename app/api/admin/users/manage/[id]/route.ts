@@ -1,8 +1,8 @@
+import bcrypt from "bcryptjs"
 import { NextRequest, NextResponse } from "next/server"
 import { getServerSession } from "next-auth/next"
 import { authOptions } from "lib/auth"
 import { prisma } from "lib/prisma"
-import bcrypt from "bcryptjs"
 
 // PUT /api/admin/users/[id] - Update user
 export async function PUT(
@@ -57,7 +57,7 @@ export async function PUT(
     }
 
     // Prepare update data
-    const updateData: any = {
+    const updateData: Record<string, unknown> = {
       name,
       email,
       role

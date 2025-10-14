@@ -1,11 +1,11 @@
+import bcrypt from "bcryptjs"
 import { NextRequest, NextResponse } from "next/server"
 import { getServerSession } from "next-auth/next"
 import { authOptions } from "lib/auth"
 import { prisma } from "lib/prisma"
-import bcrypt from "bcryptjs"
 
 // GET /api/admin/users - Fetch all users
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   try {
     const session = await getServerSession(authOptions)
     

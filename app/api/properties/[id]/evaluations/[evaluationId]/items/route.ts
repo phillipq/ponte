@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from "next/server"
 import { getServerSession } from "next-auth"
 import { authOptions } from "lib/auth"
 import { prisma } from "lib/prisma"
-import { calculateOverallScore } from "lib/property-evaluation"
 
 // PUT /api/properties/[id]/evaluations/[evaluationId]/items - Update evaluation items
 export async function PUT(
@@ -65,7 +64,7 @@ export async function PUT(
         }
         acc[item.category].push(item)
         return acc
-      }, {} as Record<string, any[]>)
+      }, {} as Record<string, unknown[]>)
 
       // Calculate overall score
       const categoryScores = Object.values(categories).map(categoryItems => {

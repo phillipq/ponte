@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server"
 import { getServerSession } from "next-auth"
+import * as XLSX from "xlsx"
 import { authOptions } from "lib/auth"
 import { prisma } from "lib/prisma"
-import * as XLSX from "xlsx"
 
 export async function POST(
   request: NextRequest,
@@ -15,7 +15,7 @@ export async function POST(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    const userId = (session.user as any).id
+    const userId = (session.user as { id: string }).id
     if (!userId) {
       return NextResponse.json({ error: "User ID not found" }, { status: 401 })
     }
@@ -67,7 +67,7 @@ export async function POST(
 
     // Parse the data
     const headers = jsonData[0] as string[]
-    const dataRows = jsonData.slice(1) as any[][]
+    const dataRows = jsonData.slice(1) as unknown[][]
 
     // Check if this is the Ponte evaluation format
     // Look for the characteristic Ponte format indicators
@@ -94,7 +94,7 @@ export async function POST(
        headers[1]?.toString().toLowerCase().includes('score') ||
        headers[1]?.toString().toLowerCase().includes('rating'))
 
-    let evaluationItems = []
+    const evaluationItems = []
     
     // Initialize header information
     let clientName = "Imported Evaluation"
@@ -109,7 +109,7 @@ export async function POST(
       // Find the actual data start row (skip title and header rows)
       let dataStartRow = 0
       for (let i = 0; i < Math.min(20, jsonData.length); i++) {
-        const row = jsonData[i] as any[]
+        const row = jsonData[i] as unknown[]
         if (row && row.length >= 4) {
           const firstCell = row[0]?.toString().trim()
           // Look for the CATEGORIES header or numbered items
@@ -123,7 +123,7 @@ export async function POST(
       
       // Extract header information from the first few rows
       for (let i = 0; i < Math.min(10, dataStartRow); i++) {
-        const row = jsonData[i] as any[]
+        const row = jsonData[i] as unknown[]
         if (row && row.length >= 2) {
           const firstCell = row[0]?.toString().toLowerCase().trim()
           const secondCell = row[1]?.toString().trim()
@@ -156,7 +156,7 @@ export async function POST(
       let currentCategory = ''
       
       for (const row of actualDataRows) {
-        const typedRow = row as any[]
+        const typedRow = row as unknown[]
         if (!typedRow || typedRow.length === 0) continue
         
         // Handle merged cells by ensuring we have the right number of columns

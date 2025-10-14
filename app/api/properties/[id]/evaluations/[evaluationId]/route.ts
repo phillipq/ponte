@@ -14,7 +14,7 @@ export async function DELETE(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    const userId = (session.user as any).id
+    const userId = (session.user as { id: string }).id
     if (!userId) {
       return NextResponse.json({ error: "User ID not found" }, { status: 401 })
     }

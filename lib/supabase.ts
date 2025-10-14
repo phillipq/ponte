@@ -34,7 +34,7 @@ export async function uploadFileToStorage(
   bucket: string,
   filePath: string,
   file: File
-): Promise<{ data: any; error: any }> {
+): Promise<{ data: unknown; error: unknown }> {
   // Use admin client for server-side operations (bypasses RLS)
   const { data, error } = await supabaseAdmin.storage
     .from(bucket)
@@ -58,7 +58,7 @@ export function getPublicUrl(bucket: string, filePath: string): string {
 export async function deleteFileFromStorage(
   bucket: string,
   filePath: string
-): Promise<{ data: any; error: any }> {
+): Promise<{ data: unknown; error: unknown }> {
   const { data, error } = await supabaseAdmin.storage
     .from(bucket)
     .remove([filePath])

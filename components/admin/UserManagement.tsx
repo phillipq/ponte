@@ -50,7 +50,7 @@ export function UserManagement({ users }: UserManagementProps) {
         const errorData = await response.json()
         alert(errorData.error || 'Action failed')
       }
-    } catch (error) {
+    } catch {
       alert('Error performing action')
     } finally {
       setIsLoading(false)
@@ -78,7 +78,7 @@ export function UserManagement({ users }: UserManagementProps) {
       } else {
         alert('Bulk action failed')
       }
-    } catch (error) {
+    } catch {
       alert('Error performing bulk action')
     } finally {
       setIsLoading(false)

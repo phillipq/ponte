@@ -35,7 +35,7 @@ export function getAppFilter() {
 }
 
 // Helper function to create app-specific queries
-export function withAppFilter<T extends Record<string, any>>(data: T): T & { appId: string } {
+export function withAppFilter<T extends Record<string, unknown>>(data: T): T & { appId: string } {
   return { ...data, appId: APP_CONFIG.APP_ID }
 }
 

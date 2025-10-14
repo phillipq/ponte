@@ -27,7 +27,7 @@ export function SubscriptionManagement({ users }: SubscriptionManagementProps) {
   const [trialDays, setTrialDays] = useState<number>(7)
   const [isLoading, setIsLoading] = useState(false)
 
-  const handleSubscriptionAction = async (userId: string, action: string, data?: any) => {
+  const handleSubscriptionAction = async (userId: string, action: string, data?: unknown) => {
     setIsLoading(true)
     try {
       const response = await fetch(`/api/admin/subscriptions/${userId}`, {
@@ -44,7 +44,7 @@ export function SubscriptionManagement({ users }: SubscriptionManagementProps) {
         const error = await response.json()
         alert(`Action failed: ${error.message}`)
       }
-    } catch (error) {
+    } catch (_error) {
       alert('Error performing action')
     } finally {
       setIsLoading(false)

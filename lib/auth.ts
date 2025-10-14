@@ -1,14 +1,13 @@
 import { PrismaAdapter } from "@next-auth/prisma-adapter"
 import bcrypt from "bcryptjs"
-import { env } from "env.mjs"
 import { NextAuthOptions } from "next-auth"
 import CredentialsProvider from "next-auth/providers/credentials"
 import GoogleProvider from "next-auth/providers/google"
+import { env } from "env.mjs"
 import { prisma } from "./prisma"
 
 export const authOptions: NextAuthOptions = {
   adapter: PrismaAdapter(prisma),
-  trustHost: true,
   providers: [
     GoogleProvider({
       clientId: env.GOOGLE_CLIENT_ID || "",
@@ -64,15 +63,14 @@ export const authOptions: NextAuthOptions = {
       return token
     },
     async session({ session, token }) {
-      if (token) {
-        session.user.id = token.id as string
+      if (token && session.user) {
+        (session.user as any).id = token.id as string
       }
       return session
     }
   },
   pages: {
     signIn: "/auth/signin",
-    signUp: "/auth/signup",
   },
   secret: env.NEXTAUTH_SECRET,
 }

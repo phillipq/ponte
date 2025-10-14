@@ -1,6 +1,7 @@
 "use client"
 
-import { useState, useRef } from "react"
+import { useRef, useState } from "react"
+import Image from "next/image"
 
 interface FileInfo {
   url: string
@@ -127,8 +128,8 @@ export default function PropertyFileManager({
         })
 
         if (documentResponse.ok) {
-          const documentData = await documentResponse.json() as { files: any[] }
-          onDocumentsChange([...documents, ...documentData.files])
+          const documentData = await documentResponse.json() as { files: unknown[] }
+          onDocumentsChange([...documents, ...documentData.files] as FileInfo[])
         }
       }
       
@@ -160,22 +161,22 @@ export default function PropertyFileManager({
         // Remove from appropriate array
         switch (type) {
           case 'propertyPhotos':
-            const filteredPhotos: any[] = []
+            const filteredPhotos: unknown[] = []
             for (const file of propertyPhotos) {
               if (getFileUrl(file) !== fileUrl) {
                 filteredPhotos.push(file)
               }
             }
-            onPropertyPhotosChange(filteredPhotos)
+            onPropertyPhotosChange(filteredPhotos as FileInfo[])
             break
           case 'documents':
-            const filteredDocs: any[] = []
+            const filteredDocs: unknown[] = []
             for (const file of documents) {
               if (getFileUrl(file) !== fileUrl) {
                 filteredDocs.push(file)
               }
             }
-            onDocumentsChange(filteredDocs)
+            onDocumentsChange(filteredDocs as FileInfo[])
             break
         }
       } else {
@@ -190,7 +191,7 @@ export default function PropertyFileManager({
 
 
 
-  const getCurrentFilesCount = () => {
+  const _getCurrentFilesCount = () => {
     return propertyPhotos.length + documents.length
   }
 
@@ -280,9 +281,11 @@ export default function PropertyFileManager({
                 const fileName = getFileName(file)
                 return (
                   <div key={index} className="relative group">
-                    <img
+                    <Image
                       src={url}
                       alt={fileName}
+                      width={96}
+                      height={96}
                       className={`w-full h-24 object-contain rounded border cursor-pointer bg-white ${
                         featuredImage === url ? 'ring-2 ring-ponte-terracotta' : ''
                       }`}
@@ -391,9 +394,11 @@ export default function PropertyFileManager({
             >
               ×
             </button>
-            <img
+            <Image
               src={getFileUrl(propertyPhotos[currentSlide]!)}
               alt={getFileName(propertyPhotos[currentSlide]!)}
+              width={800}
+              height={600}
               className="max-w-full max-h-full object-contain"
             />
             {propertyPhotos.length > 1 && (

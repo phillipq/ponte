@@ -1,6 +1,7 @@
 "use client"
 
-import { useState, useRef, useEffect } from "react"
+import { useEffect, useRef, useState } from "react"
+import Image from "next/image"
 
 interface PropertyImageManagerProps {
   propertyId: string
@@ -182,9 +183,11 @@ export default function PropertyImageManager({
             {images.map((imageUrl, index) => (
               <div key={index} className="relative group">
                 <div className="aspect-square overflow-hidden rounded-lg border-2 border-ponte-sand">
-                  <img
+                  <Image
                     src={imageUrl}
                     alt={`Property image ${index + 1}`}
+                    width={200}
+                    height={200}
                     className="w-full h-full object-contain cursor-pointer hover:opacity-80 transition-opacity"
                     onClick={() => openSlideshow(index)}
                     onError={(e) => {
@@ -248,9 +251,11 @@ export default function PropertyImageManager({
             </button>
             
             <div className="relative">
-              <img
+              <Image
                 src={images[currentSlide]}
                 alt={`Property image ${currentSlide + 1}`}
+                width={800}
+                height={600}
                 className="max-w-full max-h-[80vh] object-contain rounded"
               />
               

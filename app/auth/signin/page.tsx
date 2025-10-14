@@ -1,8 +1,9 @@
 "use client"
 
 import { useState } from "react"
-import { signIn, getSession } from "next-auth/react"
 import { useRouter } from "next/navigation"
+import Image from "next/image"
+import { signIn } from "next-auth/react"
 import { Button } from "components/Button"
 
 export default function SignIn() {
@@ -29,7 +30,7 @@ export default function SignIn() {
       } else {
         router.push("/dashboard")
       }
-    } catch (error) {
+    } catch (_error) {
       setError("An error occurred. Please try again.")
     } finally {
       setIsLoading(false)
@@ -42,9 +43,11 @@ export default function SignIn() {
       <div className="max-w-md w-full space-y-8">
         <div>
           <div className="flex justify-center mb-6">
-            <img 
+            <Image 
               src="/logos/ponte_black.png" 
               alt="Ponte" 
+              width={48}
+              height={48}
               className="h-12 w-auto"
             />
           </div>

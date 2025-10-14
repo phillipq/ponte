@@ -1,8 +1,8 @@
 import { getServerSession } from "next-auth"
 import { redirect } from "next/navigation"
+import { Button } from "components/Button"
 import { authOptions } from "lib/auth"
 import { prisma } from "lib/prisma"
-import { Button } from "components/Button"
 
 export default async function Billing() {
   const session = await getServerSession(authOptions)

@@ -1,16 +1,16 @@
 "use client"
 
-import { useState, useEffect } from "react"
-import { useSession } from "next-auth/react"
+import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
+import { useSession } from "next-auth/react"
 import { Button } from "components/Button"
 import Navigation from "components/Navigation"
 
 interface CleanupAnalysis {
-  duplicateSections: any[]
-  orphanedSections: any[]
-  duplicateResponses: any[]
-  emptySections: any[]
+  duplicateSections: unknown[]
+  orphanedSections: unknown[]
+  duplicateResponses: unknown[]
+  emptySections: unknown[]
   summary: {
     duplicateSectionsCount: number
     orphanedSectionsCount: number
@@ -20,7 +20,7 @@ interface CleanupAnalysis {
 }
 
 export default function CleanupPage() {
-  const { data: session, status } = useSession()
+  const { status } = useSession()
   const router = useRouter()
   const [analysis, setAnalysis] = useState<CleanupAnalysis | null>(null)
   const [loading, setLoading] = useState(true)
@@ -42,7 +42,7 @@ export default function CleanupPage() {
       } else {
         setError("Failed to fetch cleanup analysis")
       }
-    } catch (error) {
+    } catch {
       setError("Failed to fetch cleanup analysis")
     } finally {
       setLoading(false)
@@ -66,7 +66,7 @@ export default function CleanupPage() {
         body: JSON.stringify({ action }),
       })
 
-      const data = await response.json() as { success?: boolean, results?: any, error?: string }
+      const data = await response.json() as { success?: boolean, results?: unknown, error?: string }
 
       if (response.ok) {
         await fetchAnalysis() // Refresh the analysis
@@ -74,7 +74,7 @@ export default function CleanupPage() {
       } else {
         setError(data.error || "Cleanup failed")
       }
-    } catch (error) {
+    } catch {
       setError("Cleanup failed")
     } finally {
       setCleaning(false)

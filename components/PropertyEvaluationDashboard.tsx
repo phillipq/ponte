@@ -30,9 +30,10 @@ interface PropertyEvaluation {
 interface PropertyEvaluationDashboardProps {
   propertyId: string
   propertyName: string
+  onEvaluationChange?: () => void
 }
 
-export default function PropertyEvaluationDashboard({ propertyId, propertyName }: PropertyEvaluationDashboardProps) {
+export default function PropertyEvaluationDashboard({ propertyId, propertyName, onEvaluationChange }: PropertyEvaluationDashboardProps) {
   const [evaluations, setEvaluations] = useState<PropertyEvaluation[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState("")
@@ -42,10 +43,21 @@ export default function PropertyEvaluationDashboard({ propertyId, propertyName }
     propertyAddress: "",
     createdBy: ""
   })
+  const [showImportForm, setShowImportForm] = useState(false)
+  const [importFile, setImportFile] = useState<File | null>(null)
+  const [importing, setImporting] = useState(false)
+  const [updateTimeouts, setUpdateTimeouts] = useState<Map<string, NodeJS.Timeout>>(new Map())
 
   useEffect(() => {
     fetchEvaluations()
   }, [propertyId])
+
+  // Cleanup timeouts on unmount
+  useEffect(() => {
+    return () => {
+      updateTimeouts.forEach(timeout => clearTimeout(timeout))
+    }
+  }, [updateTimeouts])
 
   const fetchEvaluations = async () => {
     try {
@@ -53,7 +65,7 @@ export default function PropertyEvaluationDashboard({ propertyId, propertyName }
       const response = await fetch(`/api/properties/${propertyId}/evaluations`)
       
       if (response.ok) {
-        const data = await response.json()
+        const data = await response.json() as { evaluations?: PropertyEvaluation[] }
         setEvaluations(data.evaluations || [])
       } else {
         setError("Failed to load evaluations")
@@ -77,6 +89,7 @@ export default function PropertyEvaluationDashboard({ propertyId, propertyName }
         setShowCreateForm(false)
         setNewEvaluation({ clientName: "", propertyAddress: "", createdBy: "" })
         fetchEvaluations()
+        onEvaluationChange?.() // Notify parent of evaluation change
       } else {
         setError("Failed to create evaluation")
       }
@@ -86,35 +99,141 @@ export default function PropertyEvaluationDashboard({ propertyId, propertyName }
   }
 
   const updateEvaluationItem = async (itemId: string, updates: Partial<PropertyEvaluationItem>) => {
-    try {
-      // Find the evaluation that contains this item
-      const evaluation = evaluations.find(evaluationItem => 
-        evaluationItem.evaluationItems.some(item => item.id === itemId)
-      )
-      
-      if (!evaluation) {
-        setError("Evaluation not found")
-        return
-      }
+    // Clear existing timeout for this item
+    const existingTimeout = updateTimeouts.get(itemId)
+    if (existingTimeout) {
+      clearTimeout(existingTimeout)
+    }
 
-      const response = await fetch(`/api/properties/${propertyId}/evaluations/${evaluation.id}/items`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          items: [{
-            id: itemId,
-            ...updates
-          }]
+    // Find the evaluation that contains this item
+    const evaluation = evaluations.find(evaluationItem => 
+      evaluationItem.evaluationItems.some(item => item.id === itemId)
+    )
+    
+    if (!evaluation) {
+      setError("Evaluation not found")
+      return
+    }
+
+    // Optimistic update - update the UI immediately
+    setEvaluations(prevEvaluations => 
+      prevEvaluations.map(evaluationItem => {
+        if (evaluationItem.id === evaluation.id) {
+          const updatedItems = evaluationItem.evaluationItems.map(item => 
+            item.id === itemId ? { ...item, ...updates } : item
+          )
+          
+          // Recalculate totals
+          const totalScore = updatedItems.reduce((sum, item) => sum + item.score, 0)
+          const maxScore = updatedItems.length * 10
+          const overallPercentage = maxScore > 0 ? (totalScore / maxScore) * 100 : 0
+          
+          return {
+            ...evaluationItem,
+            evaluationItems: updatedItems,
+            totalScore,
+            maxScore,
+            overallPercentage
+          }
+        }
+        return evaluationItem
+      })
+    )
+
+    // Debounce the server update
+    const timeout = setTimeout(async () => {
+      try {
+        const response = await fetch(`/api/properties/${propertyId}/evaluations/${evaluation.id}/items`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            items: [{
+              id: itemId,
+              ...updates
+            }]
+          })
         })
+
+        if (!response.ok) {
+          // Revert optimistic update on error
+          fetchEvaluations()
+          setError("Failed to update evaluation item")
+        } else {
+          // Notify parent of evaluation change on successful update
+          onEvaluationChange?.()
+        }
+      } catch (error) {
+        // Revert optimistic update on error
+        fetchEvaluations()
+        setError("Failed to update evaluation item")
+      }
+    }, 500) // 500ms debounce
+
+    // Store the timeout
+    setUpdateTimeouts(prev => {
+      const newMap = new Map(prev)
+      newMap.set(itemId, timeout)
+      return newMap
+    })
+  }
+
+  const deleteEvaluation = async (evaluationId: string) => {
+    if (!confirm("Are you sure you want to delete this evaluation? This action cannot be undone.")) {
+      return
+    }
+
+    try {
+      const response = await fetch(`/api/properties/${propertyId}/evaluations/${evaluationId}`, {
+        method: "DELETE"
       })
 
       if (response.ok) {
         fetchEvaluations()
+        onEvaluationChange?.() // Notify parent of evaluation change
       } else {
-        setError("Failed to update evaluation item")
+        setError("Failed to delete evaluation")
       }
     } catch (error) {
-      setError("Failed to update evaluation item")
+      setError("Failed to delete evaluation")
+    }
+  }
+
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    if (file) {
+      setImportFile(file)
+    }
+  }
+
+  const handleImport = async () => {
+    if (!importFile) {
+      setError("Please select a file to import")
+      return
+    }
+
+    setImporting(true)
+    try {
+      const formData = new FormData()
+      formData.append("file", importFile)
+
+      const response = await fetch(`/api/properties/${propertyId}/evaluations/import`, {
+        method: "POST",
+        body: formData
+      })
+
+      if (response.ok) {
+        setShowImportForm(false)
+        setImportFile(null)
+        fetchEvaluations()
+        onEvaluationChange?.() // Notify parent of evaluation change
+      } else {
+        const errorData = await response.json() as { error?: string }
+        setError(errorData.error || "Failed to import evaluation")
+      }
+    } catch (error) {
+      setError("Failed to import evaluation")
+    } finally {
+      setImporting(false)
     }
   }
 
@@ -148,12 +267,20 @@ export default function PropertyEvaluationDashboard({ propertyId, propertyName }
         <h2 className="text-xl font-semibold text-ponte-black font-header">
           Property Evaluation Dashboard
         </h2>
-        <button
-          onClick={() => setShowCreateForm(true)}
-          className="bg-ponte-terracotta text-white px-4 py-2 rounded-lg hover:bg-ponte-terracotta/90 transition-colors font-body"
-        >
-          New Evaluation
-        </button>
+        <div className="flex gap-2">
+          <button
+            onClick={() => setShowImportForm(true)}
+            className="bg-ponte-olive text-white px-4 py-2 rounded-lg hover:bg-ponte-olive/90 transition-colors font-body"
+          >
+            📊 Import Excel
+          </button>
+          <button
+            onClick={() => setShowCreateForm(true)}
+            className="bg-ponte-terracotta text-white px-4 py-2 rounded-lg hover:bg-ponte-terracotta/90 transition-colors font-body"
+          >
+            New Evaluation
+          </button>
+        </div>
       </div>
 
       {error && (
@@ -214,6 +341,71 @@ export default function PropertyEvaluationDashboard({ propertyId, propertyName }
         </div>
       )}
 
+      {showImportForm && (
+        <div className="bg-ponte-cream rounded-lg p-4 mb-6">
+          <h3 className="text-lg font-semibold text-ponte-black mb-4 font-header">Import Evaluation from Excel</h3>
+          <div className="mb-4">
+            <label className="block text-sm font-medium text-ponte-black mb-2 font-body">
+              Select Excel/CSV File
+            </label>
+            <input
+              type="file"
+              accept=".xlsx,.xls,.csv"
+              onChange={handleFileChange}
+              className="w-full border border-ponte-sand rounded-md px-3 py-2 focus:ring-ponte-terracotta focus:border-ponte-terracotta font-body"
+            />
+            <p className="text-xs text-ponte-olive mt-1 font-body">
+              Supported formats: .xlsx, .xls, .csv. Supports Ponte evaluation format, table format, and field-value format. Avoid merged cells for best results.
+            </p>
+            <div className="mt-2 p-3 bg-ponte-sand rounded text-xs text-ponte-black">
+              <strong>Ponte Evaluation Format (Recommended):</strong><br/>
+              <div className="mt-1 text-xs">
+                <div>Client Name: [Client Name]</div>
+                <div>Date: [Date]</div>
+                <div>Created by: [Evaluator Name]</div>
+                <div>Property Address: [Address]</div>
+                <div className="mt-2">
+                  <table className="w-full">
+                    <thead>
+                      <tr><td className="font-bold">CATEGORIES</td><td className="font-bold">NOTES</td><td className="font-bold">SCORE (1 to 10)</td><td className="font-bold">DATE</td></tr>
+                    </thead>
+                    <tbody>
+                      <tr><td>LEGAL STATUS</td><td></td><td></td><td></td></tr>
+                      <tr><td>1. Liens on property...</td><td>Notes here</td><td>8</td><td>2024-01-15</td></tr>
+                      <tr><td>2. Notary selected...</td><td>More notes</td><td>7</td><td>2024-01-15</td></tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+              <br/>
+              <strong>Other Supported Formats:</strong><br/>
+              <div className="mt-1 text-xs">
+                <strong>Table Format:</strong> Category | Item | Score | Notes<br/>
+                <strong>Field-Value Format:</strong> Field | Value
+              </div>
+            </div>
+          </div>
+          <div className="flex gap-2">
+            <button
+              onClick={handleImport}
+              disabled={!importFile || importing}
+              className="bg-ponte-olive text-white px-4 py-2 rounded-lg hover:bg-ponte-olive/90 transition-colors font-body disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {importing ? "Importing..." : "Import Evaluation"}
+            </button>
+            <button
+              onClick={() => {
+                setShowImportForm(false)
+                setImportFile(null)
+              }}
+              className="bg-ponte-sand text-ponte-black px-4 py-2 rounded-lg hover:bg-ponte-sand/90 transition-colors font-body"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
+
       {evaluations.length === 0 ? (
         <div className="text-center py-8">
           <p className="text-ponte-olive font-body">No evaluations found. Create your first evaluation to get started.</p>
@@ -225,6 +417,7 @@ export default function PropertyEvaluationDashboard({ propertyId, propertyName }
               key={evaluation.id}
               evaluation={evaluation}
               onUpdateItem={updateEvaluationItem}
+              onDelete={deleteEvaluation}
             />
           ))}
         </div>

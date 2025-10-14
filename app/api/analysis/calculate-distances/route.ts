@@ -1,166 +1,99 @@
-import { NextRequest, NextResponse } from "next/server"
-import { getServerSession } from "next-auth"
-import { authOptions } from "lib/auth"
-import { prisma } from "lib/prisma"
+import { NextRequest, NextResponse } from 'next/server'
+import { getServerSession } from 'next-auth'
+import { authOptions } from 'lib/auth'
+import { prisma } from 'lib/prisma'
 
-// POST /api/analysis/calculate-distances - Calculate distances between all properties and destinations
 export async function POST(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions)
-    
-    if (!session?.user || !(session.user as any).id) {
+    if (!session?.user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    const userId = (session.user as any).id
-
-    // Get all properties and destinations for the user
-    const properties = await prisma.property.findMany({
-      where: { userId }
-    })
-    
-    const destinations = await prisma.destination.findMany({
-      where: { userId }
-    })
+    // Get all properties and destinations
+    const [properties, destinations] = await Promise.all([
+      prisma.property.findMany({
+        where: { userId: (session.user as any).id }
+      }),
+      prisma.destination.findMany()
+    ])
 
     if (properties.length === 0 || destinations.length === 0) {
-      return NextResponse.json({ error: "No properties or destinations found" }, { status: 400 })
+      return NextResponse.json({ 
+        success: false, 
+        error: "No properties or destinations found" 
+      }, { status: 400 })
     }
 
-    // Get all existing distances to identify missing pairs
-    const existingDistances = await prisma.propertyDistance.findMany({
-      where: {
-        property: { userId },
-        destination: { userId }
-      }
-    })
+    let calculated = 0
+    let errors = 0
 
-    // Create a set of existing property-destination pairs
-    const existingPairs = new Set(
-      existingDistances.map(d => `${d.propertyId}-${d.destinationId}`)
-    )
-
-    // Find missing pairs that need calculation
-    const missingPairs = []
+    // Calculate distances for each property-destination pair
     for (const property of properties) {
       for (const destination of destinations) {
-        const pairKey = `${property.id}-${destination.id}`
-        if (!existingPairs.has(pairKey)) {
-          missingPairs.push({ property, destination })
-        }
-      }
-    }
-
-    console.log(`Found ${missingPairs.length} missing pairs to calculate`)
-
-    if (missingPairs.length === 0) {
-      return NextResponse.json({
-        success: true,
-        calculated: 0,
-        errors: 0,
-        message: "All distances already calculated",
-        results: [],
-        errors: []
-      })
-    }
-
-    const results = []
-    const errors = []
-    const batchSize = 10
-
-    // Process in batches
-    for (let i = 0; i < missingPairs.length; i += batchSize) {
-      const batch = missingPairs.slice(i, i + batchSize)
-      console.log(`Processing batch ${Math.floor(i / batchSize) + 1} of ${Math.ceil(missingPairs.length / batchSize)} (${batch.length} pairs)`)
-
-      // Process batch concurrently
-      const batchPromises = batch.map(async ({ property, destination }) => {
         try {
-          // Calculate all three distance types
-          const [drivingData, walkingData, transitData] = await Promise.all([
-            calculateDistance(property.latitude, property.longitude, destination.latitude, destination.longitude),
-            calculateWalkingDistance(property.latitude, property.longitude, destination.latitude, destination.longitude),
-            calculateTransitDistance(property.latitude, property.longitude, destination.latitude, destination.longitude)
-          ])
+          // Check if distance already exists
+          const existingDistance = await prisma.propertyDistance.findFirst({
+            where: {
+              propertyId: property.id,
+              destinationId: destination.id
+            }
+          })
 
-          if (drivingData) {
-            // Convert meters to miles and kilometers, rounded to whole numbers
-            const distanceMiles = drivingData.distance ? Math.round(drivingData.distance / 1609.34) : null
-            const distanceKm = drivingData.distance ? Math.round(drivingData.distance / 1000) : null
-            const durationMinutes = drivingData.duration ? Math.round(drivingData.duration / 60) : null
-            
-            // Convert walking data
-            const walkingDurationMinutes = walkingData?.duration ? Math.round(walkingData.duration / 60) : null
-            
-            // Convert transit data
-            const transitDurationMinutes = transitData?.duration ? Math.round(transitData.duration / 60) : null
+          if (existingDistance) {
+            continue // Skip if already calculated
+          }
 
-            // Create new record
-            const savedDistance = await prisma.propertyDistance.create({
+          // Calculate distance using Google Maps Distance Matrix API
+          const distance = await calculateDistance(
+            property.latitude,
+            property.longitude,
+            destination.latitude,
+            destination.longitude
+          )
+
+          if (distance) {
+            // Save to database
+            await prisma.propertyDistance.create({
               data: {
                 propertyId: property.id,
                 destinationId: destination.id,
-                drivingDistance: drivingData.distance,
-                drivingDuration: drivingData.duration,
-                distanceMiles: distanceMiles,
-                distanceKm: distanceKm,
-                durationMinutes: durationMinutes,
-                walkingDistance: walkingData?.distance || null,
-                walkingDuration: walkingData?.duration || null,
-                walkingDurationMinutes: walkingDurationMinutes,
-                transitDistance: transitData?.distance || null,
-                transitDuration: transitData?.duration || null,
-                transitDurationMinutes: transitDurationMinutes
+                drivingDistance: distance.drivingDistance,
+                drivingDuration: distance.drivingDuration,
+                drivingDistanceText: distance.drivingDistanceText,
+                drivingDurationText: distance.drivingDurationText,
+                transitDistance: distance.transitDistance,
+                transitDuration: distance.transitDuration,
+                transitDistanceText: distance.transitDistanceText,
+                transitDurationText: distance.transitDurationText,
+                walkingDistance: distance.walkingDistance,
+                walkingDuration: distance.walkingDuration,
+                walkingDistanceText: distance.walkingDistanceText,
+                walkingDurationText: distance.walkingDurationText
               }
             })
-
-            console.log(`Calculated distance: ${property.id} -> ${destination.id}`)
-            return { success: true, data: savedDistance }
-          } else {
-            throw new Error("Failed to get driving data from Google Maps API")
+            calculated++
           }
         } catch (error) {
-          console.error(`Error calculating distance for ${property.id} -> ${destination.id}:`, error)
-          return { 
-            success: false, 
-            error: {
-              propertyId: property.id,
-              destinationId: destination.id,
-              error: error instanceof Error ? error.message : "Unknown error"
-            }
-          }
+          console.error(`Error calculating distance for property ${property.id} to destination ${destination.id}:`, error)
+          errors++
         }
-      })
-
-      // Wait for batch to complete
-      const batchResults = await Promise.all(batchPromises)
-      
-      // Process results
-      batchResults.forEach(result => {
-        if (result.success) {
-          results.push(result.data)
-        } else {
-          errors.push(result.error)
-        }
-      })
-
-      // Add pause between batches (except for the last batch)
-      if (i + batchSize < missingPairs.length) {
-        console.log("Pausing between batches...")
-        await new Promise(resolve => setTimeout(resolve, 2000)) // 2 second pause
       }
     }
 
     return NextResponse.json({
       success: true,
-      calculated: results.length,
-      errors: errors.length,
-      results,
-      errors
+      calculated,
+      errors,
+      message: `Calculated ${calculated} distances${errors > 0 ? ` with ${errors} errors` : ''}`
     })
+
   } catch (error) {
-    console.error("Error calculating distances:", error)
-    return NextResponse.json({ error: "Failed to calculate distances" }, { status: 500 })
+    console.error('Error in calculate-distances API:', error)
+    return NextResponse.json({ 
+      success: false, 
+      error: "Internal server error" 
+    }, { status: 500 })
   }
 }
 
@@ -169,138 +102,54 @@ async function calculateDistance(
   originLng: number,
   destLat: number,
   destLng: number
-): Promise<{ distance: number; duration: number } | null> {
-  try {
-    // Call Google Distance Matrix API directly
-    const apiKey = process.env.GOOGLE_MAPS_GEOCODING_API_KEY || process.env.GOOGLE_MAPS_API_KEY
-    if (!apiKey) {
-      throw new Error("Google Maps API key not found")
-    }
-
-    const origins = `${originLat},${originLng}`
-    const destinations = `${destLat},${destLng}`
-    const url = `https://maps.googleapis.com/maps/api/distancematrix/json?origins=${origins}&destinations=${destinations}&units=metric&mode=driving&key=${apiKey}`
-
-    const response = await fetch(url)
-
-    if (!response.ok) {
-      throw new Error(`Distance Matrix API error: ${response.status}`)
-    }
-
-    const data = await response.json() as any
-    
-    if (data.rows && data.rows[0] && data.rows[0].elements && data.rows[0].elements[0]) {
-      const element = data.rows[0].elements[0]
-      
-      if (element.status === "OK") {
-        return {
-          distance: element.distance.value, // in meters
-          duration: element.duration.value  // in seconds
-        }
-      } else {
-        console.error("Distance Matrix API returned error:", element.status)
-        return null
-      }
-    }
-
-    console.error("Invalid response from Distance Matrix API:", data)
-    return null
-  } catch (error) {
-    console.error("Error calling Distance Matrix API:", error)
-    return null
+) {
+  const googleMapsApiKey = process.env.GOOGLE_MAPS_API_KEY
+  if (!googleMapsApiKey) {
+    throw new Error('Google Maps API key not configured')
   }
-}
 
-async function calculateWalkingDistance(
-  originLat: number,
-  originLng: number,
-  destLat: number,
-  destLng: number
-): Promise<{ distance: number; duration: number } | null> {
+  const origin = `${originLat},${originLng}`
+  const destination = `${destLat},${destLng}`
+
   try {
-    // Call Google Distance Matrix API for walking
-    const apiKey = process.env.GOOGLE_MAPS_GEOCODING_API_KEY || process.env.GOOGLE_MAPS_API_KEY
-    if (!apiKey) {
-      throw new Error("Google Maps API key not found")
+    // Calculate driving distance
+    const drivingResponse = await fetch(
+      `https://maps.googleapis.com/maps/api/distancematrix/json?origins=${origin}&destinations=${destination}&mode=driving&key=${googleMapsApiKey}`
+    )
+    const drivingData = await drivingResponse.json()
+
+    // Calculate transit distance
+    const transitResponse = await fetch(
+      `https://maps.googleapis.com/maps/api/distancematrix/json?origins=${origin}&destinations=${destination}&mode=transit&key=${googleMapsApiKey}`
+    )
+    const transitData = await transitResponse.json()
+
+    // Calculate walking distance
+    const walkingResponse = await fetch(
+      `https://maps.googleapis.com/maps/api/distancematrix/json?origins=${origin}&destinations=${destination}&mode=walking&key=${googleMapsApiKey}`
+    )
+    const walkingData = await walkingResponse.json()
+
+    const drivingElement = drivingData.rows[0]?.elements[0]
+    const transitElement = transitData.rows[0]?.elements[0]
+    const walkingElement = walkingData.rows[0]?.elements[0]
+
+    return {
+      drivingDistance: drivingElement?.distance?.value || 0,
+      drivingDuration: drivingElement?.duration?.value || 0,
+      drivingDistanceText: drivingElement?.distance?.text || '',
+      drivingDurationText: drivingElement?.duration?.text || '',
+      transitDistance: transitElement?.distance?.value || 0,
+      transitDuration: transitElement?.duration?.value || 0,
+      transitDistanceText: transitElement?.distance?.text || '',
+      transitDurationText: transitElement?.duration?.text || '',
+      walkingDistance: walkingElement?.distance?.value || 0,
+      walkingDuration: walkingElement?.duration?.value || 0,
+      walkingDistanceText: walkingElement?.distance?.text || '',
+      walkingDurationText: walkingElement?.duration?.text || ''
     }
-
-    const origins = `${originLat},${originLng}`
-    const destinations = `${destLat},${destLng}`
-    const url = `https://maps.googleapis.com/maps/api/distancematrix/json?origins=${origins}&destinations=${destinations}&units=metric&mode=walking&key=${apiKey}`
-
-    const response = await fetch(url)
-
-    if (!response.ok) {
-      throw new Error(`Distance Matrix API error: ${response.status}`)
-    }
-
-    const data = await response.json() as any
-    
-    if (data.rows && data.rows[0] && data.rows[0].elements && data.rows[0].elements[0]) {
-      const element = data.rows[0].elements[0]
-      
-      if (element.status === "OK") {
-        return {
-          distance: element.distance.value, // in meters
-          duration: element.duration.value  // in seconds
-        }
-      } else {
-        console.error("Distance Matrix API returned error for walking:", element.status)
-        return null
-      }
-    }
-
-    console.error("Invalid response from Distance Matrix API for walking:", data)
-    return null
   } catch (error) {
-    console.error("Error calling Distance Matrix API for walking:", error)
-    return null
-  }
-}
-
-async function calculateTransitDistance(
-  originLat: number,
-  originLng: number,
-  destLat: number,
-  destLng: number
-): Promise<{ distance: number; duration: number } | null> {
-  try {
-    // Call Google Distance Matrix API for transit
-    const apiKey = process.env.GOOGLE_MAPS_GEOCODING_API_KEY || process.env.GOOGLE_MAPS_API_KEY
-    if (!apiKey) {
-      throw new Error("Google Maps API key not found")
-    }
-
-    const origins = `${originLat},${originLng}`
-    const destinations = `${destLat},${destLng}`
-    const url = `https://maps.googleapis.com/maps/api/distancematrix/json?origins=${origins}&destinations=${destinations}&units=metric&mode=transit&key=${apiKey}`
-
-    const response = await fetch(url)
-
-    if (!response.ok) {
-      throw new Error(`Distance Matrix API error: ${response.status}`)
-    }
-
-    const data = await response.json() as any
-    
-    if (data.rows && data.rows[0] && data.rows[0].elements && data.rows[0].elements[0]) {
-      const element = data.rows[0].elements[0]
-      
-      if (element.status === "OK") {
-        return {
-          distance: element.distance.value, // in meters
-          duration: element.duration.value  // in seconds
-        }
-      } else {
-        console.error("Distance Matrix API returned error for transit:", element.status)
-        return null
-      }
-    }
-
-    console.error("Invalid response from Distance Matrix API for transit:", data)
-    return null
-  } catch (error) {
-    console.error("Error calling Distance Matrix API for transit:", error)
-    return null
+    console.error('Error calling Google Maps API:', error)
+    throw error
   }
 }

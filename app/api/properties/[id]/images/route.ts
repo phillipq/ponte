@@ -78,12 +78,12 @@ export async function POST(
     }
 
     // Update property with new images
-    const currentImages = property.picturesUploaded || []
+    const currentImages = property.propertyPhotos || []
     const updatedImages = [...currentImages, ...uploadedImages]
     
     await prisma.property.update({
       where: { id: id },
-      data: { picturesUploaded: updatedImages }
+      data: { propertyPhotos: updatedImages }
     })
 
     return NextResponse.json({ 
@@ -123,12 +123,12 @@ export async function DELETE(
     }
 
     // Remove image from array
-    const currentImages = property.picturesUploaded || []
+    const currentImages = property.propertyPhotos || []
     const updatedImages = currentImages.filter(img => img !== imageUrl)
     
     await prisma.property.update({
       where: { id: id },
-      data: { picturesUploaded: updatedImages }
+      data: { propertyPhotos: updatedImages }
     })
 
     // TODO: Delete the actual file from filesystem

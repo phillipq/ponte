@@ -206,13 +206,34 @@ export async function GET(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions)
     
-    if (!session?.user?.id) {
+    if (!session?.user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    }
+
+    const userId = (session.user as any).id
+    if (!userId) {
+      return NextResponse.json({ error: "User ID not found" }, { status: 401 })
     }
 
     const properties = await prisma.property.findMany({
       where: {
-        userId: session.user.id
+        userId: userId
+      },
+      include: {
+        partner: {
+          select: {
+            id: true,
+            name: true,
+            email: true
+          }
+        },
+        user: {
+          select: {
+            id: true,
+            name: true,
+            email: true
+          }
+        }
       },
       orderBy: {
         createdAt: 'desc'
@@ -234,8 +255,13 @@ export async function POST(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions)
     
-    if (!session?.user?.id) {
+    if (!session?.user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    }
+
+    const userId = (session.user as any).id
+    if (!userId) {
+      return NextResponse.json({ error: "User ID not found" }, { status: 401 })
     }
 
     const body = await request.json()
@@ -246,7 +272,7 @@ export async function POST(request: NextRequest) {
 
     const property = await prisma.property.create({
       data: {
-        userId: session.user.id,
+        userId: userId,
         propertyNumber: propertyNumber,
         name: data.name,
         tags: data.tags,
@@ -359,7 +385,7 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { error: error.errors[0].message },
+        { error: error.errors[0]?.message || "Validation error" },
         { status: 400 }
       )
     }
@@ -377,8 +403,13 @@ export async function DELETE(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions)
     
-    if (!session?.user?.id) {
+    if (!session?.user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    }
+
+    const userId = (session.user as any).id
+    if (!userId) {
+      return NextResponse.json({ error: "User ID not found" }, { status: 401 })
     }
 
     const { searchParams } = new URL(request.url)
@@ -392,7 +423,7 @@ export async function DELETE(request: NextRequest) {
     const property = await prisma.property.findFirst({
       where: {
         id: propertyId,
-        userId: session.user.id
+        userId: userId
       }
     })
 
@@ -422,8 +453,13 @@ export async function PUT(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions)
     
-    if (!session?.user?.id) {
+    if (!session?.user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    }
+
+    const userId = (session.user as any).id
+    if (!userId) {
+      return NextResponse.json({ error: "User ID not found" }, { status: 401 })
     }
 
     const { searchParams } = new URL(request.url)
@@ -437,7 +473,7 @@ export async function PUT(request: NextRequest) {
     const existingProperty = await prisma.property.findFirst({
       where: {
         id: propertyId,
-        userId: session.user.id
+        userId: userId
       }
     })
 
@@ -566,7 +602,7 @@ export async function PUT(request: NextRequest) {
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { error: error.errors[0].message },
+        { error: error.errors[0]?.message || "Validation error" },
         { status: 400 }
       )
     }

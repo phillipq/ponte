@@ -51,6 +51,10 @@ export default function MapPage() {
   const [showInlineForm, setShowInlineForm] = useState(false)
   const [clickedLocation, setClickedLocation] = useState<{ lat: number; lng: number } | null>(null)
   
+  // Marker management
+  const [propertyMarkers, setPropertyMarkers] = useState<google.maps.Marker[]>([])
+  const [destinationMarkers, setDestinationMarkers] = useState<google.maps.Marker[]>([])
+  
   // Default map location (can be configured)
   const [defaultLocation, setDefaultLocation] = useState({
     lat: 40.7128, // New York City
@@ -1229,6 +1233,9 @@ export default function MapPage() {
   const fetchData = async () => {
     console.log("Starting fetchData...")
     try {
+      // Clear existing markers before fetching new data
+      clearAllMarkers()
+      
       const [propertiesRes, destinationsRes] = await Promise.all([
         fetch("/api/properties"),
         fetch("/api/destinations")
@@ -1450,6 +1457,20 @@ export default function MapPage() {
     }
   }
 
+  const clearAllMarkers = () => {
+    // Clear property markers
+    propertyMarkers.forEach(marker => {
+      marker.setMap(null)
+    })
+    setPropertyMarkers([])
+    
+    // Clear destination markers
+    destinationMarkers.forEach(marker => {
+      marker.setMap(null)
+    })
+    setDestinationMarkers([])
+  }
+
   const addPropertyMarker = (property: Property) => {
     if (!map) return
 
@@ -1501,6 +1522,9 @@ export default function MapPage() {
       setClickedLocation({ lat: property.latitude, lng: property.longitude })
       setShowInlineForm(true)
     })
+
+    // Add to property markers array
+    setPropertyMarkers(prev => [...prev, marker])
   }
 
   const addDestinationMarker = (destination: Destination, category: string) => {
@@ -1579,11 +1603,16 @@ export default function MapPage() {
         }
       }
     })
+
+    // Add to destination markers array
+    setDestinationMarkers(prev => [...prev, marker])
   }
 
   // Add markers when map and data are loaded
   useEffect(() => {
     if (map && properties.length > 0) {
+      // Clear existing property markers first
+      clearAllMarkers()
       properties.forEach((property) => {
         addPropertyMarker(property)
       })
@@ -1592,6 +1621,8 @@ export default function MapPage() {
 
   useEffect(() => {
     if (map && destinations.length > 0) {
+      // Clear existing destination markers first
+      clearAllMarkers()
       destinations.forEach((dest) => {
         addDestinationMarker(dest, dest.category)
       })
@@ -2063,8 +2094,8 @@ export default function MapPage() {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
-          <p className="mt-4 text-gray-600">Loading...</p>
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-ponte-terracotta mx-auto"></div>
+          <p className="mt-4 text-ponte-olive font-body">Loading Map...</p>
         </div>
       </div>
     )
@@ -2448,9 +2479,9 @@ export default function MapPage() {
           {mapLoading && (
             <div className="absolute inset-0 bg-white bg-opacity-75 flex items-center justify-center">
               <div className="text-center">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
-                <p className="mt-2 text-sm text-gray-600">Loading map...</p>
-                <p className="mt-1 text-xs text-gray-500">Check browser console for debug info</p>
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-ponte-terracotta mx-auto"></div>
+                <p className="mt-2 text-sm text-ponte-olive font-body">Loading map...</p>
+                <p className="mt-1 text-xs text-ponte-olive">Check browser console for debug info</p>
               </div>
             </div>
           )}

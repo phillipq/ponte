@@ -156,6 +156,7 @@ export default function AnalysisPage() {
   const [tourCalculating, setTourCalculating] = useState(false)
   const [tourSteps, setTourSteps] = useState<any[]>([])
   const [draggedStep, setDraggedStep] = useState<number | null>(null)
+  const [optimizeRoute, setOptimizeRoute] = useState(true)
   const [mapInstance, setMapInstance] = useState<any>(null)
   const [directionsService, setDirectionsService] = useState<any>(null)
   const [directionsRenderer, setDirectionsRenderer] = useState<any>(null)
@@ -335,7 +336,7 @@ export default function AnalysisPage() {
       const response = await fetch('/api/tours/calculate-route', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ tourSteps })
+        body: JSON.stringify({ tourSteps, optimize: optimizeRoute })
       })
 
       if (response.ok) {
@@ -357,7 +358,7 @@ export default function AnalysisPage() {
                 tourSteps[tourSteps.length - 1].longitude
               ),
               waypoints: waypoints,
-              optimizeWaypoints: waypoints.length > 0,
+              optimizeWaypoints: optimizeRoute && waypoints.length > 0,
               travelMode: (window as any).google.maps.TravelMode.DRIVING
             }
 
@@ -413,34 +414,12 @@ export default function AnalysisPage() {
     }
   }, [mapInstance, tourSteps])
 
-  // Build tour steps when starting point, properties, or destinations change
+  // Build tour steps when properties or destinations change
   useEffect(() => {
     const steps = []
     
-    // Add starting point as step 1
-    if (tourStartingPoint && tourStartingPoint.name) {
-      steps.push({
-        step: 1,
-        type: tourStartingPoint.type,
-        id: tourStartingPoint.id,
-        name: tourStartingPoint.name,
-        address: tourStartingPoint.address || '',
-        latitude: tourStartingPoint.latitude,
-        longitude: tourStartingPoint.longitude,
-        propertyType: tourStartingPoint.type === 'property' ? 
-          properties.find(p => p.id === tourStartingPoint.id)?.propertyType : undefined,
-        category: tourStartingPoint.type === 'destination' ? 
-          destinations.find(d => d.id === tourStartingPoint.id)?.category : undefined
-      })
-    }
-    
-    // Add selected properties (excluding starting point if it's a property)
-    tourProperties.forEach((propertyId, index) => {
-      // Skip if this property is already the starting point
-      if (tourStartingPoint?.type === 'property' && tourStartingPoint.id === propertyId) {
-        return
-      }
-      
+    // Add selected properties
+    tourProperties.forEach((propertyId) => {
       const property = properties.find(p => p.id === propertyId)
       if (property) {
         steps.push({
@@ -456,13 +435,8 @@ export default function AnalysisPage() {
       }
     })
     
-    // Add selected destinations (excluding starting point if it's a destination)
-    tourDestinations.forEach((destinationId, index) => {
-      // Skip if this destination is already the starting point
-      if (tourStartingPoint?.type === 'destination' && tourStartingPoint.id === destinationId) {
-        return
-      }
-      
+    // Add selected destinations
+    tourDestinations.forEach((destinationId) => {
       const destination = destinations.find(d => d.id === destinationId)
       if (destination) {
         steps.push({
@@ -479,7 +453,7 @@ export default function AnalysisPage() {
     })
     
     setTourSteps(steps)
-  }, [tourStartingPoint, tourProperties, tourDestinations, properties, destinations])
+  }, [tourProperties, tourDestinations, properties, destinations])
 
   // Tour saving and loading functions
   const saveTour = async () => {
@@ -537,7 +511,6 @@ export default function AnalysisPage() {
 
   const loadTour = (tour: any) => {
     // Restore tour data
-    setTourStartingPoint(tour.startingPoint)
     setTourSteps(tour.steps)
     setTourRoute(tour.route)
     
@@ -613,8 +586,8 @@ export default function AnalysisPage() {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
-          <p className="mt-4 text-gray-600">Loading...</p>
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-ponte-terracotta mx-auto"></div>
+          <p className="mt-4 text-ponte-olive font-body">Loading Analysis...</p>
         </div>
       </div>
     )
@@ -731,12 +704,23 @@ export default function AnalysisPage() {
                       </thead>
                       <tbody className="bg-white divide-y divide-ponte-sand">
                         {properties && properties.length > 0 ? properties.map(property => (
-                          <tr key={property.id} className="hover:bg-ponte-cream">
+                          <tr 
+                            key={property.id} 
+                            className="hover:bg-ponte-cream cursor-pointer"
+                            onClick={() => {
+                              if (selectedProperties.includes(property.id)) {
+                                setSelectedProperties(selectedProperties.filter(id => id !== property.id))
+                              } else {
+                                setSelectedProperties([...selectedProperties, property.id])
+                              }
+                            }}
+                          >
                             <td className="px-3 py-2 whitespace-nowrap">
                               <input
                                 type="checkbox"
                                 checked={selectedProperties.includes(property.id)}
                                 onChange={(e) => {
+                                  e.stopPropagation()
                                   if (e.target.checked) {
                                     setSelectedProperties([...selectedProperties, property.id])
                                   } else {
@@ -789,12 +773,23 @@ export default function AnalysisPage() {
                       </thead>
                       <tbody className="bg-white divide-y divide-ponte-sand">
                         {destinations && destinations.length > 0 ? destinations.map(destination => (
-                          <tr key={destination.id} className="hover:bg-ponte-cream">
+                          <tr 
+                            key={destination.id} 
+                            className="hover:bg-ponte-cream cursor-pointer"
+                            onClick={() => {
+                              if (selectedDestinations.includes(destination.id)) {
+                                setSelectedDestinations(selectedDestinations.filter(id => id !== destination.id))
+                              } else {
+                                setSelectedDestinations([...selectedDestinations, destination.id])
+                              }
+                            }}
+                          >
                             <td className="px-3 py-2 whitespace-nowrap">
                               <input
                                 type="checkbox"
                                 checked={selectedDestinations.includes(destination.id)}
                                 onChange={(e) => {
+                                  e.stopPropagation()
                                   if (e.target.checked) {
                                     setSelectedDestinations([...selectedDestinations, destination.id])
                                   } else {
@@ -980,139 +975,15 @@ export default function AnalysisPage() {
             <div className="bg-white rounded-lg shadow border border-ponte-sand p-6">
               <h2 className="text-xl font-semibold text-ponte-black mb-6">Plan Your Tour</h2>
               
-              {/* Starting Point Selection - Single Row */}
-              <div className="mb-8">
-                <h3 className="text-lg font-medium text-ponte-black mb-4">Starting Point</h3>
-                
-                <div className="flex flex-wrap items-center gap-6">
-                  <div className="flex items-center space-x-4">
-                    <label className="flex items-center">
-                      <input
-                        type="radio"
-                        name="startingType"
-                        value="property"
-                        checked={tourStartingPoint?.type === 'property'}
-                        onChange={(e) => {
-                          if (e.target.checked) {
-                            setTourStartingPoint({ type: 'property' })
-                          }
-                        }}
-                        className="mr-2"
-                      />
-                      <span className="text-sm text-ponte-black">Property</span>
-                    </label>
-                    <label className="flex items-center">
-                      <input
-                        type="radio"
-                        name="startingType"
-                        value="destination"
-                        checked={tourStartingPoint?.type === 'destination'}
-                        onChange={(e) => {
-                          if (e.target.checked) {
-                            setTourStartingPoint({ type: 'destination' })
-                          }
-                        }}
-                        className="mr-2"
-                      />
-                      <span className="text-sm text-ponte-black">Destination</span>
-                    </label>
-                    <label className="flex items-center">
-                      <input
-                        type="radio"
-                        name="startingType"
-                        value="custom"
-                        checked={tourStartingPoint?.type === 'custom'}
-                        onChange={(e) => {
-                          if (e.target.checked) {
-                            setTourStartingPoint({ type: 'custom', address: '' })
-                          }
-                        }}
-                        className="mr-2"
-                      />
-                      <span className="text-sm text-ponte-black">Custom Address</span>
-                    </label>
-                  </div>
-
-                  {/* Property Selection */}
-                  {tourStartingPoint?.type === 'property' && (
-                    <div className="flex-1 min-w-64">
-                      <select
-                        value={tourStartingPoint.id || ''}
-                        onChange={(e) => {
-                          const property = properties.find(p => p.id === e.target.value)
-                          if (property) {
-                            setTourStartingPoint({
-                              type: 'property',
-                              id: property.id,
-                              name: property.name || 'Unnamed Property',
-                              address: `${property.streetAddress || ''}, ${property.city || ''}`.trim(),
-                              latitude: property.latitude,
-                              longitude: property.longitude
-                            })
-                          }
-                        }}
-                        className="w-full px-3 py-2 border border-ponte-sand rounded-md focus:outline-none focus:ring-2 focus:ring-ponte-terracotta"
-                      >
-                        <option value="">Select a property...</option>
-                        {properties && properties.length > 0 ? properties.map(property => (
-                          <option key={property.id} value={property.id}>
-                            {property.name || 'Unnamed Property'} - {property.streetAddress}
-                          </option>
-                        )) : (
-                          <option disabled>Loading properties...</option>
-                        )}
-                      </select>
-                    </div>
-                  )}
-
-                  {/* Destination Selection */}
-                  {tourStartingPoint?.type === 'destination' && (
-                    <div className="flex-1 min-w-64">
-                      <select
-                        value={tourStartingPoint.id || ''}
-                        onChange={(e) => {
-                          const destination = destinations.find(d => d.id === e.target.value)
-                          if (destination) {
-                            setTourStartingPoint({
-                              type: 'destination',
-                              id: destination.id,
-                              name: destination.name,
-                              address: destination.address,
-                              latitude: destination.latitude,
-                              longitude: destination.longitude
-                            })
-                          }
-                        }}
-                        className="w-full px-3 py-2 border border-ponte-sand rounded-md focus:outline-none focus:ring-2 focus:ring-ponte-terracotta"
-                      >
-                        <option value="">Select a destination...</option>
-                        {destinations && destinations.length > 0 ? destinations.map(destination => (
-                          <option key={destination.id} value={destination.id}>
-                            {destination.name} - {getCategoryLabel(destination.category)}
-                          </option>
-                        )) : (
-                          <option disabled>Loading destinations...</option>
-                        )}
-                      </select>
-                    </div>
-                  )}
-
-                  {/* Custom Address */}
-                  {tourStartingPoint?.type === 'custom' && (
-                    <div className="flex-1 min-w-64">
-                      <input
-                        type="text"
-                        value={tourStartingPoint.address || ''}
-                        onChange={(e) => setTourStartingPoint({
-                          ...tourStartingPoint,
-                          address: e.target.value
-                        })}
-                        placeholder="Enter address..."
-                        className="w-full px-3 py-2 border border-ponte-sand rounded-md focus:outline-none focus:ring-2 focus:ring-ponte-terracotta"
-                      />
-                    </div>
-                  )}
+              {/* Starting Point Info */}
+              <div className="mb-6 p-4 bg-ponte-cream rounded-lg border border-ponte-sand">
+                <div className="flex items-center space-x-2">
+                  <div className="w-3 h-3 bg-ponte-terracotta rounded-full"></div>
+                  <span className="text-sm font-medium text-ponte-black">Starting Point</span>
                 </div>
+                <p className="text-sm text-ponte-olive mt-1">
+                  The first location in your tour route will be your starting point. You can reorder the route below.
+                </p>
               </div>
 
               {/* Tour Destinations - Side by Side Tables */}
@@ -1140,12 +1011,23 @@ export default function AnalysisPage() {
                       </thead>
                       <tbody className="bg-white divide-y divide-ponte-sand">
                         {properties && properties.length > 0 ? properties.map(property => (
-                          <tr key={property.id} className="hover:bg-ponte-cream">
+                          <tr 
+                            key={property.id} 
+                            className="hover:bg-ponte-cream cursor-pointer"
+                            onClick={() => {
+                              if (tourProperties.includes(property.id)) {
+                                setTourProperties(tourProperties.filter(id => id !== property.id))
+                              } else {
+                                setTourProperties([...tourProperties, property.id])
+                              }
+                            }}
+                          >
                             <td className="px-3 py-2 whitespace-nowrap">
                               <input
                                 type="checkbox"
                                 checked={tourProperties.includes(property.id)}
                                 onChange={(e) => {
+                                  e.stopPropagation()
                                   if (e.target.checked) {
                                     setTourProperties([...tourProperties, property.id])
                                   } else {
@@ -1214,12 +1096,23 @@ export default function AnalysisPage() {
                       </thead>
                       <tbody className="bg-white divide-y divide-ponte-sand">
                         {destinations && destinations.length > 0 ? destinations.map(destination => (
-                          <tr key={destination.id} className="hover:bg-ponte-cream">
+                          <tr 
+                            key={destination.id} 
+                            className="hover:bg-ponte-cream cursor-pointer"
+                            onClick={() => {
+                              if (tourDestinations.includes(destination.id)) {
+                                setTourDestinations(tourDestinations.filter(id => id !== destination.id))
+                              } else {
+                                setTourDestinations([...tourDestinations, destination.id])
+                              }
+                            }}
+                          >
                             <td className="px-3 py-2 whitespace-nowrap">
                               <input
                                 type="checkbox"
                                 checked={tourDestinations.includes(destination.id)}
                                 onChange={(e) => {
+                                  e.stopPropagation()
                                   if (e.target.checked) {
                                     setTourDestinations([...tourDestinations, destination.id])
                                   } else {
@@ -1281,7 +1174,6 @@ export default function AnalysisPage() {
                   </button>
                   <button
                     onClick={() => {
-                      setTourStartingPoint(null)
                       setTourProperties([])
                       setTourDestinations([])
                       setTourSteps([])
@@ -1296,10 +1188,70 @@ export default function AnalysisPage() {
 
               {tourSteps.length > 0 ? (
                 <div className="space-y-2">
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="text-sm text-ponte-olive">
+                      Drag and drop to reorder your tour route. The first location will be your starting point.
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <label className="flex items-center text-sm text-ponte-black">
+                        <input
+                          type="checkbox"
+                          checked={optimizeRoute}
+                          onChange={(e) => setOptimizeRoute(e.target.checked)}
+                          className="mr-2 rounded border-ponte-sand text-ponte-terracotta focus:ring-ponte-terracotta"
+                        />
+                        Optimize Route
+                      </label>
+                      <div className="text-xs text-ponte-olive">
+                        {optimizeRoute ? 'Google will find the most efficient order' : 'Use your custom order'}
+                      </div>
+                    </div>
+                  </div>
                   {tourSteps.map((step, index) => (
-                    <div key={index} className="flex items-center p-3 border border-ponte-sand rounded-lg">
-                      <div className="flex-shrink-0 w-8 h-8 bg-ponte-terracotta text-white rounded-full flex items-center justify-center text-sm font-medium mr-3">
-                        {index + 1}
+                    <div 
+                      key={`${step.id}-${index}`}
+                      draggable
+                      onDragStart={(e) => {
+                        setDraggedStep(index)
+                        e.dataTransfer.effectAllowed = 'move'
+                      }}
+                      onDragOver={(e) => {
+                        e.preventDefault()
+                        e.dataTransfer.dropEffect = 'move'
+                      }}
+                      onDrop={(e) => {
+                        e.preventDefault()
+                        if (draggedStep !== null && draggedStep !== index) {
+                          const newSteps = [...tourSteps]
+                          const draggedItem = newSteps[draggedStep]
+                          newSteps.splice(draggedStep, 1)
+                          newSteps.splice(index, 0, draggedItem)
+                          
+                          // Update step numbers
+                          const updatedSteps = newSteps.map((step, idx) => ({
+                            ...step,
+                            step: idx + 1
+                          }))
+                          
+                          setTourSteps(updatedSteps)
+                        }
+                        setDraggedStep(null)
+                      }}
+                      className={`flex items-center p-3 border rounded-lg cursor-move transition-all ${
+                        draggedStep === index 
+                          ? 'border-ponte-terracotta bg-ponte-cream shadow-md' 
+                          : 'border-ponte-sand hover:border-ponte-terracotta hover:bg-ponte-cream'
+                      }`}
+                    >
+                      <div className="flex-shrink-0 mr-3">
+                        <div className="w-8 h-8 bg-ponte-terracotta text-white rounded-full flex items-center justify-center text-sm font-medium">
+                          {index + 1}
+                        </div>
+                        {index === 0 && (
+                          <div className="text-xs text-ponte-terracotta font-medium text-center mt-1">
+                            START
+                          </div>
+                        )}
                       </div>
                       <div className="flex-1">
                         <div className="text-sm font-medium text-ponte-black">
@@ -1308,6 +1260,14 @@ export default function AnalysisPage() {
                         <div className="text-xs text-ponte-olive">
                           {step.address}
                         </div>
+                        <div className="text-xs text-ponte-olive mt-1">
+                          {step.type === 'property' ? '🏠 Property' : '📍 Destination'}
+                        </div>
+                      </div>
+                      <div className="flex-shrink-0 text-ponte-olive">
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8h16M4 16h16" />
+                        </svg>
                       </div>
                     </div>
                   ))}
@@ -1431,7 +1391,7 @@ export default function AnalysisPage() {
                           </td>
                           <td className="px-6 py-4">
                             <div className="text-sm font-medium text-ponte-black">
-                              {index === 0 ? 'Starting Point' : tourSteps[index - 1]?.name || 'Previous Stop'}
+                              {index === 0 ? tourSteps[0]?.name || 'Starting Point' : tourSteps[index - 1]?.name || 'Previous Stop'}
                             </div>
                             <div className="text-xs text-ponte-olive">↓</div>
                             <div className="text-sm font-medium text-ponte-black">

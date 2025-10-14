@@ -20,6 +20,18 @@ interface Property {
   province?: string | null
   country: string
   createdAt: string
+  // Partner/User information
+  partnerId?: string | null
+  partner?: {
+    id: string
+    name: string
+    email: string
+  } | null
+  user?: {
+    id: string
+    name: string
+    email: string
+  } | null
 }
 
 export default function PropertiesPage() {
@@ -540,8 +552,8 @@ export default function PropertiesPage() {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
-          <p className="mt-4 text-gray-600">Loading...</p>
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-ponte-terracotta mx-auto"></div>
+          <p className="mt-4 text-ponte-olive font-body">Loading Properties...</p>
         </div>
       </div>
     )
@@ -688,6 +700,9 @@ export default function PropertiesPage() {
                   <th className="px-6 py-3 text-left text-xs font-medium text-ponte-black uppercase tracking-wider">
                     Coordinates
                   </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-ponte-black uppercase tracking-wider">
+                    Added By
+                  </th>
                   <th className="px-6 py-3 text-right text-xs font-medium text-ponte-black uppercase tracking-wider">
                     Actions
                   </th>
@@ -696,7 +711,7 @@ export default function PropertiesPage() {
               <tbody className="bg-white divide-y divide-ponte-sand">
                 {filteredProperties.length === 0 ? (
                   <tr>
-                    <td colSpan={8} className="px-6 py-12 text-center text-ponte-olive">
+                    <td colSpan={9} className="px-6 py-12 text-center text-ponte-olive">
                       {filterType || filterTag ? 
                         `No properties found with ${filterType ? `"${getPropertyTypeInfo(filterType).label}" type` : ''}${filterType && filterTag ? ' and ' : ''}${filterTag ? `"${filterTag}" tag` : ''}` : 
                         "No properties added yet"
@@ -766,6 +781,21 @@ export default function PropertiesPage() {
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-ponte-olive">
                           {property.latitude.toFixed(4)}, {property.longitude.toFixed(4)}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-ponte-black">
+                          {property.partner ? (
+                            <div>
+                              <div className="font-medium">{property.partner.name}</div>
+                              <div className="text-xs text-ponte-olive">Partner</div>
+                            </div>
+                          ) : property.user ? (
+                            <div>
+                              <div className="font-medium">{property.user.name}</div>
+                              <div className="text-xs text-ponte-olive">User</div>
+                            </div>
+                          ) : (
+                            <div className="text-ponte-olive">Unknown</div>
+                          )}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                           <button

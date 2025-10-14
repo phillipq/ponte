@@ -25,7 +25,7 @@ export default function NewProperty() {
     longitude: "",
     listingType: "",
     propertyType: "",
-    yearBuilt: "",
+    yearBuiltNew: "",
     ownershipType: "",
     
     // Section 2 - Property Description
@@ -280,22 +280,49 @@ export default function NewProperty() {
     setSuccess("")
 
     try {
+      // Validate required fields
+      if (!formData.name.trim()) {
+        setError("Property name is required")
+        return
+      }
+
+      // Convert string coordinates to numbers
+      const latitude = parseFloat(formData.latitude)
+      const longitude = parseFloat(formData.longitude)
+      
+      if (isNaN(latitude) || isNaN(longitude)) {
+        setError("Valid latitude and longitude coordinates are required")
+        return
+      }
+
+      const processedFormData = {
+        ...formData,
+        latitude,
+        longitude,
+        uploadedPictures: uploadedPictures.map(file => ({
+          name: file.name,
+          size: file.size,
+          type: file.type
+        }))
+      }
+
+      console.log("Sending data to API:", processedFormData)
+
       const response = await fetch("/api/properties", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({
-          ...formData,
-          uploadedPictures: uploadedPictures.map(file => ({
-            name: file.name,
-            size: file.size,
-            type: file.type
-          }))
-        }),
+        body: JSON.stringify(processedFormData),
       })
 
       const data = await response.json() as { success?: boolean; property?: any; error?: string }
+
+      if (!response.ok) {
+        console.error("API Error:", data)
+        setError(data.error || "Failed to create property")
+        return
+      }
 
       if (response.ok) {
         setSuccess("Property created successfully!")
@@ -310,7 +337,7 @@ export default function NewProperty() {
           longitude: "",
           listingType: "",
           propertyType: "",
-          yearBuilt: "",
+          yearBuiltNew: "",
           ownershipType: "",
           
           // Section 2 - Property Description
@@ -646,8 +673,8 @@ export default function NewProperty() {
                     <input
                       type="text"
                       className="w-full rounded-md border-ponte-sand shadow-sm focus:border-ponte-olive focus:ring-ponte-olive"
-                      value={formData.yearBuilt}
-                      onChange={(e) => setFormData({ ...formData, yearBuilt: e.target.value })}
+                      value={formData.yearBuiltNew}
+                      onChange={(e) => setFormData({ ...formData, yearBuiltNew: e.target.value })}
                       placeholder="e.g., 1995"
                     />
                   </div>

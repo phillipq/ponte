@@ -86,16 +86,13 @@ export async function GET(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions)
     
-    if (!session?.user?.id) {
+    if (!session?.user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    const userId = session.user.id as string
+    const userId = (session.user as any).id
 
     const destinations = await prisma.destination.findMany({
-      where: {
-        userId: userId
-      },
       orderBy: {
         name: 'asc'
       }
@@ -116,11 +113,11 @@ export async function POST(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions)
     
-    if (!session?.user?.id) {
+    if (!session?.user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    const userId = session.user.id as string
+    const userId = (session.user as any).id
     const body = await request.json()
     const { name, address, latitude, longitude, category, placeId, metadata, tags, streetAddress, postalCode, city, province, country } = createDestinationSchema.parse(body)
 
@@ -150,7 +147,7 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { error: error.errors[0].message },
+        { error: error.errors[0]?.message || "Validation error" },
         { status: 400 }
       )
     }

@@ -29,9 +29,10 @@ interface PropertyEvaluation {
 interface PropertyEvaluationCardProps {
   evaluation: PropertyEvaluation
   onUpdateItem: (itemId: string, updates: Partial<PropertyEvaluationItem>) => void
+  onDelete: (evaluationId: string) => void
 }
 
-export default function PropertyEvaluationCard({ evaluation, onUpdateItem }: PropertyEvaluationCardProps) {
+export default function PropertyEvaluationCard({ evaluation, onUpdateItem, onDelete }: PropertyEvaluationCardProps) {
   const [activeTab, setActiveTab] = useState("LEGAL_STATUS")
   const [editingItem, setEditingItem] = useState<string | null>(null)
 
@@ -46,6 +47,58 @@ export default function PropertyEvaluationCard({ evaluation, onUpdateItem }: Pro
 
   const handleScoreChange = (itemId: string, score: number) => {
     onUpdateItem(itemId, { score })
+  }
+
+  const exportToExcel = (evaluation: PropertyEvaluation) => {
+    // Create Excel data structure
+    const excelData = []
+    
+    // Add header row
+    excelData.push([
+      "Category",
+      "Item",
+      "Score",
+      "Notes",
+      "Date",
+      "Evaluated By"
+    ])
+    
+    // Add evaluation items
+    evaluation.evaluationItems.forEach(item => {
+      excelData.push([
+        item.category,
+        item.item,
+        item.score,
+        item.notes || "",
+        item.date || "",
+        item.evaluatedBy || ""
+      ])
+    })
+    
+    // Add summary row
+    excelData.push([
+      "TOTAL",
+      "",
+      evaluation.totalScore,
+      "",
+      "",
+      ""
+    ])
+    
+    // Convert to CSV and download
+    const csvContent = excelData.map(row => 
+      row.map(cell => `"${cell}"`).join(",")
+    ).join("\n")
+    
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" })
+    const link = document.createElement("a")
+    const url = URL.createObjectURL(blob)
+    link.setAttribute("href", url)
+    link.setAttribute("download", `evaluation-${evaluation.id}.csv`)
+    link.style.visibility = "hidden"
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
   }
 
   const handleNotesChange = (itemId: string, notes: string) => {
@@ -108,6 +161,22 @@ export default function PropertyEvaluationCard({ evaluation, onUpdateItem }: Pro
             <p className="text-sm text-ponte-olive mt-1 font-body">
               {evaluation.totalScore.toFixed(1)} / {evaluation.maxScore.toFixed(1)} points
             </p>
+            <div className="flex gap-2 mt-3">
+              <button
+                onClick={() => exportToExcel(evaluation)}
+                className="bg-ponte-olive text-white px-3 py-1 rounded text-xs hover:bg-ponte-olive/90 transition-colors font-body"
+                title="Export to Excel"
+              >
+                📊 Export
+              </button>
+              <button
+                onClick={() => onDelete(evaluation.id)}
+                className="bg-red-600 text-white px-3 py-1 rounded text-xs hover:bg-red-700 transition-colors font-body"
+                title="Delete Evaluation"
+              >
+                🗑️ Delete
+              </button>
+            </div>
           </div>
         </div>
       </div>

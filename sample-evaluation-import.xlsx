@@ -1,0 +1,26 @@
+Category,Item,Score,Notes,Date,Evaluated By
+LEGAL_STATUS,Liens on property or family dispute clarification,8,No issues found,2024-01-15,John Smith
+LEGAL_STATUS,Notary selected and initial property legal docs reviewed,7,Documents in progress,2024-01-15,John Smith
+LEGAL_STATUS,Habitable or non habitable status confirmation,9,Property is habitable,2024-01-15,John Smith
+LEGAL_STATUS,Assign retained PONTE Engineer and Architect,6,Engineer assigned,2024-01-15,John Smith
+SEISMIC_ACTIVITY,Review records in local town hall,7,Records available,2024-01-16,John Smith
+SEISMIC_ACTIVITY,Meeting with retained PONTE engineer,8,Meeting scheduled,2024-01-16,John Smith
+FOUNDATION_CONDITION,Expose foundation and assess depth and bearing capacity,9,Foundation in good condition,2024-01-17,John Smith
+FOUNDATION_CONDITION,Supply underpinning report (if required),5,Report needed,2024-01-17,John Smith
+HOME_INSPECTION,Evaluate cracks in masonry (if required),8,Minor cracks found,2024-01-18,John Smith
+HOME_INSPECTION,Check stairs and railings,7,Railings need repair,2024-01-18,John Smith
+HOME_INSPECTION,Check windows and doors,9,All in good condition,2024-01-18,John Smith
+HOME_INSPECTION,Check decks and overhangs,6,Deck needs maintenance,2024-01-18,John Smith
+HOME_INSPECTION,Check out-buildings and wells,8,Well water tested,2024-01-18,John Smith
+HOME_INSPECTION,Check plumbing,7,Some pipes need replacement,2024-01-18,John Smith
+HOME_INSPECTION,Check electrical system,8,Electrical system updated,2024-01-18,John Smith
+HOME_INSPECTION,Check HVAC (if installed),5,No HVAC system,2024-01-18,John Smith
+HOME_INSPECTION,Check asbestos,9,No asbestos found,2024-01-18,John Smith
+HOME_INSPECTION,Supply home inspection report,8,Report completed,2024-01-18,John Smith
+SERVICE_SUPPLIER,Connect with electricity provider,7,Connection established,2024-01-19,John Smith
+SERVICE_SUPPLIER,Connect with water provider,8,Water service active,2024-01-19,John Smith
+SERVICE_SUPPLIER,Connect with gas supplier,6,Gas not available,2024-01-19,John Smith
+GROUNDS_GARDENS,Quality and stability soil,8,Soil quality good,2024-01-20,John Smith
+GROUNDS_GARDENS,Arborist report,7,Trees in good condition,2024-01-20,John Smith
+GROUNDS_GARDENS,Vineyard / fruit tree quality control,9,Excellent vineyard,2024-01-20,John Smith
+GROUNDS_GARDENS,Underground water / natural spring quality control,8,Water source confirmed,2024-01-20,John Smith

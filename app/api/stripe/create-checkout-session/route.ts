@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from "next/server"
 import { getServerSession } from "next-auth"
-import { stripe } from "lib/stripe"
 import { prisma } from "lib/prisma"
 import { authOptions } from "lib/auth"
 import { env } from "env.mjs"
+import { stripe } from "lib/stripe"
 
 export async function POST(request: NextRequest) {
   try {

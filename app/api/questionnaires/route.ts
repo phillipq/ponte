@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server"
 import { getServerSession } from "next-auth"
+import { z } from "zod"
 import { authOptions } from "lib/auth"
 import { prisma } from "lib/prisma"
-import { z } from "zod"
 
 const createQuestionnaireSchema = z.object({
   name: z.string().min(1, "Name is required"),
@@ -11,7 +11,7 @@ const createQuestionnaireSchema = z.object({
 })
 
 // GET /api/questionnaires - Get all questionnaires for the user
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   try {
     const session = await getServerSession(authOptions)
     

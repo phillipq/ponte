@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from "next/server"
 import { getServerSession } from "next-auth"
-import { stripe } from "lib/stripe"
 import { prisma } from "lib/prisma"
 import { authOptions } from "lib/auth"
+import { stripe } from "lib/stripe"
 
-export async function POST(request: NextRequest) {
+export async function POST(_request: NextRequest) {
   try {
     const session = await getServerSession(authOptions)
     
@@ -25,7 +25,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Cancel the subscription at the end of the current period
-    const subscription = await stripe.subscriptions.update(
+    const _subscription = await stripe.subscriptions.update(
       user.subscription.stripeSubscriptionId,
       {
         cancel_at_period_end: true,
@@ -53,7 +53,7 @@ export async function POST(request: NextRequest) {
   }
 }
 
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   try {
     const session = await getServerSession(authOptions)
     
@@ -71,7 +71,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Cancel the subscription at the end of the current period
-    const subscription = await stripe.subscriptions.update(
+    const _subscription = await stripe.subscriptions.update(
       user.subscription.stripeSubscriptionId,
       {
         cancel_at_period_end: true,

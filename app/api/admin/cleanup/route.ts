@@ -4,7 +4,7 @@ import { authOptions } from "lib/auth"
 import { prisma } from "lib/prisma"
 
 // GET /api/admin/cleanup - Get cleanup analysis
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   try {
     const session = await getServerSession(authOptions)
     
@@ -70,9 +70,9 @@ export async function GET(request: NextRequest) {
       duplicateResponses,
       emptySections,
       summary: {
-        duplicateSectionsCount: (duplicateSections as any[]).length,
+        duplicateSectionsCount: (duplicateSections as unknown[]).length,
         orphanedSectionsCount: orphanedSections.length,
-        duplicateResponsesCount: (duplicateResponses as any[]).length,
+        duplicateResponsesCount: (duplicateResponses as unknown[]).length,
         emptySectionsCount: emptySections.length
       }
     })
@@ -152,7 +152,7 @@ export async function POST(request: NextRequest) {
           SELECT id, title, "questionnaireId", ROW_NUMBER() OVER (PARTITION BY title, "questionnaireId" ORDER BY "createdAt") as rn
           FROM "QuestionnaireSection"
           WHERE "userId" = ${user.id}
-        ` as any[]
+        ` as unknown[]
 
         const duplicatesToRemove = duplicateSections.filter(d => d.rn > 1)
         

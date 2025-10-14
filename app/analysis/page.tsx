@@ -3,8 +3,8 @@
 import { useRouter } from "next/navigation"
 import { useSession } from "next-auth/react"
 import { useEffect, useRef, useState } from "react"
-import Navigation from "components/Navigation"
 import { Button } from "components/Button"
+import Navigation from "components/Navigation"
 
 interface Property {
   id: string
@@ -122,7 +122,7 @@ const formatDistanceFromMeters = (distanceMeters: number | null | undefined): st
 }
 
 export default function AnalysisPage() {
-  const { data: session, status } = useSession()
+  const { data: _session, status } = useSession()
   const router = useRouter()
   const [properties, setProperties] = useState<Property[]>([])
   const [destinations, setDestinations] = useState<Destination[]>([])
@@ -130,7 +130,7 @@ export default function AnalysisPage() {
   const [loading, setLoading] = useState(true)
   const [calculating, setCalculating] = useState(false)
   const [calculationProgress, setCalculationProgress] = useState("")
-  const [error, setError] = useState("")
+  const [_error, _setError] = useState("")
   
   // Tab state
   const [activeTab, setActiveTab] = useState<'analysis' | 'tour-planner' | 'saved-tours'>('analysis')
@@ -138,11 +138,11 @@ export default function AnalysisPage() {
   // Selection states
   const [selectedProperties, setSelectedProperties] = useState<string[]>([])
   const [selectedDestinations, setSelectedDestinations] = useState<string[]>([])
-  const [selectedCategories, setSelectedCategories] = useState<string[]>([])
-  const [selectedTags, setSelectedTags] = useState<string[]>([])
+  const [_selectedCategories, _setSelectedCategories] = useState<string[]>([])
+  const [_selectedTags, _setSelectedTags] = useState<string[]>([])
   
   // Tour Planner states
-  const [tourStartingPoint, setTourStartingPoint] = useState<{
+  const [_tourStartingPoint, _setTourStartingPoint] = useState<{
     type: 'property' | 'destination' | 'custom'
     id?: string
     name?: string
@@ -152,17 +152,17 @@ export default function AnalysisPage() {
   } | null>(null)
   const [tourDestinations, setTourDestinations] = useState<string[]>([])
   const [tourProperties, setTourProperties] = useState<string[]>([])
-  const [tourRoute, setTourRoute] = useState<any[]>([])
+  const [tourRoute, setTourRoute] = useState<unknown[]>([])
   const [tourCalculating, setTourCalculating] = useState(false)
-  const [tourSteps, setTourSteps] = useState<any[]>([])
+  const [tourSteps, setTourSteps] = useState<unknown[]>([])
   const [draggedStep, setDraggedStep] = useState<number | null>(null)
   const [optimizeRoute, setOptimizeRoute] = useState(true)
-  const [mapInstance, setMapInstance] = useState<any>(null)
-  const [directionsService, setDirectionsService] = useState<any>(null)
-  const [directionsRenderer, setDirectionsRenderer] = useState<any>(null)
+  const [mapInstance, setMapInstance] = useState<unknown>(null)
+  const [directionsService, setDirectionsService] = useState<unknown>(null)
+  const [directionsRenderer, setDirectionsRenderer] = useState<unknown>(null)
   const [mapLoaded, setMapLoaded] = useState(false)
-  const [savedTours, setSavedTours] = useState<any[]>([])
-  const [showSavedTours, setShowSavedTours] = useState(false)
+  const [savedTours, setSavedTours] = useState<unknown[]>([])
+  const [_showSavedTours, setShowSavedTours] = useState(false)
   const [mapInitializing, setMapInitializing] = useState(false)
   const mapRef = useRef<HTMLDivElement>(null)
 
@@ -231,14 +231,18 @@ export default function AnalysisPage() {
       console.log("Tour planner: Creating map with ref:", mapRef.current)
       
       try {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const newMap = new (window as any).google.maps.Map(mapRef.current, {
           center: { lat: 41.804532, lng: 12.251998 },
           zoom: 6,
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           mapTypeId: (window as any).google.maps.MapTypeId.ROADMAP
         })
         
         setMapInstance(newMap)
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         setDirectionsService(new (window as any).google.maps.DirectionsService())
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         setDirectionsRenderer(new (window as any).google.maps.DirectionsRenderer())
         setMapInitializing(false)
         
@@ -340,29 +344,35 @@ export default function AnalysisPage() {
       })
 
       if (response.ok) {
-        const data = await response.json() as { route: any[] }
+        const data = await response.json() as { route: unknown[] }
         setTourRoute(data.route)
         
         // Display route on map using Directions API
         if (mapInstance && directionsService && directionsRenderer && tourSteps.length >= 2) {
           try {
             const waypoints = tourSteps.slice(1, -1).map(step => ({
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
               location: new (window as any).google.maps.LatLng(step.latitude, step.longitude),
               stopover: true
             }))
 
             const request = {
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
               origin: new (window as any).google.maps.LatLng(tourSteps[0].latitude, tourSteps[0].longitude),
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
               destination: new (window as any).google.maps.LatLng(
                 tourSteps[tourSteps.length - 1].latitude, 
                 tourSteps[tourSteps.length - 1].longitude
               ),
               waypoints: waypoints,
               optimizeWaypoints: optimizeRoute && waypoints.length > 0,
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
               travelMode: (window as any).google.maps.TravelMode.DRIVING
             }
 
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             directionsService.route(request, (result: any, status: any) => {
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
               if (status === (window as any).google.maps.DirectionsStatus.OK && result) {
                 directionsRenderer.setMap(mapInstance)
                 directionsRenderer.setDirections(result)
@@ -397,8 +407,9 @@ export default function AnalysisPage() {
   const showMarkersOnMap = () => {
     if (mapInstance && tourSteps.length > 0) {
       console.log("Tour planner: Showing markers on map")
-      tourSteps.forEach((step, index) => {
-        const marker = new (window as any).google.maps.Marker({
+      tourSteps.forEach((step, _index) => {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const _marker = new (window as any).google.maps.Marker({
           position: { lat: step.latitude, lng: step.longitude },
           map: mapInstance,
           title: step.name
@@ -499,7 +510,7 @@ export default function AnalysisPage() {
     try {
       const response = await fetch('/api/tours')
       if (response.ok) {
-        const tours = await response.json() as any[]
+        const tours = await response.json() as unknown[]
         setSavedTours(tours)
         setShowSavedTours(true)
       }
@@ -509,20 +520,21 @@ export default function AnalysisPage() {
     }
   }
 
-  const loadTour = (tour: any) => {
+  const loadTour = (tour: unknown) => {
     // Restore tour data
-    setTourSteps(tour.steps)
-    setTourRoute(tour.route)
+    setTourSteps((tour as { steps: unknown[] }).steps)
+    setTourRoute((tour as { route: unknown[] }).route)
     
     // Extract properties and destinations from steps
     const loadedProperties: string[] = []
     const loadedDestinations: string[] = []
     
-    tour.steps?.forEach((step: any) => {
-      if (step.type === 'property' && step.id) {
-        loadedProperties.push(step.id)
-      } else if (step.type === 'destination' && step.id) {
-        loadedDestinations.push(step.id)
+    (tour as { steps?: unknown[] }).steps?.forEach((step: unknown) => {
+      const stepObj = step as { type?: string; id?: string }
+      if (stepObj.type === 'property' && stepObj.id) {
+        loadedProperties.push(stepObj.id)
+      } else if (stepObj.type === 'destination' && stepObj.id) {
+        loadedDestinations.push(stepObj.id)
       }
     })
     
@@ -1514,7 +1526,7 @@ export default function AnalysisPage() {
                           </div>
                           {tour.route && tour.route.length > 0 && (
                             <div className="text-sm text-ponte-black">
-                              <strong>Total Distance:</strong> {formatDistanceFromMeters(tour.route.reduce((sum: number, leg: any) => sum + (leg.distance || 0), 0))}
+                              <strong>Total Distance:</strong> {formatDistanceFromMeters(tour.route.reduce((sum: number, leg: unknown) => sum + ((leg as { distance?: number }).distance || 0), 0))}
                             </div>
                           )}
                         </div>
@@ -1537,7 +1549,7 @@ export default function AnalysisPage() {
                               // Create Google Maps URL for saved tour
                               if (tour.steps && Array.isArray(tour.steps)) {
                                 const waypoints = tour.steps
-                                  .map((step: any) => `${step.latitude},${step.longitude}`)
+                                  .map((step: unknown) => `${(step as { latitude: number; longitude: number }).latitude},${(step as { latitude: number; longitude: number }).longitude}`)
                                   .join('/')
                                 
                                 if (waypoints) {

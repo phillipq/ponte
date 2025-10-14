@@ -1,5 +1,5 @@
-import { NextRequest, NextResponse } from "next/server"
 import { PrismaClient } from "@prisma/client"
+import { NextRequest, NextResponse } from "next/server"
 
 const prisma = new PrismaClient()
 
@@ -74,7 +74,7 @@ export async function PUT(
     }
 
     // Prepare update data
-    const updateData: any = {
+    const updateData: Record<string, unknown> = {
       name,
       email,
       company: company || null,
@@ -83,7 +83,7 @@ export async function PUT(
 
     // Only update password if provided
     if (password && password.trim() !== "") {
-      const bcrypt = require("bcryptjs")
+      const bcrypt = await import("bcryptjs")
       updateData.password = await bcrypt.hash(password, 12)
     }
 

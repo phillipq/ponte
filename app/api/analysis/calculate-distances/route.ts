@@ -3,7 +3,7 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from 'lib/auth'
 import { prisma } from 'lib/prisma'
 
-export async function POST(request: NextRequest) {
+export async function POST(_request: NextRequest) {
   try {
     const session = await getServerSession(authOptions)
     if (!session?.user) {
@@ -13,7 +13,7 @@ export async function POST(request: NextRequest) {
     // Get all properties and destinations
     const [properties, destinations] = await Promise.all([
       prisma.property.findMany({
-        where: { userId: (session.user as any).id }
+        where: { userId: (session.user as { id: string }).id }
       }),
       prisma.destination.findMany()
     ])

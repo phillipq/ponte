@@ -1,9 +1,9 @@
-import { NextRequest, NextResponse } from "next/server"
+import bcrypt from "bcryptjs"
 import { getServerSession } from "next-auth"
+import { NextRequest, NextResponse } from "next/server"
+import { z } from "zod"
 import { authOptions } from "lib/auth"
 import { prisma } from "lib/prisma"
-import bcrypt from "bcryptjs"
-import { z } from "zod"
 
 const changePasswordSchema = z.object({
   currentPassword: z.string().min(1, "Current password is required"),

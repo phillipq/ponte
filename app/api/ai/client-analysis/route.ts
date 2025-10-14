@@ -40,8 +40,8 @@ export async function POST(request: NextRequest) {
     }
 
     // Get the selected response set or the latest one
-    const responseSet = questionnaireResponses.responseSets.find((rs: any) => 
-      rs.id === questionnaireResponses.selectedResponseSet
+    const responseSet = questionnaireResponses.responseSets.find((rs: unknown) => 
+      (rs as { id: string }).id === questionnaireResponses.selectedResponseSet
     ) || questionnaireResponses.responseSets[0]
 
     if (!responseSet) {
@@ -49,15 +49,15 @@ export async function POST(request: NextRequest) {
     }
 
     // Prepare questionnaire data for AI analysis
-    const questionnaireData = questionnaireResponses.sections.map((section: any) => ({
-      section: section.title,
+    const questionnaireData = questionnaireResponses.sections.map((section: unknown) => ({
+      section: (section as { title: string }).title,
       questions: responseSet.responses
-        .filter((r: any) => r.sectionTitle === section.title)
-        .map((r: any) => ({
-          question: r.question,
-          answer: r.answer
+        .filter((r: unknown) => (r as { sectionTitle: string }).sectionTitle === (section as { title: string }).title)
+        .map((r: unknown) => ({
+          question: (r as { question: string }).question,
+          answer: (r as { answer: string }).answer
         }))
-    })).filter((section: any) => section.questions.length > 0)
+    })).filter((section: unknown) => (section as { questions: unknown[] }).questions.length > 0)
 
   console.log("Debug - Questionnaire data:", JSON.stringify(questionnaireData, null, 2))
   console.log("Debug - Properties count:", properties.length)
@@ -97,8 +97,8 @@ export async function POST(request: NextRequest) {
   }
 }
 
-async function calculatePropertyDistances(properties: any[], destinations: any[]) {
-  const distances: any[] = []
+async function calculatePropertyDistances(properties: unknown[], destinations: unknown[]) {
+  const distances: unknown[] = []
 
   for (const property of properties) {
     const propertyDistances = []
@@ -109,27 +109,27 @@ async function calculatePropertyDistances(properties: any[], destinations: any[]
         const existingDistance = await prisma.propertyDistance.findUnique({
           where: {
             propertyId_destinationId: {
-              propertyId: property.id,
-              destinationId: destination.id
+              propertyId: (property as { id: string }).id,
+              destinationId: (destination as { id: string }).id
             }
           }
         })
 
         if (existingDistance) {
           // Use cached distance data
-          console.log(`Using cached distance for ${property.name} to ${destination.name}`)
+          console.log(`Using cached distance for ${(property as { name: string }).name} to ${(destination as { name: string }).name}`)
           propertyDistances.push({
-            destination: destination.name,
-            category: destination.category || 'Unknown',
+            destination: (destination as { name: string }).name,
+            category: (destination as { category?: string }).category || 'Unknown',
             distance: existingDistance.distanceKm ? `${existingDistance.distanceKm.toFixed(1)} km` : 'Unknown',
             duration: existingDistance.durationMinutes ? `${Math.round(existingDistance.durationMinutes)} mins` : 'Unknown',
             value: existingDistance.drivingDistance || 0
           })
         } else {
           // Calculate new distance using Google Distance Matrix API
-          console.log(`Calculating new distance for ${property.name} to ${destination.name}`)
+          console.log(`Calculating new distance for ${(property as { name: string }).name} to ${(destination as { name: string }).name}`)
           const response = await fetch(
-            `https://maps.googleapis.com/maps/api/distancematrix/json?origins=${property.latitude},${property.longitude}&destinations=${destination.latitude},${destination.longitude}&units=metric&key=${process.env.GOOGLE_MAPS_API_KEY}`
+            `https://maps.googleapis.com/maps/api/distancematrix/json?origins=${(property as { latitude: number }).latitude},${(property as { longitude: number }).longitude}&destinations=${(destination as { latitude: number }).latitude},${(destination as { longitude: number }).longitude}&units=metric&key=${process.env.GOOGLE_MAPS_API_KEY}`
           )
           
           const data = await response.json()
@@ -153,8 +153,8 @@ async function calculatePropertyDistances(properties: any[], destinations: any[]
                 calculatedAt: new Date()
               },
               create: {
-                propertyId: property.id,
-                destinationId: destination.id,
+                propertyId: (property as { id: string }).id,
+                destinationId: (destination as { id: string }).id,
                 drivingDistance: element.distance.value,
                 drivingDuration: element.duration.value,
                 distanceKm: element.distance.value / 1000,
@@ -164,8 +164,8 @@ async function calculatePropertyDistances(properties: any[], destinations: any[]
             })
 
             propertyDistances.push({
-              destination: destination.name,
-              category: destination.category || 'Unknown',
+              destination: (destination as { name: string }).name,
+              category: (destination as { category?: string }).category || 'Unknown',
               distance: element.distance.text,
               duration: element.duration.text,
               value: element.distance.value
@@ -173,13 +173,13 @@ async function calculatePropertyDistances(properties: any[], destinations: any[]
           }
         }
       } catch (error) {
-        console.error(`Error calculating distance for ${property.name} to ${destination.name}:`, error)
+        console.error(`Error calculating distance for ${(property as { name: string }).name} to ${(destination as { name: string }).name}:`, error)
       }
     }
 
     distances.push({
-      propertyId: property.id,
-      propertyName: property.name,
+      propertyId: (property as { id: string }).id,
+      propertyName: (property as { name: string }).name,
       distances: propertyDistances
     })
   }
@@ -187,7 +187,7 @@ async function calculatePropertyDistances(properties: any[], destinations: any[]
   return distances
 }
 
-async function generateOpenAIAnalysis(client: any, questionnaireData: any[], properties: any[], propertyDistances: any[]) {
+async function generateOpenAIAnalysis(client: unknown, questionnaireData: unknown[], properties: unknown[], propertyDistances: unknown[]) {
   const { OpenAI } = await import('openai')
   const client_openai = new OpenAI({
     apiKey: process.env.OPENAI_API_KEY
@@ -204,7 +204,7 @@ CLIENT INFORMATION:
 QUESTIONNAIRE RESPONSES:
 ${questionnaireData.length > 0 ? questionnaireData.map(section => `
 ${section.section}:
-${section.questions.map((q: any) => `- ${q.question}: ${q.answer}`).join('\n')}
+${section.questions.map((q: unknown) => `- ${(q as { question: string }).question}: ${(q as { answer: string }).answer}`).join('\n')}
 `).join('\n') : 'No questionnaire responses available'}
 
 AVAILABLE PROPERTIES:
@@ -220,7 +220,7 @@ ${index + 1}. ${p.name}
 PROPERTY DISTANCES TO DESTINATIONS:
 ${propertyDistances.length > 0 ? propertyDistances.map(pd => `
 ${pd.propertyName}:
-${pd.distances.map((d: any) => `  - ${d.destination} (${d.category}): ${d.distance} (${d.duration})`).join('\n')}
+${pd.distances.map((d: unknown) => `  - ${(d as { destination: string }).destination} (${(d as { category: string }).category}): ${(d as { distance: string }).distance} (${(d as { duration: string }).duration})`).join('\n')}
 `).join('\n') : 'No distance data available'}
 
 Please provide:
@@ -361,7 +361,7 @@ CRITICAL: You MUST return ONLY valid JSON. Do not include any explanatory text, 
           summary: "AI analysis was requested but the response format was invalid. Please try generating the analysis again.",
           preferences: ["Analysis incomplete - please try again"],
           recommendations: "Unable to generate recommendations due to response format error. Please try again.",
-          propertyRankings: properties.map((property, index) => ({
+          propertyRankings: properties.map((property, _index) => ({
             id: property.id,
             name: property.name,
             score: 0.5,
@@ -373,8 +373,8 @@ CRITICAL: You MUST return ONLY valid JSON. Do not include any explanatory text, 
       
       // Try to extract any useful information from the response
       let summary = "AI analysis generated but response format was invalid."
-      let preferences = ["Analysis incomplete"]
-      let recommendations = "Unable to generate recommendations due to response format error."
+      const preferences = ["Analysis incomplete"]
+      const recommendations = "Unable to generate recommendations due to response format error."
       
       // Try to extract some information from the raw response
       if (response.includes("summary") || response.includes("Summary")) {
@@ -388,7 +388,7 @@ CRITICAL: You MUST return ONLY valid JSON. Do not include any explanatory text, 
         summary: summary,
         preferences: preferences,
         recommendations: recommendations,
-        propertyRankings: properties.map((property, index) => ({
+        propertyRankings: properties.map((property, _index) => ({
           id: property.id,
           name: property.name,
           score: 0.5,

@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from "next/server"
 import { getServerSession } from "next-auth"
+import { randomBytes } from "crypto"
+import { z } from "zod"
 import { authOptions } from "lib/auth"
 import { prisma } from "lib/prisma"
-import { z } from "zod"
-import { randomBytes } from "crypto"
 
 const createInviteSchema = z.object({
   clientId: z.string().min(1, "Client ID is required"),
@@ -92,7 +92,7 @@ export async function POST(request: NextRequest) {
 }
 
 // GET /api/questionnaire/invite - Get all invites for the user
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   try {
     const session = await getServerSession(authOptions)
     if (!session?.user?.id) {

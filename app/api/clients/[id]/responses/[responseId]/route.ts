@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server"
 import { getServerSession } from "next-auth"
+import { z } from "zod"
 import { authOptions } from "lib/auth"
 import { prisma } from "lib/prisma"
-import { z } from "zod"
 
 const updateResponseSchema = z.object({
   answer: z.string().min(1, "Answer is required")

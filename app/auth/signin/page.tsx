@@ -1,9 +1,9 @@
 "use client"
 
-import { useState } from "react"
-import { useRouter } from "next/navigation"
 import Image from "next/image"
+import { useRouter } from "next/navigation"
 import { signIn } from "next-auth/react"
+import { useState } from "react"
 import { Button } from "components/Button"
 
 export default function SignIn() {
@@ -30,7 +30,7 @@ export default function SignIn() {
       } else {
         router.push("/dashboard")
       }
-    } catch (_error) {
+    } catch {
       setError("An error occurred. Please try again.")
     } finally {
       setIsLoading(false)

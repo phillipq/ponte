@@ -1,8 +1,8 @@
 "use client"
 
-import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { signIn } from "next-auth/react"
+import { useState } from "react"
 import { Button } from "components/Button"
 
 export default function SignUp() {
@@ -55,7 +55,7 @@ export default function SignUp() {
         const data = await response.json()
         setError(data.error || "Registration failed")
       }
-    } catch (_error) {
+    } catch {
       setError("An error occurred. Please try again.")
     } finally {
       setIsLoading(false)

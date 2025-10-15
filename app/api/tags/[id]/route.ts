@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server"
 import { getServerSession } from "next-auth"
+import { z } from "zod"
 import { authOptions } from "lib/auth"
 import { prisma } from "lib/prisma"
-import { z } from "zod"
 
 const updateTagSchema = z.object({
   name: z.string().min(1, "Tag name is required").max(50, "Tag name must be less than 50 characters").optional(),

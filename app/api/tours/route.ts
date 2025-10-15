@@ -6,12 +6,12 @@ import { prisma } from "lib/prisma"
 export async function GET() {
   try {
     const session = await getServerSession(authOptions)
-    if (!session?.user || !(session.user as any).id) {
+    if (!session?.user || !(session.user as { id: string }).id) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
     const tours = await prisma.tour.findMany({
-      where: { userId: (session.user as any).id },
+      where: { userId: (session.user as { id: string }).id },
       orderBy: { createdAt: "desc" }
     })
 
@@ -25,19 +25,19 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions)
-    if (!session?.user || !(session.user as any).id) {
+    if (!session?.user || !(session.user as { id: string }).id) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    const tourData = await request.json() as any
+    const tourData = await request.json() as unknown
     
     const tour = await prisma.tour.create({
       data: {
-        userId: (session.user as any).id,
-        name: tourData.name,
-        startingPoint: tourData.startingPoint,
-        steps: tourData.steps,
-        route: tourData.route
+        userId: (session.user as { id: string }).id,
+        name: (tourData as { name: string }).name,
+        startingPoint: (tourData as { startingPoint: unknown }).startingPoint,
+        steps: (tourData as { steps: unknown }).steps,
+        route: (tourData as { route: unknown }).route
       }
     })
     

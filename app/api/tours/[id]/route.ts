@@ -9,7 +9,7 @@ export async function PUT(
 ) {
   try {
     const session = await getServerSession(authOptions)
-    if (!session?.user || !(session.user as any).id) {
+    if (!session?.user || !(session.user as { id: string }).id) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
@@ -24,7 +24,7 @@ export async function PUT(
     const tour = await prisma.tour.findFirst({
       where: { 
         id: id,
-        userId: (session.user as any).id 
+        userId: (session.user as { id: string }).id 
       }
     })
     
@@ -51,7 +51,7 @@ export async function DELETE(
 ) {
   try {
     const session = await getServerSession(authOptions)
-    if (!session?.user || !(session.user as any).id) {
+    if (!session?.user || !(session.user as { id: string }).id) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
@@ -61,7 +61,7 @@ export async function DELETE(
     const tour = await prisma.tour.findFirst({
       where: { 
         id: id,
-        userId: (session.user as any).id 
+        userId: (session.user as { id: string }).id 
       }
     })
     

@@ -88,9 +88,9 @@ export async function GET(
         order: question.order
       })
       return acc
-    }, {} as Record<string, any>)
+    }, {} as Record<string, unknown>)
 
-    const sectionsArray = Object.values(sections).sort((a: any, b: any) => a.order - b.order)
+    const sectionsArray = Object.values(sections).sort((a: unknown, b: unknown) => (a as { order: number }).order - (b as { order: number }).order)
 
     return NextResponse.json({
       invite: {

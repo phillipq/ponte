@@ -1,8 +1,8 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useParams, useRouter } from "next/navigation"
 import { useSession } from "next-auth/react"
-import { useRouter, useParams } from "next/navigation"
+import { useEffect, useState } from "react"
 import { Button } from "components/Button"
 import Navigation from "components/Navigation"
 
@@ -13,7 +13,7 @@ interface Client {
   phone?: string
   company?: string
   notes?: string
-  questionnaireResponses?: any
+  questionnaireResponses?: unknown
   preferredProperties?: string[]
   createdAt: string
   updatedAt: string
@@ -39,20 +39,20 @@ export default function ClientDetailPage() {
   const router = useRouter()
   const params = useParams()
   const [client, setClient] = useState<Client | null>(null)
-  const [questionnaireSections, setQuestionnaireSections] = useState<QuestionnaireSection[]>([])
-  const [questionnaireResponses, setQuestionnaireResponses] = useState<any>(null)
+  const [_questionnaireSections, setQuestionnaireSections] = useState<QuestionnaireSection[]>([])
+  const [questionnaireResponses, setQuestionnaireResponses] = useState<unknown>(null)
   const [selectedResponseSet, setSelectedResponseSet] = useState<string>('')
   const [loading, setLoading] = useState(true)
-  const [deletingResponseSet, setDeletingResponseSet] = useState<string | null>(null)
-  const [aiAnalysis, setAiAnalysis] = useState<any>(null)
-  const [propertyRankings, setPropertyRankings] = useState<any[]>([])
+  const [_deletingResponseSet, setDeletingResponseSet] = useState<string | null>(null)
+  const [aiAnalysis, setAiAnalysis] = useState<unknown>(null)
+  const [propertyRankings, setPropertyRankings] = useState<unknown[]>([])
   const [generatingAi, setGeneratingAi] = useState(false)
-  const [properties, setProperties] = useState<any[]>([])
-  const [questionnaireInvites, setQuestionnaireInvites] = useState<any[]>([])
+  const [properties, setProperties] = useState<unknown[]>([])
+  const [questionnaireInvites, setQuestionnaireInvites] = useState<unknown[]>([])
   const [creatingInvite, setCreatingInvite] = useState(false)
   const [inviteExpiresInDays, setInviteExpiresInDays] = useState(30)
-  const [destinations, setDestinations] = useState<any[]>([])
-  const [storedAiAnalyses, setStoredAiAnalyses] = useState<any[]>([])
+  const [destinations, setDestinations] = useState<unknown[]>([])
+  const [storedAiAnalyses, setStoredAiAnalyses] = useState<unknown[]>([])
   const [selectedAiAnalysis, setSelectedAiAnalysis] = useState<string>("")
   const [showPropertyPreferences, setShowPropertyPreferences] = useState(false)
   const [selectedProperties, setSelectedProperties] = useState<string[]>([])
@@ -64,7 +64,7 @@ export default function ClientDetailPage() {
     company: "",
     notes: ""
   })
-  const [editingResponse, setEditingResponse] = useState<any>(null)
+  const [editingResponse, setEditingResponse] = useState<unknown>(null)
   const [editingResponseValue, setEditingResponseValue] = useState("")
   const [updatingResponse, setUpdatingResponse] = useState(false)
   const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set())
@@ -170,11 +170,11 @@ export default function ClientDetailPage() {
       console.log("Fetching questionnaire responses...")
       const response = await fetch(`/api/clients/${params.id}/questionnaire-responses`)
       if (response.ok) {
-        const data = await response.json() as any
+        const data = await response.json() as unknown
         setQuestionnaireResponses(data)
         // Set the first response set as default if none selected
-        if (data.responseSets && data.responseSets.length > 0 && !selectedResponseSet) {
-          setSelectedResponseSet(data.responseSets[0].id)
+        if ((data as { responseSets?: unknown[] }).responseSets && (data as { responseSets: unknown[] }).responseSets.length > 0 && !selectedResponseSet) {
+          setSelectedResponseSet(((data as { responseSets: unknown[] }).responseSets[0] as { id: string }).id)
         }
       } else {
         console.error("Failed to fetch questionnaire responses:", response.status)
@@ -192,12 +192,12 @@ export default function ClientDetailPage() {
       ])
 
       if (propertiesResponse.ok) {
-        const data = await propertiesResponse.json() as { properties?: any[] }
+        const data = await propertiesResponse.json() as { properties?: unknown[] }
         setProperties(data.properties || [])
       }
 
       if (destinationsResponse.ok) {
-        const data = await destinationsResponse.json() as { destinations?: any[] }
+        const data = await destinationsResponse.json() as { destinations?: unknown[] }
         setDestinations(data.destinations || [])
       }
     } catch (error) {
@@ -212,7 +212,7 @@ export default function ClientDetailPage() {
       console.log("AI analysis API response status:", response.status)
       
       if (response.ok) {
-        const data = await response.json() as { aiAnalyses?: any[] }
+        const data = await response.json() as { aiAnalyses?: unknown[] }
         console.log("AI analyses data received:", data)
         setStoredAiAnalyses(data.aiAnalyses || [])
       } else {
@@ -228,9 +228,9 @@ export default function ClientDetailPage() {
     try {
       const response = await fetch(`/api/questionnaire/invite`)
       if (response.ok) {
-        const data = await response.json() as { invites?: any[] }
+        const data = await response.json() as { invites?: unknown[] }
         // Filter invites for this specific client
-        const clientInvites = (data.invites || []).filter((invite: any) => invite.client.id === params.id)
+        const clientInvites = (data.invites || []).filter((invite: unknown) => (invite as { client: { id: string } }).client.id === params.id)
         setQuestionnaireInvites(clientInvites)
       }
     } catch (error) {

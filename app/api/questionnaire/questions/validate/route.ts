@@ -1,8 +1,8 @@
+import { parse } from "csv-parse/sync"
 import { NextRequest, NextResponse } from "next/server"
 import { getServerSession } from "next-auth"
 import { authOptions } from "lib/auth"
 import { prisma } from "lib/prisma"
-import { parse } from "csv-parse/sync"
 
 export async function POST(request: NextRequest) {
   try {
@@ -68,9 +68,9 @@ export async function POST(request: NextRequest) {
     let newQuestions = 0
 
     for (const record of records) {
-      const sectionName = (record as any).section?.trim()
-      const question = (record as any).question?.trim()
-      const order = parseInt((record as any).order) || 0
+      const sectionName = (record as { section?: string }).section?.trim()
+      const question = (record as { question?: string }).question?.trim()
+      const order = parseInt((record as { order?: string }).order || '0') || 0
 
       if (!sectionName || !question) continue
 

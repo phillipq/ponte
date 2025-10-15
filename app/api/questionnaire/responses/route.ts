@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server"
 import { getServerSession } from "next-auth"
+import { z } from "zod"
 import { authOptions } from "lib/auth"
 import { prisma } from "lib/prisma"
-import { z } from "zod"
 
 const createResponseSchema = z.object({
   clientId: z.string().min(1, "Client ID is required"),

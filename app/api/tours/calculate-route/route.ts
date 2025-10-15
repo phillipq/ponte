@@ -7,7 +7,7 @@ export async function POST(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions)
     
-    if (!session?.user || !(session.user as any).id) {
+    if (!session?.user || !(session.user as { id: string }).id) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
@@ -18,12 +18,13 @@ export async function POST(request: NextRequest) {
     }
 
     // Validate coordinates
-    const validSteps = tourSteps.filter((step: any) => 
-      step.latitude && step.longitude && 
-      !isNaN(step.latitude) && !isNaN(step.longitude) &&
-      step.latitude >= -90 && step.latitude <= 90 &&
-      step.longitude >= -180 && step.longitude <= 180
-    )
+    const validSteps = tourSteps.filter((step: unknown) => {
+      const s = step as { latitude?: number; longitude?: number }
+      return s.latitude && s.longitude && 
+      !isNaN(s.latitude) && !isNaN(s.longitude) &&
+      s.latitude >= -90 && s.latitude <= 90 &&
+      s.longitude >= -180 && s.longitude <= 180
+    })
 
     if (validSteps.length < 2) {
       return NextResponse.json({ error: "Invalid coordinates" }, { status: 400 })
@@ -215,18 +216,18 @@ async function calculateDistance(
       throw new Error(`Distance Matrix API error: ${response.status}`)
     }
 
-    const data = await response.json() as any
+    const data = await response.json() as unknown
     
-    if (data.rows && data.rows[0] && data.rows[0].elements && data.rows[0].elements[0]) {
-      const element = data.rows[0].elements[0]
+    if ((data as { rows?: unknown[] }).rows && ((data as { rows: unknown[] }).rows[0] as { elements?: unknown[] })?.elements && ((data as { rows: unknown[] }).rows[0] as { elements: unknown[] }).elements[0]) {
+      const element = ((data as { rows: unknown[] }).rows[0] as { elements: unknown[] }).elements[0]
       
-      if (element.status === "OK") {
+      if ((element as { status: string }).status === "OK") {
         return {
-          distance: element.distance.value, // in meters
-          duration: element.duration.value  // in seconds
+          distance: (element as { distance: { value: number } }).distance.value, // in meters
+          duration: (element as { duration: { value: number } }).duration.value  // in seconds
         }
       } else {
-        console.error(`Distance Matrix API returned error for ${mode}:`, element.status)
+        console.error(`Distance Matrix API returned error for ${mode}:`, (element as { status: string }).status)
         return null
       }
     }

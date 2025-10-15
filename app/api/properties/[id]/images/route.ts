@@ -1,10 +1,10 @@
-import { NextRequest, NextResponse } from "next/server"
 import { getServerSession } from "next-auth"
+import { NextRequest, NextResponse } from "next/server"
+import { existsSync } from "fs"
+import { mkdir, writeFile } from "fs/promises"
+import { join } from "path"
 import { authOptions } from "lib/auth"
 import { prisma } from "lib/prisma"
-import { writeFile, mkdir } from "fs/promises"
-import { join } from "path"
-import { existsSync } from "fs"
 
 export async function POST(
   request: NextRequest,
@@ -22,7 +22,7 @@ export async function POST(
     const property = await prisma.property.findFirst({
       where: {
         id: id,
-        userId: (session.user as any).id
+        userId: (session.user as { id: string }).id
       }
     })
 
@@ -114,7 +114,7 @@ export async function DELETE(
     const property = await prisma.property.findFirst({
       where: {
         id: id,
-        userId: (session.user as any).id
+        userId: (session.user as { id: string }).id
       }
     })
 

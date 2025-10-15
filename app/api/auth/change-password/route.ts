@@ -1,6 +1,6 @@
 import bcrypt from "bcryptjs"
-import { getServerSession } from "next-auth"
 import { NextRequest, NextResponse } from "next/server"
+import { getServerSession } from "next-auth"
 import { z } from "zod"
 import { authOptions } from "lib/auth"
 import { prisma } from "lib/prisma"

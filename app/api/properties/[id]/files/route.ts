@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { getServerSession } from "next-auth"
 import { authOptions } from "lib/auth"
 import { prisma } from "lib/prisma"
-import { supabase, STORAGE_BUCKETS, uploadFileToStorage, getPublicUrl, deleteFileFromStorage } from "lib/supabase"
+import { STORAGE_BUCKETS, deleteFileFromStorage, getPublicUrl, uploadFileToStorage } from "lib/supabase"
 
 export async function POST(
   request: NextRequest,
@@ -20,7 +20,7 @@ export async function POST(
     const property = await prisma.property.findFirst({
       where: {
         id: id,
-        userId: (session.user as any).id
+        userId: (session.user as { id: string }).id
       }
     })
 
@@ -68,7 +68,7 @@ export async function POST(
       const filePath = `properties/${id}/${storageFilename}`
       
       // Upload to Supabase storage
-      const { data: uploadData, error: uploadError } = await uploadFileToStorage(bucket, filePath, file)
+      const { data: _uploadData, error: uploadError } = await uploadFileToStorage(bucket, filePath, file)
       
       if (uploadError) {
         console.error('Error uploading file to Supabase:', uploadError)
@@ -95,8 +95,8 @@ export async function POST(
     }
 
     // Update property with new files
-    let currentFiles: any[] = []
-    let updateData: any = {}
+    let currentFiles: unknown[] = []
+    const updateData: Record<string, unknown> = {}
     
     if (type === 'propertyPhotos') {
       currentFiles = property.propertyPhotos || []
@@ -145,7 +145,7 @@ export async function DELETE(
     const property = await prisma.property.findFirst({
       where: {
         id: id,
-        userId: (session.user as any).id
+        userId: (session.user as { id: string }).id
       }
     })
 
@@ -155,7 +155,7 @@ export async function DELETE(
 
     // Remove file from array
     let currentFiles: string[] = []
-    let updateData: any = {}
+    const updateData: Record<string, unknown> = {}
     
     if (type === 'propertyPhotos') {
       currentFiles = property.propertyPhotos || []
@@ -174,7 +174,7 @@ export async function DELETE(
     try {
       // Extract file path from URL
       const urlParts = fileUrl.split('/')
-      const bucket = urlParts[urlParts.length - 3] // Get bucket from URL
+      const _bucket = urlParts[urlParts.length - 3] // Get bucket from URL
       const filename = urlParts[urlParts.length - 1] // Get filename from URL
       const filePath = `properties/${id}/${filename}`
       

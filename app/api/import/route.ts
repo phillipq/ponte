@@ -1,8 +1,8 @@
+import { PrismaClient } from '@prisma/client'
+import { parse } from 'csv-parse/sync'
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from 'lib/auth'
-import { PrismaClient } from '@prisma/client'
-import { parse } from 'csv-parse/sync'
 
 const prisma = new PrismaClient()
 
@@ -56,7 +56,7 @@ const normalizeCategory = (category: string) => {
 }
 
 // Valid categories
-const validCategories = [
+const _validCategories = [
   'int_airport', 'airport', 'attraction', 'beach', 'bus_station', 'entertainment',
   'hospital', 'hotel', 'museum', 'mountain', 'other', 'park', 'restaurant',
   'school', 'shopping', 'train_station'

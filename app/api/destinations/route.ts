@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server"
 import { getServerSession } from "next-auth"
+import { z } from "zod"
 import { authOptions } from "lib/auth"
 import { prisma } from "lib/prisma"
-import { z } from "zod"
 
 // Category normalization function
 const normalizeCategory = (category: string) => {
@@ -70,7 +70,7 @@ const createDestinationSchema = z.object({
   country: z.string().optional(),
 })
 
-const updateDestinationSchema = z.object({
+const _updateDestinationSchema = z.object({
   name: z.string().optional(),
   address: z.string().optional(),
   latitude: z.number().optional(),
@@ -82,7 +82,7 @@ const updateDestinationSchema = z.object({
 })
 
 // GET /api/destinations - Get all destinations for the user
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   try {
     const session = await getServerSession(authOptions)
     
@@ -90,7 +90,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    const userId = (session.user as any).id
+    const _userId = (session.user as { id: string }).id
 
     const destinations = await prisma.destination.findMany({
       orderBy: {
@@ -117,7 +117,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    const userId = (session.user as any).id
+    const userId = (session.user as { id: string }).id
     const body = await request.json()
     const { name, address, latitude, longitude, category, placeId, metadata, tags, streetAddress, postalCode, city, province, country } = createDestinationSchema.parse(body)
 

@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from "next/server"
 import { getServerSession } from "next-auth"
+import { z } from "zod"
 import { authOptions } from "lib/auth"
 import { prisma } from "lib/prisma"
 import { getNextPropertyNumber } from "lib/property-number"
-import { z } from "zod"
 
 const createPropertySchema = z.object({
   name: z.string().min(1, "Name is required"),
@@ -202,7 +202,7 @@ const updatePropertySchema = z.object({
 })
 
 // GET /api/properties - Get all properties for the user
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   try {
     const session = await getServerSession(authOptions)
     
@@ -210,7 +210,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    const userId = (session.user as any).id
+    const userId = (session.user as { id: string }).id
     if (!userId) {
       return NextResponse.json({ error: "User ID not found" }, { status: 401 })
     }
@@ -259,7 +259,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    const userId = (session.user as any).id
+    const userId = (session.user as { id: string }).id
     if (!userId) {
       return NextResponse.json({ error: "User ID not found" }, { status: 401 })
     }
@@ -407,7 +407,7 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    const userId = (session.user as any).id
+    const userId = (session.user as { id: string }).id
     if (!userId) {
       return NextResponse.json({ error: "User ID not found" }, { status: 401 })
     }
@@ -457,7 +457,7 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    const userId = (session.user as any).id
+    const userId = (session.user as { id: string }).id
     if (!userId) {
       return NextResponse.json({ error: "User ID not found" }, { status: 401 })
     }
@@ -485,7 +485,7 @@ export async function PUT(request: NextRequest) {
     const updateData = updatePropertySchema.parse(body)
 
     // Only update fields that are provided
-    const updateFields: any = {}
+    const updateFields: Record<string, unknown> = {}
     if (updateData.name !== undefined) updateFields.name = updateData.name
     if (updateData.tags !== undefined) updateFields.tags = updateData.tags
     if (updateData.latitude !== undefined) updateFields.latitude = updateData.latitude

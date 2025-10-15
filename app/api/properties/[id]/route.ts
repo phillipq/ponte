@@ -17,7 +17,7 @@ export async function GET(
     const property = await prisma.property.findFirst({
       where: {
         id: id,
-        userId: (session.user as any).id
+        userId: (session.user as { id: string }).id
       }
     })
 
@@ -43,7 +43,7 @@ export async function PUT(
     }
 
     const { id } = await params
-    const body = await request.json() as any
+    const body = await request.json() as unknown
     
     // Extract all the new property fields
     const {
@@ -61,7 +61,7 @@ export async function PUT(
     const property = await prisma.property.update({
       where: {
         id: id,
-        userId: (session.user as any).id
+        userId: (session.user as { id: string }).id
       },
       data: {
         name,
@@ -139,7 +139,7 @@ export async function DELETE(
     await prisma.property.delete({
       where: {
         id: id,
-        userId: (session.user as any).id
+        userId: (session.user as { id: string }).id
       }
     })
 

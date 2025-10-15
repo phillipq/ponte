@@ -410,7 +410,7 @@ Return only valid JSON, no other text.`
 }
 
 
-function parsePropertyHTML(html: string, url: string): ScrapedPropertyData {
+function _parsePropertyHTML(html: string, url: string): ScrapedPropertyData {
   const result: ScrapedPropertyData = {}
   
   // Common patterns for Italian property sites

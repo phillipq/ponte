@@ -203,9 +203,9 @@ export default function CleanupPage() {
               <div className="space-y-2">
                 {analysis.orphanedSections.map((section, index) => (
                   <div key={index} className="p-3 bg-ponte-sand rounded-md">
-                    <p className="font-medium text-ponte-black">{section.title}</p>
+                    <p className="font-medium text-ponte-black">{(section as { title: string }).title}</p>
                     <p className="text-sm text-ponte-olive">
-                      {section.questions.length} questions • Created: {new Date(section.createdAt).toLocaleDateString()}
+                      {(section as { questions: unknown[] }).questions.length} questions • Created: {new Date((section as { createdAt: string }).createdAt).toLocaleDateString()}
                     </p>
                   </div>
                 ))}
@@ -234,10 +234,10 @@ export default function CleanupPage() {
               <div className="space-y-2">
                 {analysis.emptySections.map((section, index) => (
                   <div key={index} className="p-3 bg-ponte-sand rounded-md">
-                    <p className="font-medium text-ponte-black">{section.title}</p>
+                    <p className="font-medium text-ponte-black">{(section as { title: string }).title}</p>
                     <p className="text-sm text-ponte-olive">
-                      Questionnaire: {section.questionnaire?.name || "None"} • 
-                      Created: {new Date(section.createdAt).toLocaleDateString()}
+                      Questionnaire: {(section as { questionnaire?: { name: string } }).questionnaire?.name || "None"} • 
+                      Created: {new Date((section as { createdAt: string }).createdAt).toLocaleDateString()}
                     </p>
                   </div>
                 ))}
@@ -266,9 +266,9 @@ export default function CleanupPage() {
               <div className="space-y-2">
                 {analysis.duplicateSections.map((duplicate, index) => (
                   <div key={index} className="p-3 bg-ponte-sand rounded-md">
-                    <p className="font-medium text-ponte-black">{duplicate.title}</p>
+                    <p className="font-medium text-ponte-black">{(duplicate as { title: string }).title}</p>
                     <p className="text-sm text-ponte-olive">
-                      {duplicate.count} duplicates • Questionnaire ID: {duplicate.questionnaireId || "None"}
+                      {(duplicate as { count: number }).count} duplicates • Questionnaire ID: {(duplicate as { questionnaireId?: string }).questionnaireId || "None"}
                     </p>
                   </div>
                 ))}
@@ -293,10 +293,10 @@ export default function CleanupPage() {
               <div className="space-y-2">
                 {analysis.duplicateResponses.map((duplicate, index) => (
                   <div key={index} className="p-3 bg-ponte-sand rounded-md">
-                    <p className="font-medium text-ponte-black">{duplicate.email}</p>
+                    <p className="font-medium text-ponte-black">{(duplicate as { email: string }).email}</p>
                     <p className="text-sm text-ponte-olive">
-                      {duplicate.count} duplicates • Source: {duplicate.source} • 
-                      Date: {new Date(duplicate.submittedAt).toLocaleDateString()}
+                      {(duplicate as { count: number }).count} duplicates • Source: {(duplicate as { source: string }).source} • 
+                      Date: {new Date((duplicate as { submittedAt: string }).submittedAt).toLocaleDateString()}
                     </p>
                   </div>
                 ))}

@@ -1,7 +1,7 @@
 "use client"
 
-import { useState } from "react"
 import { useRouter } from "next/navigation"
+import { useState } from "react"
 
 export default function PartnerLogin() {
   const router = useRouter()
@@ -35,7 +35,7 @@ export default function PartnerLogin() {
       } else {
         setError(data.error || "Login failed")
       }
-    } catch (error) {
+    } catch {
       setError("Login failed. Please try again.")
     } finally {
       setLoading(false)

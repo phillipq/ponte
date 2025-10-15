@@ -1,7 +1,7 @@
 "use client"
 
-import { useRef, useState } from "react"
 import Image from "next/image"
+import { useRef, useState } from "react"
 
 interface FileInfo {
   url: string
@@ -109,7 +109,7 @@ export default function PropertyFileManager({
         })
 
         if (imageResponse.ok) {
-          const imageData = await imageResponse.json() as { files: any[] }
+          const imageData = await imageResponse.json() as { files: unknown[] }
           onPropertyPhotosChange([...propertyPhotos, ...imageData.files])
         }
       }

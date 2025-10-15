@@ -1,7 +1,7 @@
 "use client"
 
-import { useState, useEffect } from "react"
-import { EVALUATION_CATEGORIES, calculateCategoryScore, getScoreColor, getScoreBgColor, formatPercentage } from "lib/property-evaluation"
+import { useState } from "react"
+import { calculateCategoryScore, EVALUATION_CATEGORIES, formatPercentage, getScoreBgColor, getScoreColor } from "lib/property-evaluation"
 
 interface PropertyEvaluationItem {
   id: string
@@ -34,7 +34,7 @@ interface PropertyEvaluationCardProps {
 
 export default function PropertyEvaluationCard({ evaluation, onUpdateItem, onDelete }: PropertyEvaluationCardProps) {
   const [activeTab, setActiveTab] = useState("LEGAL_STATUS")
-  const [editingItem, setEditingItem] = useState<string | null>(null)
+  const [_editingItem, _setEditingItem] = useState<string | null>(null)
 
   const getCategoryItems = (categoryName: string) => {
     return evaluation.evaluationItems.filter(item => item.category === categoryName)

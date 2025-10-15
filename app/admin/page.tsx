@@ -15,11 +15,11 @@ export default async function AdminDashboard() {
   }
 
   // Check if user can access admin
-  if (!canAccessAdmin(session.user.email!)) {
+  if (!session.user?.email || !canAccessAdmin(session.user.email)) {
     redirect("/dashboard")
   }
 
-  const isMasterAdminUser = isMasterAdmin(session.user.email!)
+  const isMasterAdminUser = isMasterAdmin(session.user.email)
 
   // Get users based on admin type
   const allUsers = await prisma.user.findMany({

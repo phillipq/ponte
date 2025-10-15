@@ -1,7 +1,8 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import Image from "next/image"
 import { useRouter } from "next/navigation"
+import { useEffect, useState } from "react"
 import { Button } from "components/Button"
 import Navigation from "components/Navigation"
 
@@ -27,7 +28,7 @@ export default function QuestionnairePage() {
   const [loading, setLoading] = useState(true)
   const [showAddSection, setShowAddSection] = useState(false)
   const [showAddQuestion, setShowAddQuestion] = useState<string | null>(null)
-  const [editingSection, setEditingSection] = useState<QuestionnaireSection | null>(null)
+  const [_editingSection, setEditingSection] = useState<QuestionnaireSection | null>(null)
   const [editingQuestion, setEditingQuestion] = useState<QuestionnaireQuestion | null>(null)
   const [newSection, setNewSection] = useState({ title: "", order: 0 })
   const [newQuestion, setNewQuestion] = useState({ question: "", questionType: "text" as "text" | "ranking" | "yesno", order: 0 })
@@ -79,7 +80,7 @@ export default function QuestionnairePage() {
         const data = await response.json() as { error?: string }
         setError(data.error || "Failed to create section")
       }
-    } catch (error) {
+    } catch {
       setError("Failed to create section")
     } finally {
       setSubmitting(false)
@@ -113,7 +114,7 @@ export default function QuestionnairePage() {
         const data = await response.json() as { error?: string }
         setError(data.error || "Failed to create question")
       }
-    } catch (error) {
+    } catch {
       setError("Failed to create question")
     } finally {
       setSubmitting(false)
@@ -135,7 +136,7 @@ export default function QuestionnairePage() {
       } else {
         setError("Failed to delete section")
       }
-    } catch (error) {
+    } catch {
       setError("Failed to delete section")
     }
   }
@@ -155,7 +156,7 @@ export default function QuestionnairePage() {
       } else {
         setError("Failed to delete question")
       }
-    } catch (error) {
+    } catch {
       setError("Failed to delete question")
     }
   }
@@ -188,7 +189,7 @@ export default function QuestionnairePage() {
         const data = await response.json() as { error?: string }
         setError(data.error || "Failed to update question")
       }
-    } catch (error) {
+    } catch {
       setError("Failed to update question")
     } finally {
       setSubmitting(false)
@@ -226,9 +227,11 @@ export default function QuestionnairePage() {
         <div className="mb-8">
           <div className="flex items-center justify-between">
             <div className="flex items-center">
-              <img 
+              <Image 
                 src="/logos/icon-questionnaire.png" 
                 alt="Questionnaire Icon" 
+                width={32}
+                height={32}
                 className="w-8 h-8 mr-3"
               />
               <div>

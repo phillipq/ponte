@@ -1,8 +1,9 @@
 "use client"
 
-import { useState, useEffect } from "react"
-import { useSession } from "next-auth/react"
+import Image from "next/image"
 import { useRouter } from "next/navigation"
+import { useSession } from "next-auth/react"
+import { useEffect, useState } from "react"
 import Navigation from "components/Navigation"
 
 interface Destination {
@@ -27,7 +28,7 @@ interface Destination {
 }
 
 export default function DestinationsPage() {
-  const { data: session, status } = useSession()
+  const { data: _session, status } = useSession()
   const router = useRouter()
   const [destinations, setDestinations] = useState<Destination[]>([])
   const [loading, setLoading] = useState(true)
@@ -52,7 +53,7 @@ export default function DestinationsPage() {
     longitude: 0,
     tags: [] as string[]
   })
-  const [geocodingResult, setGeocodingResult] = useState<any>(null)
+  const [geocodingResult, setGeocodingResult] = useState<unknown>(null)
   const [geocodingLoading, setGeocodingLoading] = useState(false)
   const [error, setError] = useState("")
   const [submitting, setSubmitting] = useState(false)
@@ -254,7 +255,7 @@ export default function DestinationsPage() {
         await fetchDestinations()
         setSelectedDestinations([])
       }
-    } catch (error) {
+    } catch {
       alert("Failed to delete destinations")
     } finally {
       setBulkDeleteLoading(false)
@@ -327,7 +328,7 @@ export default function DestinationsPage() {
     }))
   }
 
-  const handleGeocode = async () => {
+  const _handleGeocode = async () => {
     if (!newDestination.streetAddress.trim() && !newDestination.city.trim()) {
       setError("Please enter at least a street address or city")
       return
@@ -356,7 +357,7 @@ export default function DestinationsPage() {
         body: JSON.stringify({ address: fullAddress }),
       })
 
-      const data = await response.json() as { result?: any, error?: string }
+      const data = await response.json() as { result?: unknown, error?: string }
 
       if (response.ok) {
         setGeocodingResult(data.result)
@@ -369,7 +370,7 @@ export default function DestinationsPage() {
       } else {
         setError(data.error || "Geocoding failed")
       }
-    } catch (error) {
+    } catch {
       setError("Failed to geocode address")
     } finally {
       setGeocodingLoading(false)
@@ -392,8 +393,8 @@ export default function DestinationsPage() {
       })
 
       if (response.ok) {
-        const data = await response.json() as any
-        const address = data.result.formatted_address
+        const data = await response.json() as unknown
+        const address = (data as { result: { formatted_address: string } }).result.formatted_address
         
         // Update the editing destination with the full address in the address field
         setEditingDestination(prev => prev ? {
@@ -403,7 +404,7 @@ export default function DestinationsPage() {
       } else {
         setError("Failed to geocode address")
       }
-    } catch (error) {
+    } catch {
       setError("Failed to geocode address")
     } finally {
       setGeocodingLoading(false)
@@ -464,7 +465,7 @@ export default function DestinationsPage() {
       } else {
         setError(data.error || `Failed to ${isEditing ? 'update' : 'add'} destination`)
       }
-    } catch (error) {
+    } catch {
       setError(`Failed to ${editingDestination ? 'update' : 'add'} destination`)
     } finally {
       setSubmitting(false)
@@ -555,9 +556,11 @@ export default function DestinationsPage() {
         <div className="mb-8">
           <div className="flex justify-between items-center">
             <div className="flex items-center">
-              <img 
+              <Image 
                 src="/logos/icon-destination.png" 
                 alt="Destination Icon" 
+                width={32}
+                height={32}
                 className="w-8 h-8 mr-3"
               />
               <div>

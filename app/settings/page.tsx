@@ -1,12 +1,12 @@
 "use client"
 
-import { useState, useEffect } from "react"
-import { useSession } from "next-auth/react"
 import { useRouter } from "next/navigation"
+import { useSession } from "next-auth/react"
+import { useEffect, useState } from "react"
 import Navigation from "components/Navigation"
 
 export default function SettingsPage() {
-  const { data: session, status } = useSession()
+  const { data: _session, status } = useSession()
   const router = useRouter()
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
@@ -29,10 +29,10 @@ export default function SettingsPage() {
   const [passwordSuccess, setPasswordSuccess] = useState("")
 
   // Tag management settings
-  const [tags, setTags] = useState<any[]>([])
+  const [tags, setTags] = useState<unknown[]>([])
   const [newTagName, setNewTagName] = useState("")
   const [newTagColor, setNewTagColor] = useState("#C1664A") // Default to terracotta
-  const [editingTag, setEditingTag] = useState<any>(null)
+  const [editingTag, setEditingTag] = useState<unknown>(null)
   const [editTagName, setEditTagName] = useState("")
   const [editTagColor, setEditTagColor] = useState("")
   const [tagLoading, setTagLoading] = useState(false)
@@ -40,10 +40,10 @@ export default function SettingsPage() {
   const [tagSuccess, setTagSuccess] = useState("")
 
   // Keywords & Features management settings
-  const [keywords, setKeywords] = useState<any[]>([])
+  const [keywords, setKeywords] = useState<unknown[]>([])
   const [newKeywordName, setNewKeywordName] = useState("")
   const [newKeywordColor, setNewKeywordColor] = useState("#7A8664") // Default to olive
-  const [editingKeyword, setEditingKeyword] = useState<any>(null)
+  const [editingKeyword, setEditingKeyword] = useState<unknown>(null)
   const [editKeywordName, setEditKeywordName] = useState("")
   const [editKeywordColor, setEditKeywordColor] = useState("")
   const [keywordLoading, setKeywordLoading] = useState(false)
@@ -70,7 +70,7 @@ export default function SettingsPage() {
   const [activeTab, setActiveTab] = useState("user")
 
   // User management state
-  const [users, setUsers] = useState<any[]>([])
+  const [users, setUsers] = useState<unknown[]>([])
   const [userLoading, setUserLoading] = useState(false)
   const [showAddUser, setShowAddUser] = useState(false)
   const [newUser, setNewUser] = useState({
@@ -81,7 +81,7 @@ export default function SettingsPage() {
   })
   const [userSubmitting, setUserSubmitting] = useState(false)
   const [userError, setUserError] = useState("")
-  const [editingUser, setEditingUser] = useState<any>(null)
+  const [editingUser, setEditingUser] = useState<unknown>(null)
   const [editUser, setEditUser] = useState({
     name: "",
     email: "",
@@ -92,7 +92,7 @@ export default function SettingsPage() {
   const [editUserError, setEditUserError] = useState("")
 
   // Partner management state
-  const [partners, setPartners] = useState<any[]>([])
+  const [partners, setPartners] = useState<unknown[]>([])
   const [partnerLoading, setPartnerLoading] = useState(false)
   const [showAddPartner, setShowAddPartner] = useState(false)
   const [newPartner, setNewPartner] = useState({
@@ -104,7 +104,7 @@ export default function SettingsPage() {
   })
   const [partnerSubmitting, setPartnerSubmitting] = useState(false)
   const [partnerError, setPartnerError] = useState("")
-  const [editingPartner, setEditingPartner] = useState<any>(null)
+  const [editingPartner, setEditingPartner] = useState<unknown>(null)
   const [editPartner, setEditPartner] = useState({
     name: "",
     email: "",
@@ -163,10 +163,10 @@ export default function SettingsPage() {
       // In a real app, you'd fetch from your API
       const savedSettings = localStorage.getItem("mapSettings")
       if (savedSettings) {
-        const settings = JSON.parse(savedSettings) as { defaultLocation?: any }
+        const settings = JSON.parse(savedSettings) as { defaultLocation?: unknown }
         setDefaultLocation(settings.defaultLocation || defaultLocation)
       }
-    } catch (error) {
+    } catch {
       console.error("Error loading settings:", error)
     } finally {
       setLoading(false)
@@ -187,7 +187,7 @@ export default function SettingsPage() {
       
       setSuccess("Settings saved successfully!")
       setTimeout(() => setSuccess(""), 3000)
-    } catch (error) {
+    } catch {
       console.error("Error saving settings:", error)
       setError("Failed to save settings")
     } finally {
@@ -243,7 +243,7 @@ export default function SettingsPage() {
       } else {
         setPasswordError(data.error || "Failed to change password")
       }
-    } catch (error) {
+    } catch {
       setPasswordError("An error occurred. Please try again.")
     } finally {
       setPasswordLoading(false)
@@ -255,10 +255,10 @@ export default function SettingsPage() {
     try {
       const response = await fetch("/api/tags")
       if (response.ok) {
-        const data = await response.json() as { tags?: any[] }
+        const data = await response.json() as { tags?: unknown[] }
         setTags(data.tags || [])
       }
-    } catch (error) {
+    } catch {
       console.error("Error loading tags:", error)
     }
   }
@@ -289,7 +289,7 @@ export default function SettingsPage() {
       } else {
         setTagError(data.error || "Failed to create tag")
       }
-    } catch (error) {
+    } catch {
       setTagError("An error occurred. Please try again.")
     } finally {
       setTagLoading(false)
@@ -323,7 +323,7 @@ export default function SettingsPage() {
       } else {
         setTagError(data.error || "Failed to update tag")
       }
-    } catch (error) {
+    } catch {
       setTagError("An error occurred. Please try again.")
     } finally {
       setTagLoading(false)
@@ -349,7 +349,7 @@ export default function SettingsPage() {
         const data = await response.json() as { error?: string }
         setTagError(data.error || "Failed to delete tag")
       }
-    } catch (error) {
+    } catch {
       setTagError("An error occurred. Please try again.")
     } finally {
       setTagLoading(false)
@@ -361,10 +361,10 @@ export default function SettingsPage() {
     try {
       const response = await fetch("/api/admin/keywords")
       if (response.ok) {
-        const data = await response.json() as { keywords?: any[] }
+        const data = await response.json() as { keywords?: unknown[] }
         setKeywords(data.keywords || [])
       }
-    } catch (error) {
+    } catch {
       console.error("Error loading keywords:", error)
     }
   }
@@ -397,7 +397,7 @@ export default function SettingsPage() {
       } else {
         setKeywordError(data.error || "Failed to create keyword")
       }
-    } catch (error) {
+    } catch {
       setKeywordError("An error occurred. Please try again.")
     } finally {
       setKeywordLoading(false)
@@ -435,7 +435,7 @@ export default function SettingsPage() {
       } else {
         setKeywordError(data.error || "Failed to update keyword")
       }
-    } catch (error) {
+    } catch {
       setKeywordError("An error occurred. Please try again.")
     } finally {
       setKeywordLoading(false)
@@ -461,14 +461,14 @@ export default function SettingsPage() {
         const data = await response.json() as { error?: string }
         setKeywordError(data.error || "Failed to delete keyword")
       }
-    } catch (error) {
+    } catch {
       setKeywordError("An error occurred. Please try again.")
     } finally {
       setKeywordLoading(false)
     }
   }
 
-  const startEditTag = (tag: any) => {
+  const startEditTag = (tag: unknown) => {
     setEditingTag(tag)
     setEditTagName(tag.name)
     setEditTagColor(tag.color || "#C1664A")
@@ -519,7 +519,7 @@ export default function SettingsPage() {
       } else {
         setImportError(data.error || 'Import failed')
       }
-    } catch (error) {
+    } catch {
       setImportError('An error occurred during import')
     } finally {
       setImportLoading(false)
@@ -562,12 +562,12 @@ export default function SettingsPage() {
     try {
       setPartnerLoading(true)
       const response = await fetch("/api/admin/partners")
-      const data = await response.json() as { partners: any[] }
+      const data = await response.json() as { partners: unknown[] }
       
       if (response.ok) {
         setPartners(data.partners)
       }
-    } catch (error) {
+    } catch {
       console.error("Error fetching partners:", error)
     } finally {
       setPartnerLoading(false)
@@ -597,7 +597,7 @@ export default function SettingsPage() {
       } else {
         setPartnerError(data.error || "Failed to create partner")
       }
-    } catch (error) {
+    } catch {
       setPartnerError("Failed to create partner")
     } finally {
       setPartnerSubmitting(false)
@@ -617,12 +617,12 @@ export default function SettingsPage() {
       if (response.ok) {
         fetchPartners()
       }
-    } catch (error) {
+    } catch {
       console.error("Error updating realtor status:", error)
     }
   }
 
-  const startEditPartner = (realtor: any) => {
+  const startEditPartner = (realtor: unknown) => {
     setEditingPartner(realtor)
     setEditPartner({
       name: realtor.name,
@@ -675,7 +675,7 @@ export default function SettingsPage() {
       } else {
         setEditPartnerError(data.error || "Failed to update realtor")
       }
-    } catch (error) {
+    } catch {
       setEditPartnerError("Failed to update realtor")
     } finally {
       setEditPartnerSubmitting(false)
@@ -687,12 +687,12 @@ export default function SettingsPage() {
     try {
       setUserLoading(true)
       const response = await fetch("/api/admin/users")
-      const data = await response.json() as { users: any[] }
+      const data = await response.json() as { users: unknown[] }
       
       if (response.ok) {
         setUsers(data.users)
       }
-    } catch (error) {
+    } catch {
       console.error("Error fetching users:", error)
     } finally {
       setUserLoading(false)
@@ -722,14 +722,14 @@ export default function SettingsPage() {
       } else {
         setUserError(data.error || "Failed to create user")
       }
-    } catch (error) {
+    } catch {
       setUserError("Failed to create user")
     } finally {
       setUserSubmitting(false)
     }
   }
 
-  const startEditUser = (user: any) => {
+  const startEditUser = (user: unknown) => {
     setEditingUser(user)
     setEditUser({
       name: user.name,
@@ -779,7 +779,7 @@ export default function SettingsPage() {
       } else {
         setEditUserError(data.error || "Failed to update user")
       }
-    } catch (error) {
+    } catch {
       setEditUserError("Failed to update user")
     } finally {
       setEditUserSubmitting(false)
@@ -800,7 +800,7 @@ export default function SettingsPage() {
         const data = await response.json() as { error?: string }
         alert(data.error || "Failed to delete user")
       }
-    } catch (error) {
+    } catch {
       alert("Failed to delete user")
     }
   }
@@ -1137,7 +1137,7 @@ export default function SettingsPage() {
               <div className="mt-6">
                 <h3 className="text-sm font-medium text-ponte-black mb-3">Existing Tags</h3>
                 <div className="space-y-2">
-                  {tags.map((tag: any) => (
+                  {tags.map((tag: unknown) => (
                     <div key={tag.id} className="flex items-center justify-between p-3 bg-white border border-ponte-sand rounded-md">
                       {editingTag?.id === tag.id ? (
                         <form onSubmit={updateTag} className="flex items-center space-x-2 flex-1">
@@ -1289,7 +1289,7 @@ export default function SettingsPage() {
               <div className="mt-6">
                 <h3 className="text-sm font-medium text-ponte-black mb-3">Existing Keywords</h3>
                 <div className="space-y-2">
-                  {keywords.map((keyword: any) => (
+                  {keywords.map((keyword: unknown) => (
                     <div key={keyword.id} className="flex items-center justify-between p-3 bg-white border border-ponte-sand rounded-md">
                       {editingKeyword?.id === keyword.id ? (
                         <form onSubmit={updateKeyword} className="flex items-center space-x-2 flex-1">
@@ -1558,7 +1558,7 @@ export default function SettingsPage() {
                         <div className="ml-4">
                           <p className="text-sm font-medium text-ponte-olive">Admins</p>
                           <p className="text-2xl font-bold text-ponte-black">
-                            {users.filter((u: any) => u.role === "admin").length}
+                            {users.filter((u: unknown) => u.role === "admin").length}
                           </p>
                         </div>
                       </div>
@@ -1574,7 +1574,7 @@ export default function SettingsPage() {
                         <div className="ml-4">
                           <p className="text-sm font-medium text-ponte-olive">Regular Users</p>
                           <p className="text-2xl font-bold text-ponte-black">
-                            {users.filter((u: any) => u.role === "user").length}
+                            {users.filter((u: unknown) => u.role === "user").length}
                           </p>
                         </div>
                       </div>
@@ -1630,7 +1630,7 @@ export default function SettingsPage() {
                             </tr>
                           </thead>
                           <tbody className="bg-white divide-y divide-ponte-sand">
-                            {users.map((user: any) => (
+                            {users.map((user: unknown) => (
                               <tr key={user.id} className="hover:bg-gray-50">
                                 <td className="px-6 py-4 whitespace-nowrap">
                                   <div>
@@ -1732,7 +1732,7 @@ export default function SettingsPage() {
                         <div className="ml-4">
                           <p className="text-sm font-medium text-ponte-olive">Active Realtors</p>
                           <p className="text-2xl font-bold text-ponte-black">
-                            {partners.filter((r: any) => r.isActive).length}
+                            {partners.filter((r: unknown) => r.isActive).length}
                           </p>
                         </div>
                       </div>
@@ -1748,7 +1748,7 @@ export default function SettingsPage() {
                         <div className="ml-4">
                           <p className="text-sm font-medium text-ponte-olive">Total Properties</p>
                           <p className="text-2xl font-bold text-ponte-black">
-                            {partners.reduce((sum: number, r: any) => sum + (r._count?.properties || 0), 0)}
+                            {partners.reduce((sum: number, r: unknown) => sum + (r._count?.properties || 0), 0)}
                           </p>
                         </div>
                       </div>
@@ -1804,7 +1804,7 @@ export default function SettingsPage() {
                             </tr>
                           </thead>
                           <tbody className="bg-white divide-y divide-ponte-sand">
-                            {partners.map((realtor: any) => (
+                            {partners.map((realtor: unknown) => (
                               <tr key={realtor.id} className="hover:bg-gray-50">
                                 <td className="px-6 py-4 whitespace-nowrap">
                                   <div>

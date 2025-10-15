@@ -1,7 +1,7 @@
 "use client"
 
-import { useState, useEffect } from "react"
 import { useParams } from "next/navigation"
+import { useEffect, useState } from "react"
 
 interface Question {
   id: string
@@ -135,7 +135,7 @@ export default function PublicQuestionnairePage() {
   }
 
   // Check if question is asking for importance/rating
-  const isRatingQuestion = (question: string) => {
+  const _isRatingQuestion = (question: string) => {
     const ratingKeywords = [
       'how important', 'importance', 'priority', 'rate', 'ranking',
       'scale', 'level', 'degree', 'extent', 'significance'
@@ -146,7 +146,7 @@ export default function PublicQuestionnairePage() {
   }
 
   // Rating scale component with emoji faces - stores descriptive words
-  const RatingScale = ({ questionId, value, onChange }: { questionId: string, value: string, onChange: (value: string) => void }) => {
+  const RatingScale = ({ questionId: _questionId, value, onChange }: { questionId: string, value: string, onChange: (value: string) => void }) => {
     const ratings = [
       { value: 'Not Important', label: 'Not Important', emoji: '⭐' },
       { value: 'Somewhat Important', label: 'Somewhat Important', emoji: '⭐⭐' },
@@ -322,7 +322,7 @@ export default function PublicQuestionnairePage() {
         {/* Questionnaire Form */}
         <div className="bg-white rounded-lg shadow-lg p-6 border border-ponte-sand">
           <form onSubmit={(e) => { e.preventDefault(); handleSubmit(); }}>
-            {questionnaireData.questionnaire.sections.map((section, sectionIndex) => (
+            {questionnaireData.questionnaire.sections.map((section, _sectionIndex) => (
               <div key={section.id} className="mb-8">
                 <h2 className="text-2xl font-semibold text-ponte-black mb-4 border-b border-ponte-sand pb-2">
                   {section.title}

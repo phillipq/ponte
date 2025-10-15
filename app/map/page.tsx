@@ -1,11 +1,11 @@
 "use client"
 
-import { useState, useEffect, useRef } from "react"
-import { useSession } from "next-auth/react"
 import { useRouter } from "next/navigation"
+import { useSession } from "next-auth/react"
+import { useEffect, useRef, useState } from "react"
 // Using traditional Google Maps API loading method
-import Navigation from "components/Navigation"
 import { Button } from "components/Button"
+import Navigation from "components/Navigation"
 
 interface Property {
   id: string
@@ -35,13 +35,13 @@ interface Destination {
 }
 
 export default function MapPage() {
-  const { data: session, status } = useSession()
+  const { data: _session, status } = useSession()
   const router = useRouter()
   const mapRef = useRef<HTMLDivElement>(null)
   const [map, setMap] = useState<google.maps.Map | null>(null)
   const [properties, setProperties] = useState<Property[]>([])
   const [destinations, setDestinations] = useState<Destination[]>([])
-  const [selectedCategory, setSelectedCategory] = useState<string>("")
+  const [_selectedCategory, _setSelectedCategory] = useState<string>("")
   const [loading, setLoading] = useState(true)
   const [mapLoading, setMapLoading] = useState(true)
   const [scriptLoaded, setScriptLoaded] = useState(false)
@@ -98,13 +98,13 @@ export default function MapPage() {
   })
   const [newTag, setNewTag] = useState("")
   const [searchQuery, setSearchQuery] = useState("")
-  const [searchResults, setSearchResults] = useState<any[]>([])
+  const [searchResults, setSearchResults] = useState<unknown[]>([])
   const [showSearchResults, setShowSearchResults] = useState(false)
-  const [placesService, setPlacesService] = useState<google.maps.places.PlacesService | null>(null)
+  const [_placesService, _setPlacesService] = useState<google.maps.places.PlacesService | null>(null)
   const [showLocationMenu, setShowLocationMenu] = useState(false)
   const [menuPosition, setMenuPosition] = useState({ x: 0, y: 0 })
   const [contextLocation, setContextLocation] = useState<{ lat: number; lng: number } | null>(null)
-  const [googleMapsPopup, setGoogleMapsPopup] = useState<any>(null)
+  const [googleMapsPopup, setGoogleMapsPopup] = useState<unknown>(null)
   const [showGoogleMapsMenu, setShowGoogleMapsMenu] = useState(false)
   const [movingDestination, setMovingDestination] = useState<string | null>(null)
   const [moveMarker, setMoveMarker] = useState<google.maps.Marker | null>(null)
@@ -300,7 +300,7 @@ export default function MapPage() {
             
             if (allText) {
               // Clean up the text - remove "View on Google Maps" and other unwanted text
-              let cleanText = allText
+              const cleanText = allText
                 .replace(/View on Google Maps/gi, '')
                 .replace(/Directions/gi, '')
                 .replace(/Save/gi, '')
@@ -572,7 +572,7 @@ export default function MapPage() {
             console.log("📝 All popup text:", allText)
             
             // Clean up the text - remove "View on Google Maps" and other unwanted text
-            let cleanText = allText
+            const cleanText = allText
               .replace(/View on Google Maps/gi, '')
               .replace(/Directions/gi, '')
               .replace(/Save/gi, '')
@@ -862,7 +862,7 @@ export default function MapPage() {
           
           if (allText) {
             // Clean up the text - remove "View on Google Maps" and other unwanted text
-            let cleanText = allText
+            const cleanText = allText
               .replace(/View on Google Maps/gi, '')
               .replace(/Directions/gi, '')
               .replace(/Save/gi, '')
@@ -1037,7 +1037,7 @@ export default function MapPage() {
                       console.log("📝 All popup text from observer:", allText)
                       
                       // Clean up the text - remove "View on Google Maps" and other unwanted text
-                      let cleanText = allText
+                      const cleanText = allText
                         .replace(/View on Google Maps/gi, '')
                         .replace(/Directions/gi, '')
                         .replace(/Save/gi, '')
@@ -1247,7 +1247,7 @@ export default function MapPage() {
         const propertiesData = await propertiesRes.json()
         console.log("Properties response:", propertiesData)
         // Handle both array and object response formats
-        const properties = Array.isArray(propertiesData) ? propertiesData : (propertiesData as any).properties || []
+        const properties = Array.isArray(propertiesData) ? propertiesData : (propertiesData as { properties?: unknown[] }).properties || []
         console.log("Properties loaded:", properties.length)
         setProperties(properties)
       }
@@ -1256,7 +1256,7 @@ export default function MapPage() {
         const destinationsData = await destinationsRes.json()
         console.log("Destinations response:", destinationsData)
         // Handle both array and object response formats
-        const destinations = Array.isArray(destinationsData) ? destinationsData : (destinationsData as any).destinations || []
+        const destinations = Array.isArray(destinationsData) ? destinationsData : (destinationsData as { destinations?: unknown[] }).destinations || []
         console.log("Destinations loaded:", destinations.length)
         setDestinations(destinations)
       }
@@ -1649,7 +1649,7 @@ export default function MapPage() {
 
       const service = new google.maps.places.PlacesService(map)
       service.textSearch(request, (results, status) => {
-        if (status === (window as any).google.maps.places.PlacesServiceStatus.OK && results) {
+        if (status === (window as { google: { maps: { places: { PlacesServiceStatus: { OK: string } } } } }).google.maps.places.PlacesServiceStatus.OK && results) {
           setSearchResults(results)
           setShowSearchResults(true)
         } else {
@@ -1663,10 +1663,10 @@ export default function MapPage() {
     }
   }
 
-  const handleSearchResultClick = (result: any) => {
+  const handleSearchResultClick = (result: unknown) => {
     if (!map) return
 
-    const location = result.geometry.location
+    const location = (result as { geometry: { location: google.maps.LatLng } }).geometry.location
     map.setCenter(location)
     map.setZoom(15)
     
@@ -1681,7 +1681,7 @@ export default function MapPage() {
     setSearchQuery("")
   }
 
-  const handleMapClick = (event: google.maps.MapMouseEvent) => {
+  const _handleMapClick = (event: google.maps.MapMouseEvent) => {
     if (!event.latLng) return
 
     const lat = event.latLng.lat()
@@ -1713,8 +1713,8 @@ export default function MapPage() {
       })
 
       if (response.ok) {
-        const data = await response.json() as any
-        const address = data.result.formatted_address
+        const data = await response.json() as unknown
+        const address = (data as { result: { formatted_address: string } }).result.formatted_address
         
         // Update both property and destination forms with the geocoded address
         setNewProperty(prev => ({
@@ -1823,8 +1823,8 @@ export default function MapPage() {
         setGoogleMapsPopup(null)
         alert(`"${name}" added to destinations successfully!`)
       } else {
-        const errorData = await response.json() as any
-        alert(`Failed to add destination: ${errorData.error}`)
+        const errorData = await response.json() as unknown
+        alert(`Failed to add destination: ${(errorData as { error: string }).error}`)
       }
     } catch (error) {
       console.error("Error adding destination from Google Maps:", error)
@@ -1844,7 +1844,7 @@ export default function MapPage() {
       const finalLng = clickedLocation.lng
       
       // Perform reverse geocoding to get address from coordinates
-      let geocodedAddress = {
+      const geocodedAddress = {
         streetAddress: "Map Location",
         city: "",
         postalCode: "",
@@ -1862,8 +1862,8 @@ export default function MapPage() {
         })
 
         if (response.ok) {
-          const data = await response.json() as any
-          const address = data.result.formatted_address
+          const data = await response.json() as unknown
+          const address = (data as { result: { formatted_address: string } }).result.formatted_address
           
           // Parse the address components
           const addressParts = address.split(', ')
@@ -1919,8 +1919,8 @@ export default function MapPage() {
         clearMapPin()
         setClickedLocation(null)
       } else {
-        const errorData = await propertyResponse.json() as any
-        alert(`Failed to create property: ${errorData.error}`)
+        const errorData = await propertyResponse.json() as unknown
+        alert(`Failed to create property: ${(errorData as { error: string }).error}`)
       }
     } catch (error) {
       console.error("Error adding property:", error)
@@ -1948,7 +1948,7 @@ export default function MapPage() {
         })
       })
 
-      const data = await response.json() as any
+      const data = await response.json() as unknown
       if (response.ok) {
         const destinationResponse = await fetch("/api/destinations", {
           method: "POST",
@@ -1968,8 +1968,8 @@ export default function MapPage() {
           setNewDestination({ name: "", address: "", category: "", latitude: 0, longitude: 0 })
           setClickedLocation(null)
         } else {
-          const errorData = await destinationResponse.json() as any
-          alert(`Failed to create destination: ${errorData.error}`)
+          const errorData = await destinationResponse.json() as unknown
+          alert(`Failed to create destination: ${(errorData as { error: string }).error}`)
         }
       } else {
         alert("Failed to get address for the selected location.")
@@ -2013,7 +2013,7 @@ export default function MapPage() {
     })
     
     // Store the listener for cleanup
-    ;(tempMarker as any).moveListener = moveListener
+    ;(tempMarker as { moveListener: google.maps.MapsEventListener }).moveListener = moveListener
   }
 
   const handleConfirmMoveDestination = async () => {
@@ -2035,8 +2035,8 @@ export default function MapPage() {
         })
       })
       
-      const data = await response.json() as any
-      const newAddress = data.result?.formatted_address || "Unknown Address"
+      const data = await response.json() as unknown
+      const newAddress = (data as { result?: { formatted_address?: string } }).result?.formatted_address || "Unknown Address"
       
       // Update the destination
       const updateResponse = await fetch(`/api/destinations/${movingDestination}`, {
@@ -2053,8 +2053,8 @@ export default function MapPage() {
         await fetchData()
         alert("Destination moved successfully!")
       } else {
-        const errorData = await updateResponse.json() as any
-        alert(`Failed to move destination: ${errorData.error}`)
+        const errorData = await updateResponse.json() as unknown
+        alert(`Failed to move destination: ${(errorData as { error: string }).error}`)
       }
     } catch (error) {
       console.error("Error moving destination:", error)

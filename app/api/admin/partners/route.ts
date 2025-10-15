@@ -37,7 +37,7 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   try {
-    const { name, email, password, company, phone } = await request.json()
+    const { name, email, password, company, phone } = await request.json() as { name: string; email: string; password: string; company?: string; phone?: string }
 
     if (!name || !email || !password) {
       return NextResponse.json(

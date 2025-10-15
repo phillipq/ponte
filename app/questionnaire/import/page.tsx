@@ -1,8 +1,8 @@
 "use client"
 
-import { useState, useRef } from "react"
-import { useSession } from "next-auth/react"
 import { useRouter } from "next/navigation"
+import { useSession } from "next-auth/react"
+import { useRef, useState } from "react"
 import { Button } from "components/Button"
 import Navigation from "components/Navigation"
 
@@ -15,12 +15,12 @@ interface ImportResult {
 }
 
 export default function QuestionnaireImportPage() {
-  const { data: session, status } = useSession()
+  const { data: _session, status } = useSession()
   const router = useRouter()
   const [file, setFile] = useState<File | null>(null)
   const [importing, setImporting] = useState(false)
   const [validating, setValidating] = useState(false)
-  const [validationResults, setValidationResults] = useState<any>(null)
+  const [validationResults, setValidationResults] = useState<unknown>(null)
   const [showValidation, setShowValidation] = useState(false)
   const [confirmedMatches, setConfirmedMatches] = useState<Set<string>>(new Set())
   const [results, setResults] = useState<ImportResult[]>([])
@@ -187,13 +187,13 @@ export default function QuestionnaireImportPage() {
           })
 
           if (response.ok) {
-            const data = await response.json() as { client: any, responseSet: any }
+            const data = await response.json() as { client: unknown, responseSet: unknown }
             importResults.push({
               email,
-              name: data.client.name,
-              isNew: data.client.isNew,
-              responsesCount: data.responseSet.responsesCount,
-              version: data.responseSet.version
+              name: (data.client as { name: string }).name,
+              isNew: (data.client as { isNew: boolean }).isNew,
+              responsesCount: (data.responseSet as { responsesCount: number }).responsesCount,
+              version: (data.responseSet as { version: number }).version
             })
           } else {
             console.error('Import failed for:', email)
@@ -376,25 +376,25 @@ export default function QuestionnaireImportPage() {
             <div className="mb-6">
               <h3 className="text-lg font-semibold text-ponte-black mb-3 font-header">Client Response Analysis</h3>
               <div className="space-y-2">
-                {validationResults.clientAnalysis.map((client: any, index: number) => (
+                {validationResults.clientAnalysis.map((client: unknown, index: number) => (
                   <div key={index} className="flex items-center justify-between p-3 bg-ponte-cream rounded-lg">
                     <div>
-                      <p className="font-medium text-ponte-black">{client.email}</p>
+                      <p className="font-medium text-ponte-black">{(client as { email: string }).email}</p>
                       <p className="text-sm text-ponte-olive">
-                        Row {client.rowIndex} • {client.totalResponses}/{client.totalQuestions} responses
+                        Row {(client as { rowIndex: number }).rowIndex} • {(client as { totalResponses: number }).totalResponses}/{(client as { totalQuestions: number }).totalQuestions} responses
                       </p>
                     </div>
                     <div className="text-right">
                       <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                        client.completeness === 100 ? 'bg-green-100 text-green-800' :
-                        client.completeness > 50 ? 'bg-yellow-100 text-yellow-800' :
+                        (client as { completeness: number }).completeness === 100 ? 'bg-green-100 text-green-800' :
+                        (client as { completeness: number }).completeness > 50 ? 'bg-yellow-100 text-yellow-800' :
                         'bg-red-100 text-red-800'
                       }`}>
-                        {client.completeness}% Complete
+                        {(client as { completeness: number }).completeness}% Complete
                       </span>
-                      {client.missingResponses > 0 && (
+                      {(client as { missingResponses: number }).missingResponses > 0 && (
                         <p className="text-xs text-ponte-olive mt-1">
-                          {client.missingResponses} missing
+                          {(client as { missingResponses: number }).missingResponses} missing
                         </p>
                       )}
                     </div>
@@ -410,9 +410,9 @@ export default function QuestionnaireImportPage() {
                   Questions Missing from CSV ({validationResults.comparison.missingInCsv.length})
                 </h3>
                 <div className="space-y-2 max-h-40 overflow-y-auto">
-                  {validationResults.comparison.missingInCsv.map((item: any, index: number) => (
+                  {validationResults.comparison.missingInCsv.map((item: unknown, index: number) => (
                     <div key={index} className="p-2 bg-red-50 border border-red-200 rounded text-sm">
-                      <span className="font-medium text-red-800">{item.section}:</span> {item.question}
+                      <span className="font-medium text-red-800">{(item as { section: string }).section}:</span> {(item as { question: string }).question}
                     </div>
                   ))}
                 </div>
@@ -429,8 +429,8 @@ export default function QuestionnaireImportPage() {
                   Review these potential matches and confirm which ones should be treated as exact matches:
                 </p>
                 <div className="space-y-2 max-h-60 overflow-y-auto">
-                  {validationResults.comparison.partialMatches.map((item: any, index: number) => {
-                    const matchKey = `${item.dbQuestion}-${item.csvQuestion}`
+                  {validationResults.comparison.partialMatches.map((item: unknown, index: number) => {
+                    const matchKey = `${(item as { dbQuestion: string }).dbQuestion}-${(item as { csvQuestion: string }).csvQuestion}`
                     const isConfirmed = confirmedMatches.has(matchKey)
                     return (
                       <div key={index} className={`p-3 border rounded text-sm ${

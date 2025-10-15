@@ -44,7 +44,7 @@ export function SubscriptionManagement({ users }: SubscriptionManagementProps) {
         const error = await response.json()
         alert(`Action failed: ${error.message}`)
       }
-    } catch (_error) {
+    } catch {
       alert('Error performing action')
     } finally {
       setIsLoading(false)

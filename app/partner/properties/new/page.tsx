@@ -1,8 +1,8 @@
 "use client"
 
-import { useState, useEffect } from "react"
-import { useRouter } from "next/navigation"
 import Image from "next/image"
+import { useRouter } from "next/navigation"
+import { useEffect, useState } from "react"
 
 interface Partner {
   id: string
@@ -14,7 +14,7 @@ interface Partner {
 
 export default function NewPartnerProperty() {
   const router = useRouter()
-  const [partner, setPartner] = useState<Partner | null>(null)
+  const [_partner, setPartner] = useState<Partner | null>(null)
   const [loading, setLoading] = useState(true)
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState("")
@@ -129,14 +129,14 @@ export default function NewPartnerProperty() {
   })
 
   const [newTag, setNewTag] = useState("")
-  const [geocodingResult, setGeocodingResult] = useState<any>(null)
-  const [geocodingLoading, setGeocodingLoading] = useState(false)
+  const [_geocodingResult, setGeocodingResult] = useState<unknown>(null)
+  const [_geocodingLoading, setGeocodingLoading] = useState(false)
   const [language, setLanguage] = useState<"en" | "it">("en")
   const [uploadedFiles, setUploadedFiles] = useState<File[]>([])
-  const [uploading, setUploading] = useState(false)
+  const [_uploading, _setUploading] = useState(false)
   const [uploadedPictures, setUploadedPictures] = useState<File[]>([])
   const [picturePreview, setPicturePreview] = useState<string[]>([])
-  const [uploadingPictures, setUploadingPictures] = useState(false)
+  const [_uploadingPictures, _setUploadingPictures] = useState(false)
 
   // Translations
   const translations = {
@@ -308,7 +308,7 @@ export default function NewPartnerProperty() {
     }
   }, [picturePreview])
 
-  const handleGeocode = async () => {
+  const _handleGeocode = async () => {
     if (!formData.streetAddress.trim() || !formData.city.trim()) {
       setError(t.requiredFields)
       return
@@ -327,7 +327,7 @@ export default function NewPartnerProperty() {
         body: JSON.stringify({ address }),
       })
 
-      const data = await response.json() as { result?: any; error?: string }
+      const data = await response.json() as { result?: unknown; error?: string }
 
       if (response.ok) {
         setGeocodingResult(data.result)
@@ -339,14 +339,14 @@ export default function NewPartnerProperty() {
       } else {
         setError(data.error || t.geocodingError)
       }
-    } catch (error) {
+    } catch {
       setError(t.geocodingError)
     } finally {
       setGeocodingLoading(false)
     }
   }
 
-  const addTag = () => {
+  const _addTag = () => {
     if (newTag.trim() && !formData.tags.includes(newTag.trim())) {
       setFormData(prev => ({
         ...prev,
@@ -356,19 +356,19 @@ export default function NewPartnerProperty() {
     }
   }
 
-  const removeTag = (tagToRemove: string) => {
+  const _removeTag = (tagToRemove: string) => {
     setFormData(prev => ({
       ...prev,
       tags: prev.tags.filter(tag => tag !== tagToRemove)
     }))
   }
 
-  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const _handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(event.target.files || [])
     setUploadedFiles(prev => [...prev, ...files])
   }
 
-  const removeFile = (index: number) => {
+  const _removeFile = (index: number) => {
     setUploadedFiles(prev => prev.filter((_, i) => i !== index))
   }
 
@@ -451,7 +451,7 @@ export default function NewPartnerProperty() {
         }),
       })
 
-      const data = await response.json() as { success?: boolean; property?: any; error?: string }
+      const data = await response.json() as { success?: boolean; property?: unknown; error?: string }
 
       if (response.ok) {
         setSuccess(t.successMessage)
@@ -573,7 +573,7 @@ export default function NewPartnerProperty() {
       } else {
         setError(data.error || t.errorMessage)
       }
-    } catch (error) {
+    } catch {
       setError(t.errorMessage)
     } finally {
       setSubmitting(false)
@@ -1748,9 +1748,11 @@ export default function NewPartnerProperty() {
                       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                         {picturePreview.map((preview, index) => (
                           <div key={index} className="relative group">
-                            <img
+                            <Image
                               src={preview}
                               alt={`Preview ${index + 1}`}
+                              width={128}
+                              height={128}
                               className="w-full h-32 object-cover rounded-lg border border-ponte-sand"
                             />
                             <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-50 transition-all duration-200 rounded-lg flex items-center justify-center">

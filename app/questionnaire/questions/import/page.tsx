@@ -1,12 +1,13 @@
 "use client"
 
-import { useState, useRef, useEffect } from "react"
-import { useSession } from "next-auth/react"
+import Image from "next/image"
 import { useRouter } from "next/navigation"
+import { useSession } from "next-auth/react"
+import { useRef, useState } from "react"
 import { Button } from "components/Button"
 import Navigation from "components/Navigation"
 
-interface Questionnaire {
+interface _Questionnaire {
   id: string
   name: string
   description?: string
@@ -22,12 +23,12 @@ interface QuestionImportResult {
 }
 
 export default function QuestionImportPage() {
-  const { data: session, status } = useSession()
+  const { data: _session, status } = useSession()
   const router = useRouter()
   const [file, setFile] = useState<File | null>(null)
   const [importing, setImporting] = useState(false)
   const [validating, setValidating] = useState(false)
-  const [validationResults, setValidationResults] = useState<any>(null)
+  const [validationResults, setValidationResults] = useState<unknown>(null)
   const [showValidation, setShowValidation] = useState(false)
   const [results, setResults] = useState<QuestionImportResult[]>([])
   const [showResults, setShowResults] = useState(false)
@@ -77,7 +78,7 @@ export default function QuestionImportPage() {
         body: formData,
       })
 
-      const data = await response.json() as { error?: string, [key: string]: any }
+      const data = await response.json() as { error?: string, [key: string]: unknown }
 
       if (response.ok) {
         setValidationResults(data)
@@ -85,7 +86,7 @@ export default function QuestionImportPage() {
       } else {
         setError(data.error || "Validation failed")
       }
-    } catch (error) {
+    } catch {
       setError("Validation failed")
     } finally {
       setValidating(false)
@@ -123,7 +124,7 @@ export default function QuestionImportPage() {
       } else {
         setError(data.error || "Import failed")
       }
-    } catch (error) {
+    } catch {
       setError("Import failed")
     } finally {
       setImporting(false)
@@ -155,9 +156,11 @@ export default function QuestionImportPage() {
               >
                 ← Back to Questionnaires
               </button>
-              <img 
+              <Image 
                 src="/logos/icon-questionnaire.png" 
                 alt="Questionnaire Icon" 
+                width={32}
+                height={32}
                 className="w-8 h-8 mr-3"
               />
               <div>
@@ -297,10 +300,10 @@ export default function QuestionImportPage() {
               <div>
                 <h3 className="text-lg font-medium text-ponte-black mb-3">Sections Found:</h3>
                 <div className="space-y-2">
-                  {validationResults.sections.map((section: any, index: number) => (
+                  {validationResults.sections.map((section: unknown, index: number) => (
                     <div key={index} className="flex justify-between items-center p-3 bg-ponte-sand rounded-md">
-                      <span className="font-medium text-ponte-black">{section.name}</span>
-                      <span className="text-sm text-ponte-olive">{section.questionCount} questions</span>
+                      <span className="font-medium text-ponte-black">{(section as { name: string }).name}</span>
+                      <span className="text-sm text-ponte-olive">{(section as { questionCount: number }).questionCount} questions</span>
                     </div>
                   ))}
                 </div>

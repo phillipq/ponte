@@ -345,37 +345,43 @@ export default function AnalysisPage() {
 
       if (response.ok) {
         const data = await response.json() as { route: unknown[] }
-        setTourRoute(data.route)
+        setTourRoute((data as { route: unknown[] }).route)
         
         // Display route on map using Directions API
         if (mapInstance && directionsService && directionsRenderer && tourSteps.length >= 2) {
           try {
-            const waypoints = tourSteps.slice(1, -1).map(step => ({
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              location: new (window as any).google.maps.LatLng(step.latitude, step.longitude),
-              stopover: true
-            }))
+            const waypoints = tourSteps.slice(1, -1).map(step => {
+              const stepData = step as { latitude: number; longitude: number }
+              return {
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                location: new (window as any).google.maps.LatLng(stepData.latitude, stepData.longitude),
+                stopover: true
+              }
+            })
 
+            const firstStep = tourSteps[0] as { latitude: number; longitude: number }
+            const lastStep = tourSteps[tourSteps.length - 1] as { latitude: number; longitude: number }
+            
             const request = {
               // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              origin: new (window as any).google.maps.LatLng(tourSteps[0].latitude, tourSteps[0].longitude),
+              origin: new (window as any).google.maps.LatLng(firstStep.latitude, firstStep.longitude),
               // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              destination: new (window as any).google.maps.LatLng(
-                tourSteps[tourSteps.length - 1].latitude, 
-                tourSteps[tourSteps.length - 1].longitude
-              ),
+              destination: new (window as any).google.maps.LatLng(lastStep.latitude, lastStep.longitude),
               waypoints: waypoints,
               optimizeWaypoints: optimizeRoute && waypoints.length > 0,
               // eslint-disable-next-line @typescript-eslint/no-explicit-any
               travelMode: (window as any).google.maps.TravelMode.DRIVING
-            }
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            } as any
 
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            directionsService.route(request, (result: any, status: any) => {
+            (directionsService as any).route(request, (result: any, status: any) => {
               // eslint-disable-next-line @typescript-eslint/no-explicit-any
               if (status === (window as any).google.maps.DirectionsStatus.OK && result) {
-                directionsRenderer.setMap(mapInstance)
-                directionsRenderer.setDirections(result)
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                (directionsRenderer as any).setMap(mapInstance)
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                (directionsRenderer as any).setDirections(result)
                 console.log("Tour planner: Route displayed on map successfully")
               } else {
                 console.error("Tour planner: Directions request failed:", status)
@@ -410,9 +416,9 @@ export default function AnalysisPage() {
       tourSteps.forEach((step, _index) => {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const _marker = new (window as any).google.maps.Marker({
-          position: { lat: step.latitude, lng: step.longitude },
+          position: { lat: (step as { latitude: number }).latitude, lng: (step as { longitude: number }).longitude },
           map: mapInstance,
-          title: step.name
+          title: (step as { name: string }).name
         })
       })
     }
@@ -427,7 +433,7 @@ export default function AnalysisPage() {
 
   // Build tour steps when properties or destinations change
   useEffect(() => {
-    const steps = []
+    const steps: unknown[] = []
     
     // Add selected properties
     tourProperties.forEach((propertyId) => {
@@ -481,7 +487,7 @@ export default function AnalysisPage() {
     const tourData = {
       id: Date.now().toString(),
       name: tourName,
-      startingPoint: tourStartingPoint,
+      startingPoint: _tourStartingPoint,
       steps: tourSteps,
       route: tourRoute,
       createdAt: new Date().toISOString()
@@ -521,15 +527,17 @@ export default function AnalysisPage() {
   }
 
   const loadTour = (tour: unknown) => {
+    const tourData = tour as { steps?: unknown[]; route?: unknown[] }
+    
     // Restore tour data
-    setTourSteps((tour as { steps: unknown[] }).steps)
-    setTourRoute((tour as { route: unknown[] }).route)
+    setTourSteps(tourData.steps || [])
+    setTourRoute(tourData.route || [])
     
     // Extract properties and destinations from steps
     const loadedProperties: string[] = []
     const loadedDestinations: string[] = []
     
-    (tour as { steps?: unknown[] }).steps?.forEach((step: unknown) => {
+    tourData.steps?.forEach((step: unknown) => {
       const stepObj = step as { type?: string; id?: string }
       if (stepObj.type === 'property' && stepObj.id) {
         loadedProperties.push(stepObj.id)
@@ -547,7 +555,7 @@ export default function AnalysisPage() {
     // Close saved tours modal if open
     setShowSavedTours(false)
     
-    alert(`Tour "${tour.name}" loaded successfully!`)
+    alert(`Tour "${(tour as { name: string }).name}" loaded successfully!`)
   }
 
   const deleteTour = async (tourId: string) => {
@@ -1221,7 +1229,7 @@ export default function AnalysisPage() {
                   </div>
                   {tourSteps.map((step, index) => (
                     <div 
-                      key={`${step.id}-${index}`}
+                      key={`${(step as { id: string }).id}-${index}`}
                       draggable
                       onDragStart={(e) => {
                         setDraggedStep(index)
@@ -1241,7 +1249,7 @@ export default function AnalysisPage() {
                           
                           // Update step numbers
                           const updatedSteps = newSteps.map((step, idx) => ({
-                            ...step,
+                            ...(step as Record<string, unknown>),
                             step: idx + 1
                           }))
                           
@@ -1267,13 +1275,13 @@ export default function AnalysisPage() {
                       </div>
                       <div className="flex-1">
                         <div className="text-sm font-medium text-ponte-black">
-                          {step.name}
+                          {(step as { name: string }).name}
                         </div>
                         <div className="text-xs text-ponte-olive">
-                          {step.address}
+                          {(step as { address: string }).address}
                         </div>
                         <div className="text-xs text-ponte-olive mt-1">
-                          {step.type === 'property' ? '🏠 Property' : '📍 Destination'}
+                          {(step as { type: string }).type === 'property' ? '🏠 Property' : '📍 Destination'}
                         </div>
                       </div>
                       <div className="flex-shrink-0 text-ponte-olive">
@@ -1315,7 +1323,7 @@ export default function AnalysisPage() {
                         onClick={() => {
                           // Create Google Maps URL for entire tour
                           const waypoints = tourSteps
-                            .map(step => `${step.latitude},${step.longitude}`)
+                            .map(step => `${(step as { latitude: number }).latitude},${(step as { longitude: number }).longitude}`)
                             .join('/')
                           
                           if (waypoints) {
@@ -1346,25 +1354,25 @@ export default function AnalysisPage() {
                     <div className="bg-white rounded-lg p-4 border border-ponte-sand">
                       <div className="text-xs text-ponte-olive mb-1">Total Distance</div>
                       <div className="text-2xl font-bold text-ponte-black">
-                        {formatDistanceFromMeters(tourRoute.reduce((sum, leg) => sum + (leg.distance || 0), 0))}
+                        {formatDistanceFromMeters((tourRoute as { distance?: number }[]).reduce((sum, leg) => sum + (leg.distance || 0), 0))}
                       </div>
                     </div>
                     <div className="bg-white rounded-lg p-4 border border-ponte-sand">
                       <div className="text-xs text-ponte-olive mb-1">Driving Time</div>
                       <div className="text-2xl font-bold text-ponte-black">
-                        {formatDuration(tourRoute.reduce((sum, leg) => sum + (leg.duration || 0), 0) / 60)}
+                        {formatDuration((tourRoute as { duration?: number }[]).reduce((sum, leg) => sum + (leg.duration || 0), 0) / 60)}
                       </div>
                     </div>
                     <div className="bg-white rounded-lg p-4 border border-ponte-sand">
                       <div className="text-xs text-ponte-olive mb-1">Walking Time</div>
                       <div className="text-2xl font-bold text-ponte-black">
-                        {formatDuration(tourRoute.reduce((sum, leg) => sum + (leg.walkingDuration || 0), 0) / 60)}
+                        {formatDuration((tourRoute as { walkingDuration?: number }[]).reduce((sum, leg) => sum + (leg.walkingDuration || 0), 0) / 60)}
                       </div>
                     </div>
                     <div className="bg-white rounded-lg p-4 border border-ponte-sand">
                       <div className="text-xs text-ponte-olive mb-1">Transit Time</div>
                       <div className="text-2xl font-bold text-ponte-black">
-                        {formatDuration(tourRoute.reduce((sum, leg) => sum + (leg.transitDuration || 0), 0) / 60)}
+                        {formatDuration((tourRoute as { transitDuration?: number }[]).reduce((sum, leg) => sum + (leg.transitDuration || 0), 0) / 60)}
                       </div>
                     </div>
                   </div>
@@ -1403,35 +1411,35 @@ export default function AnalysisPage() {
                           </td>
                           <td className="px-6 py-4">
                             <div className="text-sm font-medium text-ponte-black">
-                              {index === 0 ? tourSteps[0]?.name || 'Starting Point' : tourSteps[index - 1]?.name || 'Previous Stop'}
+                              {index === 0 ? (tourSteps[0] as { name?: string })?.name || 'Starting Point' : (tourSteps[index - 1] as { name?: string })?.name || 'Previous Stop'}
                             </div>
                             <div className="text-xs text-ponte-olive">↓</div>
                             <div className="text-sm font-medium text-ponte-black">
-                              {leg.name}
+                              {(leg as { name: string }).name}
                             </div>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap">
                             <div className="text-sm text-ponte-black">
-                              {leg.durationText || formatDuration(leg.duration / 60)}
+                              {(leg as { durationText?: string; duration: number }).durationText || formatDuration((leg as { duration: number }).duration / 60)}
                             </div>
                             <div className="text-xs text-ponte-olive">
-                              {leg.distanceText || formatDistanceFromMeters(leg.distance)}
+                              {(leg as { distanceText?: string; distance: number }).distanceText || formatDistanceFromMeters((leg as { distance: number }).distance)}
                             </div>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap">
                             <div className="text-sm text-ponte-black">
-                              {leg.transitDurationText || formatDuration(leg.transitDuration / 60)}
+                              {(leg as { transitDurationText?: string; transitDuration: number }).transitDurationText || formatDuration((leg as { transitDuration: number }).transitDuration / 60)}
                             </div>
                             <div className="text-xs text-ponte-olive">
-                              {formatDistanceFromMeters(leg.distance)}
+                              {formatDistanceFromMeters((leg as { distance: number }).distance)}
                             </div>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap">
                             <div className="text-sm text-ponte-black">
-                              {leg.walkingDurationText || formatDuration(leg.walkingDuration / 60)}
+                              {(leg as { walkingDurationText?: string; walkingDuration: number }).walkingDurationText || formatDuration((leg as { walkingDuration: number }).walkingDuration / 60)}
                             </div>
                             <div className="text-xs text-ponte-olive">
-                              {formatDistanceFromMeters(leg.distance)}
+                              {formatDistanceFromMeters((leg as { distance: number }).distance)}
                             </div>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap">
@@ -1444,7 +1452,7 @@ export default function AnalysisPage() {
                                 const toStep = tourSteps[index + 1]
                                 
                                 if (fromStep && toStep) {
-                                  const mapsUrl = `https://www.google.com/maps/dir/${fromStep.latitude},${fromStep.longitude}/${toStep.latitude},${toStep.longitude}`
+                                  const mapsUrl = `https://www.google.com/maps/dir/${(fromStep as { latitude: number }).latitude},${(fromStep as { longitude: number }).longitude}/${(toStep as { latitude: number }).latitude},${(toStep as { longitude: number }).longitude}`
                                   window.open(mapsUrl, '_blank')
                                 }
                               }}
@@ -1511,22 +1519,22 @@ export default function AnalysisPage() {
               {savedTours.length > 0 ? (
                 <div className="space-y-4">
                   {savedTours.map((tour) => (
-                    <div key={tour.id} className="border border-ponte-sand rounded-lg p-4 hover:bg-ponte-cream transition-colors">
+                    <div key={(tour as { id: string }).id} className="border border-ponte-sand rounded-lg p-4 hover:bg-ponte-cream transition-colors">
                       <div className="flex justify-between items-start">
                         <div className="flex-1">
-                          <h3 className="text-lg font-medium text-ponte-black mb-2">{tour.name}</h3>
+                          <h3 className="text-lg font-medium text-ponte-black mb-2">{(tour as { name: string }).name}</h3>
                           <div className="text-sm text-ponte-olive mb-3">
-                            Created: {new Date(tour.createdAt).toLocaleDateString()} at {new Date(tour.createdAt).toLocaleTimeString()}
+                            Created: {new Date((tour as { createdAt: string }).createdAt).toLocaleDateString()} at {new Date((tour as { createdAt: string }).createdAt).toLocaleTimeString()}
                           </div>
                           <div className="text-sm text-ponte-black">
-                            <strong>Starting Point:</strong> {tour.startingPoint?.name || 'Unknown'}
+                            <strong>Starting Point:</strong> {(tour as { startingPoint?: { name?: string } }).startingPoint?.name || 'Unknown'}
                           </div>
                           <div className="text-sm text-ponte-black">
-                            <strong>Stops:</strong> {tour.steps?.length || 0} locations
+                            <strong>Stops:</strong> {(tour as { steps?: unknown[] }).steps?.length || 0} locations
                           </div>
-                          {tour.route && tour.route.length > 0 && (
+                          {(tour as { route?: unknown[] }).route && (tour as { route: unknown[] }).route.length > 0 && (
                             <div className="text-sm text-ponte-black">
-                              <strong>Total Distance:</strong> {formatDistanceFromMeters(tour.route.reduce((sum: number, leg: unknown) => sum + ((leg as { distance?: number }).distance || 0), 0))}
+                              <strong>Total Distance:</strong> {formatDistanceFromMeters((tour as { route: unknown[] }).route.reduce((sum: number, leg: unknown) => sum + ((leg as { distance?: number }).distance || 0), 0))}
                             </div>
                           )}
                         </div>
@@ -1547,8 +1555,8 @@ export default function AnalysisPage() {
                             size="sm"
                             onClick={() => {
                               // Create Google Maps URL for saved tour
-                              if (tour.steps && Array.isArray(tour.steps)) {
-                                const waypoints = tour.steps
+                              if ((tour as { steps?: unknown[] }).steps && Array.isArray((tour as { steps?: unknown[] }).steps)) {
+                                const waypoints = (tour as { steps: unknown[] }).steps
                                   .map((step: unknown) => `${(step as { latitude: number; longitude: number }).latitude},${(step as { latitude: number; longitude: number }).longitude}`)
                                   .join('/')
                                 
@@ -1569,7 +1577,7 @@ export default function AnalysisPage() {
                           <Button
                             intent="secondary"
                             size="sm"
-                            onClick={() => renameTour(tour.id, tour.name)}
+                            onClick={() => renameTour((tour as { id: string }).id, (tour as { name: string }).name)}
                             className="flex items-center space-x-1"
                           >
                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1580,7 +1588,7 @@ export default function AnalysisPage() {
                           <Button
                             intent="danger"
                             size="sm"
-                            onClick={() => deleteTour(tour.id)}
+                            onClick={() => deleteTour((tour as { id: string }).id)}
                             className="flex items-center space-x-1"
                           >
                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

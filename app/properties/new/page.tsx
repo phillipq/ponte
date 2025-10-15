@@ -1,13 +1,13 @@
 "use client"
 
-import { useState, useEffect } from "react"
-import { useSession } from "next-auth/react"
-import { useRouter } from "next/navigation"
 import Image from "next/image"
+import { useRouter } from "next/navigation"
+import { useSession } from "next-auth/react"
+import { useEffect, useState } from "react"
 import Navigation from "components/Navigation"
 
 export default function NewProperty() {
-  const { data: session, status } = useSession()
+  const { data: _session, status } = useSession()
   const router = useRouter()
   const [loading, setLoading] = useState(true)
   const [submitting, setSubmitting] = useState(false)
@@ -115,7 +115,7 @@ export default function NewProperty() {
   })
 
   const [availableTags, setAvailableTags] = useState<Array<{id: string, name: string, color: string}>>([])
-  const [geocodingResult, setGeocodingResult] = useState<any>(null)
+  const [geocodingResult, setGeocodingResult] = useState<unknown>(null)
   const [geocodingLoading, setGeocodingLoading] = useState(false)
   const [uploadedPictures, setUploadedPictures] = useState<File[]>([])
   const [picturePreview, setPicturePreview] = useState<string[]>([])
@@ -202,7 +202,7 @@ export default function NewProperty() {
         body: JSON.stringify({ address: formData.fullAddress }),
       })
 
-      const data = await response.json() as { result?: any; error?: string }
+      const data = await response.json() as { result?: unknown; error?: string }
 
       if (response.ok) {
         setGeocodingResult(data.result)
@@ -214,7 +214,7 @@ export default function NewProperty() {
       } else {
         setError(data.error || "Failed to geocode address")
       }
-    } catch (error) {
+    } catch {
       setError("Failed to geocode address")
     } finally {
       setGeocodingLoading(false)
@@ -316,7 +316,7 @@ export default function NewProperty() {
         body: JSON.stringify(processedFormData),
       })
 
-      const data = await response.json() as { success?: boolean; property?: any; error?: string }
+      const data = await response.json() as { success?: boolean; property?: unknown; error?: string }
 
       if (!response.ok) {
         console.error("API Error:", data)
@@ -435,7 +435,7 @@ export default function NewProperty() {
       } else {
         setError(data.error || "Failed to create property")
       }
-    } catch (error) {
+    } catch {
       setError("Failed to create property")
     } finally {
       setSubmitting(false)
@@ -1598,9 +1598,11 @@ export default function NewProperty() {
                         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                           {picturePreview.map((preview, index) => (
                             <div key={index} className="relative group">
-                              <img
+                              <Image
                                 src={preview}
                                 alt={`Preview ${index + 1}`}
+                                width={128}
+                                height={128}
                                 className="w-full h-32 object-cover rounded-lg border border-ponte-sand"
                               />
                               <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-50 transition-all duration-200 rounded-lg flex items-center justify-center">

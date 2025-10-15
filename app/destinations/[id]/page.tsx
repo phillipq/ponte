@@ -1,8 +1,8 @@
 "use client"
 
-import { useState, useEffect } from "react"
-import { useRouter, useParams } from "next/navigation"
+import { useParams, useRouter } from "next/navigation"
 import { useSession } from "next-auth/react"
+import { useEffect, useState } from "react"
 import Navigation from "components/Navigation"
 
 interface Destination {
@@ -13,7 +13,7 @@ interface Destination {
   longitude: number
   category: string
   placeId?: string
-  metadata?: any
+  metadata?: unknown
   tags: string[]
   keywords: string[]
   description?: string
@@ -27,7 +27,7 @@ interface Destination {
 }
 
 export default function DestinationDetailsPage() {
-  const { data: session, status } = useSession()
+  const { data: _session, status } = useSession()
   const router = useRouter()
   const params = useParams()
   const destinationId = params.id as string
@@ -38,7 +38,7 @@ export default function DestinationDetailsPage() {
   const [error, setError] = useState("")
   const [availableTags, setAvailableTags] = useState<Array<{id: string, name: string, color: string}>>([])
   const [availableKeywords, setAvailableKeywords] = useState<Array<{id: string, name: string, color: string}>>([])
-  const [geocodingResult, setGeocodingResult] = useState<any>(null)
+  const [geocodingResult, setGeocodingResult] = useState<unknown>(null)
   const [geocodingLoading, setGeocodingLoading] = useState(false)
 
   // Form state
@@ -174,7 +174,7 @@ export default function DestinationDetailsPage() {
       } else {
         setError(data.error || "Failed to update destination")
       }
-    } catch (error) {
+    } catch {
       setError("Failed to update destination")
     } finally {
       setSaving(false)
@@ -200,7 +200,7 @@ export default function DestinationDetailsPage() {
   }
 
 
-  const getTagColor = (tagName: string) => {
+  const _getTagColor = (tagName: string) => {
     const tag = availableTags.find(t => t.name === tagName)
     return tag?.color || '#D3BFA4'
   }
@@ -305,22 +305,22 @@ export default function DestinationDetailsPage() {
         body: JSON.stringify({ address: fullAddress }),
       })
 
-      const data = await response.json() as { result?: any, error?: string }
+      const data = await response.json() as { result?: unknown, error?: string }
 
       if (response.ok) {
         setGeocodingResult(data.result)
-        if (data.result?.geometry?.location) {
+        if ((data.result as { geometry?: { location?: unknown } })?.geometry?.location) {
           setFormData(prev => ({
             ...prev,
-            latitude: data.result.geometry.location.lat,
-            longitude: data.result.geometry.location.lng,
-            address: data.result.formatted_address || fullAddress
+            latitude: (data.result as { geometry: { location: { lat: number } } }).geometry.location.lat,
+            longitude: (data.result as { geometry: { location: { lng: number } } }).geometry.location.lng,
+            address: (data.result as { formatted_address?: string }).formatted_address || fullAddress
           }))
         }
       } else {
         setError(data.error || "Geocoding failed")
       }
-    } catch (error) {
+    } catch {
       setError("Geocoding failed")
     } finally {
       setGeocodingLoading(false)

@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { getServerSession } from "next-auth"
 import { authOptions } from "lib/auth"
 import { prisma } from "lib/prisma"
-import { STORAGE_BUCKETS, deleteFileFromStorage, getPublicUrl, uploadFileToStorage } from "lib/supabase"
+import { deleteFileFromStorage, getPublicUrl, STORAGE_BUCKETS, uploadFileToStorage } from "lib/supabase"
 
 export async function POST(
   request: NextRequest,

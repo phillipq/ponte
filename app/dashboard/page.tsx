@@ -1,9 +1,10 @@
 "use client"
 
-import { useState, useEffect } from "react"
-import { useSession } from "next-auth/react"
+import Image from "next/image"
 import { useRouter } from "next/navigation"
-import { Button } from "components/Button"
+import { useSession } from "next-auth/react"
+import { useEffect, useState } from "react"
+import { _Button } from "components/Button"
 import Navigation from "components/Navigation"
 
 interface Property {
@@ -35,12 +36,12 @@ interface Client {
   company?: string
   preferredProperties?: string[]
   createdAt: string
-  aiAnalyses?: any[]
-  questionnaireResponseSets?: any[]
+  aiAnalyses?: unknown[]
+  questionnaireResponseSets?: unknown[]
 }
 
 export default function Dashboard() {
-  const { data: session, status } = useSession()
+  const { data: _session, status } = useSession()
   const router = useRouter()
   const [properties, setProperties] = useState<Property[]>([])
   const [destinations, setDestinations] = useState<Destination[]>([])
@@ -211,8 +212,8 @@ export default function Dashboard() {
   }
 
   // Simple pie chart component
-  const PieChart = ({ data, title, getInfo }: { data: any[], title: string, getInfo: (item: string) => { label: string, icon: string } }) => {
-    const total = data.reduce((sum, item) => sum + item.count, 0)
+  const PieChart = ({ data, title, getInfo }: { data: unknown[], title: string, getInfo: (item: string) => { label: string, icon: string } }) => {
+    const total = data.reduce((sum, item) => sum + (item as { count: number }).count, 0)
     if (total === 0) return null
 
     let currentAngle = 0
@@ -264,12 +265,12 @@ export default function Dashboard() {
                       </div>
         <div className="flex-1 space-y-2">
           <h3 className="font-semibold text-ponte-black">{title}</h3>
-          {data.map((item, index) => {
+          {data.map((item, _index) => {
             const info = getInfo(item.type || item.category)
             return (
               <div key={item.type || item.category} className="flex items-center justify-between">
                 <div className="flex items-center">
-                  <img src={info.icon} alt={info.label} className="w-4 h-4 mr-2" />
+                  <Image src={info.icon} alt={info.label} width={16} height={16} className="w-4 h-4 mr-2" />
                   <span className="text-sm font-medium text-ponte-black">{info.label}</span>
                     </div>
                 <div className="text-right">
@@ -313,7 +314,7 @@ export default function Dashboard() {
           <div className="bg-white rounded-lg shadow p-6 border border-ponte-sand">
             <div className="flex items-center">
               <div className="p-2 bg-ponte-terracotta rounded-lg">
-                <img src="/logos/icon-property.png" alt="Properties" className="w-6 h-6" />
+                <Image src="/logos/icon-property.png" alt="Properties" width={24} height={24} className="w-6 h-6" />
                     </div>
               <div className="ml-4">
                 <p className="text-sm font-medium text-ponte-olive">Total Properties</p>
@@ -325,7 +326,7 @@ export default function Dashboard() {
           <div className="bg-white rounded-lg shadow p-6 border border-ponte-sand">
                   <div className="flex items-center">
               <div className="p-2 bg-ponte-olive rounded-lg">
-                <img src="/logos/icon-destination.png" alt="Destinations" className="w-6 h-6" />
+                <Image src="/logos/icon-destination.png" alt="Destinations" width={24} height={24} className="w-6 h-6" />
               </div>
               <div className="ml-4">
                 <p className="text-sm font-medium text-ponte-olive">Total Destinations</p>
@@ -337,7 +338,7 @@ export default function Dashboard() {
           <div className="bg-white rounded-lg shadow p-6 border border-ponte-sand">
             <div className="flex items-center">
               <div className="p-2 bg-ponte-sand rounded-lg">
-                <img src="/logos/icon-distance.png" alt="Types" className="w-6 h-6" />
+                <Image src="/logos/icon-distance.png" alt="Types" width={24} height={24} className="w-6 h-6" />
               </div>
               <div className="ml-4">
                 <p className="text-sm font-medium text-ponte-olive">Property Types</p>
@@ -349,7 +350,7 @@ export default function Dashboard() {
           <div className="bg-white rounded-lg shadow p-6 border border-ponte-sand">
             <div className="flex items-center">
               <div className="p-2 bg-ponte-terracotta rounded-lg">
-                <img src="/logos/icon-client.png" alt="Clients" className="w-6 h-6" />
+                <Image src="/logos/icon-client.png" alt="Clients" width={24} height={24} className="w-6 h-6" />
               </div>
               <div className="ml-4">
                 <p className="text-sm font-medium text-ponte-olive">Total Clients</p>
@@ -401,7 +402,7 @@ export default function Dashboard() {
           <div className="bg-white rounded-lg shadow p-6 border border-ponte-sand">
             <h3 className="text-lg font-semibold text-ponte-black mb-4 flex items-center">
               <div className="p-2 bg-ponte-terracotta rounded-lg mr-3">
-                <img src="/logos/icon-analysis.png" alt="AI Analysis" className="w-5 h-5" />
+                <Image src="/logos/icon-analysis.png" alt="AI Analysis" width={20} height={20} className="w-5 h-5" />
               </div>
               AI Analysis Status
             </h3>
@@ -430,7 +431,7 @@ export default function Dashboard() {
           <div className="bg-white rounded-lg shadow p-6 border border-ponte-sand">
             <h3 className="text-lg font-semibold text-ponte-black mb-4 flex items-center">
               <div className="p-2 bg-ponte-terracotta rounded-lg mr-3">
-                <img src="/logos/icon-combined.png" alt="Distance Calculations" className="w-5 h-5" />
+                <Image src="/logos/icon-combined.png" alt="Distance Calculations" width={20} height={20} className="w-5 h-5" />
               </div>
               Distance Calculations
             </h3>
@@ -462,7 +463,7 @@ export default function Dashboard() {
         <div className="bg-white rounded-lg shadow p-6 border border-ponte-sand mb-8">
           <h3 className="text-lg font-semibold text-ponte-black mb-4 flex items-center">
             <div className="p-2 bg-ponte-terracotta rounded-lg mr-3">
-              <img src="/logos/icon-preference.png" alt="Client Preferences" className="w-5 h-5" />
+              <Image src="/logos/icon-preference.png" alt="Client Preferences" width={20} height={20} className="w-5 h-5" />
             </div>
             Client Preferences
           </h3>

@@ -69,7 +69,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 })
     }
 
-    const { name, color } = await request.json()
+    const { name, color } = await request.json() as { name: string; color: string }
 
     if (!name || !color) {
       return NextResponse.json({ error: "Name and color are required" }, { status: 400 })

@@ -7,7 +7,7 @@ import { prisma } from "lib/prisma"
 // PUT /api/admin/users/[id] - Update user
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions)
@@ -36,9 +36,11 @@ export async function PUT(
       return NextResponse.json({ error: "Role must be 'user' or 'admin'" }, { status: 400 })
     }
 
+    const { id: userId } = await params
+
     // Check if user exists
     const existingUser = await prisma.user.findUnique({
-      where: { id: params.id }
+      where: { id: userId }
     })
 
     if (!existingUser) {
@@ -70,7 +72,7 @@ export async function PUT(
 
     // Update user
     const user = await prisma.user.update({
-      where: { id: params.id },
+      where: { id: userId },
       data: updateData,
       select: {
         id: true,
@@ -90,8 +92,8 @@ export async function PUT(
 
 // DELETE /api/admin/users/[id] - Delete user
 export async function DELETE(
-  request: NextRequest,
-  { params }: { params: { id: string } }
+  _request: NextRequest,
+  { params: _params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions)
@@ -111,13 +113,13 @@ export async function DELETE(
     }
 
     // Prevent admin from deleting themselves
-    if (currentUser.id === params.id) {
+    if (currentUser.id === userId) {
       return NextResponse.json({ error: "Cannot delete your own account" }, { status: 400 })
     }
 
     // Check if user exists
     const existingUser = await prisma.user.findUnique({
-      where: { id: params.id }
+      where: { id: userId }
     })
 
     if (!existingUser) {
@@ -126,7 +128,7 @@ export async function DELETE(
 
     // Delete user (cascade will handle related records)
     await prisma.user.delete({
-      where: { id: params.id }
+      where: { id: userId }
     })
 
     return NextResponse.json({ message: "User deleted successfully" })

@@ -1,11 +1,12 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import Image from "next/image"
 import { useParams, useRouter } from "next/navigation"
 import { useSession } from "next-auth/react"
+import { useEffect, useState } from "react"
 import Navigation from "components/Navigation"
-import PropertyFileManager from "components/PropertyFileManager"
 import PropertyEvaluationDashboard from "components/PropertyEvaluationDashboard"
+import PropertyFileManager from "components/PropertyFileManager"
 
 interface FileInfo {
   url: string
@@ -130,7 +131,7 @@ interface Property {
 export default function PropertyDetailPage() {
   const { id } = useParams()
   const router = useRouter()
-  const { data: session, status } = useSession()
+  const { data: _session, status } = useSession()
   const [property, setProperty] = useState<Property | null>(null)
   const [originalProperty, setOriginalProperty] = useState<Property | null>(null)
   const [loading, setLoading] = useState(true)
@@ -138,8 +139,8 @@ export default function PropertyDetailPage() {
   const [saving, setSaving] = useState(false)
   const [availableTags, setAvailableTags] = useState<Array<{id: string, name: string, color: string}>>([])
   const [evaluationChanged, setEvaluationChanged] = useState(false)
-  const [destinations, setDestinations] = useState<any[]>([])
-  const [distances, setDistances] = useState<any[]>([])
+  const [destinations, setDestinations] = useState<unknown[]>([])
+  const [distances, setDistances] = useState<unknown[]>([])
   const [loadingDistances, setLoadingDistances] = useState(false)
   const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set())
 
@@ -208,7 +209,7 @@ export default function PropertyDetailPage() {
       console.log('Destinations response status:', response.status)
       
       if (response.ok) {
-        const data = await response.json() as { destinations: any[] }
+        const data = await response.json() as { destinations: unknown[] }
         console.log('Destinations API response:', data)
         console.log('Destinations API response destinations:', data.destinations)
         // Handle the API response format: { destinations: [...] }
@@ -253,7 +254,7 @@ export default function PropertyDetailPage() {
       const response = await fetch(`/api/properties/${property.id}/distances`)
       
       if (response.ok) {
-        const data = await response.json() as { distances: any[] }
+        const data = await response.json() as { distances: unknown[] }
         console.log('Distance fetch successful:', data.distances.length, 'distances')
         // Ensure distances is an array before setting it
         setDistances(Array.isArray(data.distances) ? data.distances : [])
@@ -337,7 +338,7 @@ export default function PropertyDetailPage() {
     setEvaluationChanged(true)
   }
 
-  const getTagColor = (tagName: string) => {
+  const _getTagColor = (tagName: string) => {
     const tag = availableTags.find(t => t.name === tagName)
     return tag?.color || '#D3BFA4'
   }
@@ -358,9 +359,11 @@ export default function PropertyDetailPage() {
               {/* Featured Image */}
               {property.featuredImage && (
                 <div className="flex-shrink-0">
-                  <img
+                  <Image
                     src={property.featuredImage}
                     alt="Property featured image"
+                    width={64}
+                    height={64}
                     className="w-16 h-16 object-contain rounded-lg border-2 border-ponte-sand bg-white"
                     onError={(e) => {
                       e.currentTarget.style.display = 'none'
@@ -1216,9 +1219,9 @@ export default function PropertyDetailPage() {
             propertyId={property.id}
             propertyPhotos={property.propertyPhotos || []}
             documents={[
-              ...(Array.isArray(property.floorPlans) ? property.floorPlans as any[] : []),
-              ...(Array.isArray(property.dronePhotos) ? property.dronePhotos as any[] : []),
-              ...(Array.isArray(property.energyCertificate) ? property.energyCertificate as any[] : [])
+              ...(Array.isArray(property.floorPlans) ? property.floorPlans as unknown[] : []),
+              ...(Array.isArray(property.dronePhotos) ? property.dronePhotos as unknown[] : []),
+              ...(Array.isArray(property.energyCertificate) ? property.energyCertificate as unknown[] : [])
             ]}
             onPropertyPhotosChange={(photos) => setProperty(prev => ({...prev!, propertyPhotos: photos}))}
             onDocumentsChange={(documents) => {
@@ -1345,17 +1348,17 @@ export default function PropertyDetailPage() {
                     }
                     acc[category].push(dest)
                     return acc
-                  }, {} as Record<string, any[]>)
+                  }, {} as Record<string, unknown[]>)
 
                   console.log('Categories created:', categories)
                   console.log('Category entries:', Object.entries(categories))
 
                   return Object.entries(categories).map(([category, categoryDestinations]) => {
                     const categoryDistances = (distances || []).filter(d => 
-                      (categoryDestinations as any[]).some((dest: any) => dest.id === d.destinationId)
+                      (categoryDestinations as unknown[]).some((dest: unknown) => (dest as { id: string }).id === (d as { destinationId: string }).destinationId)
                     )
                     
-                    console.log(`Category ${category} - Destinations:`, (categoryDestinations as any[]).length, 'Distances:', categoryDistances.length)
+                    console.log(`Category ${category} - Destinations:`, (categoryDestinations as unknown[]).length, 'Distances:', categoryDistances.length)
 
                     const isExpanded = expandedCategories.has(category)
                     
@@ -1385,7 +1388,7 @@ export default function PropertyDetailPage() {
                         {isExpanded && (
                           <div className="px-4 pb-4">
                             <div className="space-y-2">
-                              {categoryDistances.map((distance, index) => {
+                              {categoryDistances.map((distance, _index) => {
                                 const destination = destinations.find(d => d.id === distance.destinationId)
                                 if (!destination) return null
                                 

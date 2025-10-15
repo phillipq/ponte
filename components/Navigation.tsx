@@ -1,5 +1,6 @@
 "use client"
 
+import Image from "next/image"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { signOut } from "next-auth/react"
@@ -26,9 +27,11 @@ export default function Navigation() {
           <div className="flex">
             <div className="flex-shrink-0 flex items-center">
               <Link href="/dashboard" className="flex items-center">
-                <img 
+                <Image 
                   src="/logos/ponte_black.png" 
                   alt="Ponte" 
+                  width={32}
+                  height={32}
                   className="h-8 w-auto"
                 />
               </Link>

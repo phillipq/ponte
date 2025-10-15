@@ -1,5 +1,6 @@
 "use client"
 
+import Image from "next/image"
 import { useParams, useRouter } from "next/navigation"
 import { useSession } from "next-auth/react"
 import { useEffect, useState } from "react"
@@ -255,7 +256,7 @@ export default function ClientDetailPage() {
       })
 
       if (response.ok) {
-        const data = await response.json() as { invite: any }
+        const data = await response.json() as { invite: unknown }
         setQuestionnaireInvites(prev => [data.invite, ...prev])
         alert(`Questionnaire invite created! Share this link: ${data.invite.questionnaireUrl}`)
       } else {
@@ -295,13 +296,13 @@ export default function ClientDetailPage() {
     }
   }
 
-  const loadAiAnalysis = (analysis: any) => {
+  const _loadAiAnalysis = (analysis: unknown) => {
     setAiAnalysis({
-      summary: analysis.summary,
-      preferences: analysis.preferences,
-      recommendations: analysis.recommendations
+      summary: (analysis as { summary: string }).summary,
+      preferences: (analysis as { preferences: unknown }).preferences,
+      recommendations: (analysis as { recommendations: unknown }).recommendations
     })
-    setPropertyRankings(analysis.propertyRankings || [])
+    setPropertyRankings((analysis as { propertyRankings?: unknown[] }).propertyRankings || [])
   }
 
   const deleteAiAnalysis = async (analysisId: string) => {
@@ -363,7 +364,7 @@ export default function ClientDetailPage() {
       const response = await fetch(`/api/clients/${params.id}/ai-analysis/${analysisId}`)
       
       if (response.ok) {
-        const data = await response.json() as { summary: string; recommendations: string; propertyRankings?: any[] }
+        const data = await response.json() as { summary: string; recommendations: string; propertyRankings?: unknown[] }
         setAiAnalysis({
           summary: data.summary,
           recommendations: data.recommendations
@@ -417,12 +418,12 @@ export default function ClientDetailPage() {
     }
   }
 
-  const startEditingResponse = (response: any) => {
+  const _startEditingResponse = (response: unknown) => {
     setEditingResponse(response)
-    setEditingResponseValue(response.answer)
+    setEditingResponseValue((response as { answer: string }).answer)
   }
 
-  const cancelEditingResponse = () => {
+  const _cancelEditingResponse = () => {
     setEditingResponse(null)
     setEditingResponseValue("")
   }
@@ -441,7 +442,7 @@ export default function ClientDetailPage() {
     }
   }
 
-  const saveResponseEdit = async () => {
+  const _saveResponseEdit = async () => {
     if (!editingResponse) return
 
     try {
@@ -543,7 +544,7 @@ export default function ClientDetailPage() {
       })
 
       if (response.ok) {
-        const data = await response.json() as { analysis: any; propertyRankings: any[] }
+        const data = await response.json() as { analysis: unknown; propertyRankings: unknown[] }
         setAiAnalysis(data.analysis)
         setPropertyRankings(data.propertyRankings)
         await fetchStoredAiAnalyses()
@@ -558,7 +559,7 @@ export default function ClientDetailPage() {
     }
   }
 
-  const handleDeleteResponseSet = async (responseSetId: string) => {
+  const _handleDeleteResponseSet = async (responseSetId: string) => {
     if (!confirm('Are you sure you want to delete this response set? This action cannot be undone.')) {
       return
     }
@@ -846,9 +847,11 @@ export default function ClientDetailPage() {
                     Step {step.id}
                   </h3>
                   <div className="w-8 h-8 rounded-lg bg-ponte-cream flex items-center justify-center">
-                    <img 
+                    <Image 
                       src={`/logos/icon-step${step.id}.png`} 
                       alt={`Step ${step.id}`}
+                      width={24}
+                      height={24}
                       className="w-6 h-6"
                       onError={(e) => {
                         e.currentTarget.style.display = 'none'
@@ -971,9 +974,9 @@ export default function ClientDetailPage() {
                           className="w-full px-3 py-2 border border-ponte-sand rounded-lg focus:ring-2 focus:ring-ponte-terracotta focus:border-transparent"
                         >
                           <option value="">Choose a response set...</option>
-                          {questionnaireResponses.responseSets.map((set: any) => (
-                            <option key={set.id} value={set.id}>
-                              Response Set #{set.version} - {new Date(set.submittedAt).toLocaleDateString()} ({set.status})
+                          {questionnaireResponses.responseSets.map((set: unknown) => (
+                            <option key={(set as { id: string }).id} value={(set as { id: string }).id}>
+                              Response Set #{(set as { version: string }).version} - {new Date((set as { submittedAt: string }).submittedAt).toLocaleDateString()} ({(set as { status: string }).status})
                             </option>
                           ))}
                         </select>
@@ -1015,12 +1018,12 @@ export default function ClientDetailPage() {
           <div className="bg-white rounded-lg shadow border border-ponte-sand p-6 mb-6">
             <h2 className="text-xl font-semibold text-ponte-black mb-4 font-header">Response Details</h2>
             {(() => {
-              const selectedSet = questionnaireResponses.responseSets.find((set: any) => set.id === selectedResponseSet)
+              const selectedSet = questionnaireResponses.responseSets.find((set: unknown) => (set as { id: string }).id === selectedResponseSet)
               if (!selectedSet) return null
 
               // Group responses by section
-              const responsesBySection = selectedSet.responses?.reduce((acc: any, response: any) => {
-                const sectionTitle = response.sectionTitle || 'Other'
+              const responsesBySection = selectedSet.responses?.reduce((acc: Record<string, unknown[]>, response: unknown) => {
+                const sectionTitle = (response as { sectionTitle?: string }).sectionTitle || 'Other'
                 if (!acc[sectionTitle]) {
                   acc[sectionTitle] = []
                 }
@@ -1051,7 +1054,7 @@ export default function ClientDetailPage() {
                   {Object.keys(responsesBySection).length > 0 ? (
                     <div className="space-y-4">
                       {Object.entries(responsesBySection).map(([sectionTitle, responses]) => {
-                        const responsesArray = responses as any[]
+                        const responsesArray = responses as unknown[]
                         return (
                         <div key={sectionTitle} className="border border-ponte-sand rounded-lg bg-white shadow-sm">
                           <div 
@@ -1081,14 +1084,14 @@ export default function ClientDetailPage() {
                           {expandedSections.has(sectionTitle) && (
                             <div className="px-4 pb-4">
                               <div className="space-y-3">
-                                {responsesArray.map((response: any) => (
-                                  <div key={response.id} className="border-l-4 border-ponte-terracotta pl-4 py-2">
+                                {responsesArray.map((response: unknown) => (
+                                  <div key={(response as { id: string }).id} className="border-l-4 border-ponte-terracotta pl-4 py-2">
                                     <div className="flex items-start justify-between">
                                       <div className="flex-1">
                                         <p className="font-medium text-ponte-black text-sm mb-1">
-                                          {response.questionText}
+                                          {(response as { questionText: string }).questionText}
                                         </p>
-                                        {editingResponse?.id === response.id ? (
+                                        {editingResponse?.id === (response as { id: string }).id ? (
                                           <div className="space-y-2">
                                             <textarea
                                               value={editingResponseValue}
@@ -1170,19 +1173,19 @@ export default function ClientDetailPage() {
                     <div>
                       <h4 className="font-medium text-ponte-black mb-2">Stored Analyses</h4>
                       <div className="space-y-2">
-                        {storedAiAnalyses.map((analysis: any) => (
-                          <div key={analysis.id} className="flex items-center justify-between p-3 border border-ponte-sand rounded-lg">
+                        {storedAiAnalyses.map((analysis: unknown) => (
+                          <div key={(analysis as { id: string }).id} className="flex items-center justify-between p-3 border border-ponte-sand rounded-lg">
                             <div>
                               <p className="font-medium text-ponte-black text-sm">
-                                Analysis #{analysis.id}
+                                Analysis #{(analysis as { id: string }).id}
                               </p>
                               <p className="text-xs text-ponte-olive">
-                                {new Date(analysis.createdAt).toLocaleDateString()}
+                                {new Date((analysis as { createdAt: string }).createdAt).toLocaleDateString()}
                               </p>
                             </div>
                             <div className="flex space-x-2">
                               <Button
-                                onClick={() => loadStoredAnalysis(analysis.id)}
+                                onClick={() => loadStoredAnalysis((analysis as { id: string }).id)}
                                 className="bg-ponte-olive hover:bg-ponte-olive/80 text-white px-3 py-1 text-xs"
                               >
                                 View
@@ -1216,13 +1219,13 @@ export default function ClientDetailPage() {
                           <div>
                             <h5 className="font-medium text-ponte-black text-sm mb-2">Property Rankings</h5>
                             <div className="space-y-2">
-                              {propertyRankings.map((property: any, index: number) => (
-                                <div key={property.id} className="flex items-center justify-between p-2 bg-ponte-cream rounded">
+                              {propertyRankings.map((property: unknown, index: number) => (
+                                <div key={(property as { id: string }).id} className="flex items-center justify-between p-2 bg-ponte-cream rounded">
                                   <span className="text-sm font-medium text-ponte-black">
-                                    #{index + 1} {property.name}
+                                    #{index + 1} {(property as { name: string }).name}
                                   </span>
                                   <span className="text-sm text-ponte-olive">
-                                    Score: {property.score || 'N/A'}
+                                    Score: {(property as { score?: string }).score || 'N/A'}
                                   </span>
                                 </div>
                               ))}
@@ -1250,15 +1253,15 @@ export default function ClientDetailPage() {
                       <h4 className="font-medium text-ponte-black mb-2">Selected Properties</h4>
                       <div className="space-y-2">
                         {selectedProperties.map((propertyId: string) => {
-                          const property = properties.find((p: any) => p.id === propertyId)
+                          const property = properties.find((p: unknown) => (p as { id: string }).id === propertyId)
                           return property ? (
                             <div key={propertyId} className="flex items-center justify-between p-3 border border-ponte-sand rounded-lg">
                               <div>
                                 <p className="font-medium text-ponte-black text-sm">
-                                  {property.name}
+                                  {(property as { name: string }).name}
                                 </p>
                                 <p className="text-xs text-ponte-olive">
-                                  {property.address}
+                                  {(property as { address: string }).address}
                                 </p>
                               </div>
                               <Button

@@ -1,8 +1,9 @@
 "use client"
 
-import { useState, useEffect } from "react"
-import { useSession } from "next-auth/react"
+import Image from "next/image"
 import { useRouter } from "next/navigation"
+import { useSession } from "next-auth/react"
+import { useEffect, useState } from "react"
 import Navigation from "components/Navigation"
 
 interface Property {
@@ -35,7 +36,7 @@ interface Property {
 }
 
 export default function PropertiesPage() {
-  const { data: session, status } = useSession()
+  const { data: _session, status } = useSession()
   const router = useRouter()
   const [properties, setProperties] = useState<Property[]>([])
   const [loading, setLoading] = useState(true)
@@ -59,8 +60,8 @@ export default function PropertiesPage() {
     province: "",
     country: "ITALY"
   })
-  const [geocodingResult, setGeocodingResult] = useState<any>(null)
-  const [geocodingLoading, setGeocodingLoading] = useState(false)
+  const [geocodingResult, setGeocodingResult] = useState<unknown>(null)
+  const [_geocodingLoading, setGeocodingLoading] = useState(false)
   const [availableTags, setAvailableTags] = useState<Array<{id: string, name: string, color: string}>>([])
   const [editForm, setEditForm] = useState({
     name: "",
@@ -209,7 +210,7 @@ export default function PropertiesPage() {
         await fetchProperties()
         setSelectedProperties([])
       }
-    } catch (error) {
+    } catch {
       alert("Failed to delete properties")
     } finally {
       setBulkDeleteLoading(false)
@@ -249,8 +250,8 @@ export default function PropertiesPage() {
       })
 
       if (response.ok) {
-        const data = await response.json() as any
-        const address = data.result.formatted_address
+        const data = await response.json() as unknown
+        const address = (data as { result: { formatted_address: string } }).result.formatted_address
         
         // Parse the address components
         const addressParts = address.split(', ')
@@ -266,7 +267,7 @@ export default function PropertiesPage() {
       } else {
         setError("Failed to geocode address")
       }
-    } catch (error) {
+    } catch {
       setError("Failed to geocode address")
     } finally {
       setSubmitting(false)
@@ -311,7 +312,7 @@ export default function PropertiesPage() {
       } else {
         setError(data.error || "Failed to update property")
       }
-    } catch (error) {
+    } catch {
       setError("Failed to update property")
     } finally {
       setSubmitting(false)
@@ -338,7 +339,7 @@ export default function PropertiesPage() {
   }
 
 
-  const handleGeocodeAddressForAdd = async () => {
+  const _handleGeocodeAddressForAdd = async () => {
     if (!newProperty.streetAddress.trim() && !newProperty.city.trim()) {
       setError("Please enter at least a street address or city")
       return
@@ -367,7 +368,7 @@ export default function PropertiesPage() {
         body: JSON.stringify({ address: fullAddress }),
       })
 
-      const data = await response.json() as { result?: any, error?: string }
+      const data = await response.json() as { result?: unknown, error?: string }
 
       if (response.ok) {
         setGeocodingResult(data.result)
@@ -380,14 +381,14 @@ export default function PropertiesPage() {
       } else {
         setError(data.error || "Geocoding failed")
       }
-    } catch (error) {
+    } catch {
       setError("Failed to geocode address")
     } finally {
       setGeocodingLoading(false)
     }
   }
 
-  const handleAddProperty = async (e: React.FormEvent) => {
+  const _handleAddProperty = async (e: React.FormEvent) => {
     e.preventDefault()
     
     if (!geocodingResult) {
@@ -426,14 +427,14 @@ export default function PropertiesPage() {
       } else {
         setError(data.error || "Failed to add property")
       }
-    } catch (error) {
+    } catch {
       setError("Failed to add property")
     } finally {
       setSubmitting(false)
     }
   }
 
-  const handleTagToggle = (tagName: string, isForNewProperty: boolean = false) => {
+  const _handleTagToggle = (tagName: string, isForNewProperty: boolean = false) => {
     if (isForNewProperty) {
       setNewProperty(prev => ({
         ...prev,
@@ -537,7 +538,7 @@ export default function PropertiesPage() {
     return tag?.color || '#D3BFA4' // fallback to sand color
   }
 
-  const formatAddress = (property: Property) => {
+  const _formatAddress = (property: Property) => {
     const parts = [
       property.streetAddress,
       property.postalCode,
@@ -570,9 +571,11 @@ export default function PropertiesPage() {
         <div className="mb-8">
           <div className="flex justify-between items-center">
             <div className="flex items-center">
-              <img 
+              <Image 
                 src="/logos/icon-property.png" 
                 alt="Property Icon" 
+                width={32}
+                height={32}
                 className="w-8 h-8 mr-3"
               />
               <div>

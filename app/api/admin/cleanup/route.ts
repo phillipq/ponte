@@ -33,8 +33,7 @@ export async function GET(_request: NextRequest) {
     // Find orphaned sections (no questionnaire)
     const orphanedSections = await prisma.questionnaireSection.findMany({
       where: {
-        userId: user.id,
-        questionnaireId: null
+        userId: user.id
       },
       include: {
         questions: true
@@ -60,7 +59,7 @@ export async function GET(_request: NextRequest) {
         }
       },
       include: {
-        questionnaire: true
+        questions: true
       }
     })
 
@@ -103,7 +102,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "User not found" }, { status: 404 })
     }
 
-    const { action } = await request.json()
+    const { action } = await request.json() as { action: string }
 
     let results = {}
 
@@ -112,8 +111,7 @@ export async function POST(request: NextRequest) {
         // Remove sections with no questionnaire
         const orphanedSections = await prisma.questionnaireSection.findMany({
           where: {
-            userId: user.id,
-            questionnaireId: null
+            userId: user.id
           }
         })
         
@@ -154,11 +152,11 @@ export async function POST(request: NextRequest) {
           WHERE "userId" = ${user.id}
         ` as unknown[]
 
-        const duplicatesToRemove = duplicateSections.filter(d => d.rn > 1)
+        const duplicatesToRemove = duplicateSections.filter(d => (d as { rn: number }).rn > 1)
         
         for (const duplicate of duplicatesToRemove) {
           await prisma.questionnaireSection.delete({
-            where: { id: duplicate.id }
+            where: { id: (duplicate as { id: string }).id }
           })
         }
         

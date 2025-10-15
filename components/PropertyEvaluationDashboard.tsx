@@ -1,7 +1,7 @@
 "use client"
 
-import { useState, useEffect } from "react"
-import { EVALUATION_CATEGORIES, calculateCategoryScore, getScoreColor, getScoreBgColor, formatPercentage } from "lib/property-evaluation"
+import { useState } from "react"
+import { calculateCategoryScore } from "lib/property-evaluation"
 import PropertyEvaluationCard from "./PropertyEvaluationCard"
 
 interface PropertyEvaluationItem {
@@ -33,7 +33,7 @@ interface PropertyEvaluationDashboardProps {
   onEvaluationChange?: () => void
 }
 
-export default function PropertyEvaluationDashboard({ propertyId, propertyName, onEvaluationChange }: PropertyEvaluationDashboardProps) {
+export default function PropertyEvaluationDashboard({ propertyId, propertyName: _propertyName, onEvaluationChange }: PropertyEvaluationDashboardProps) {
   const [evaluations, setEvaluations] = useState<PropertyEvaluation[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState("")
@@ -70,7 +70,7 @@ export default function PropertyEvaluationDashboard({ propertyId, propertyName, 
       } else {
         setError("Failed to load evaluations")
       }
-    } catch (error) {
+    } catch {
       setError("Failed to load evaluations")
     } finally {
       setLoading(false)
@@ -93,7 +93,7 @@ export default function PropertyEvaluationDashboard({ propertyId, propertyName, 
       } else {
         setError("Failed to create evaluation")
       }
-    } catch (error) {
+    } catch {
       setError("Failed to create evaluation")
     }
   }
@@ -162,7 +162,7 @@ export default function PropertyEvaluationDashboard({ propertyId, propertyName, 
           // Notify parent of evaluation change on successful update
           onEvaluationChange?.()
         }
-      } catch (error) {
+      } catch {
         // Revert optimistic update on error
         fetchEvaluations()
         setError("Failed to update evaluation item")
@@ -193,7 +193,7 @@ export default function PropertyEvaluationDashboard({ propertyId, propertyName, 
       } else {
         setError("Failed to delete evaluation")
       }
-    } catch (error) {
+    } catch {
       setError("Failed to delete evaluation")
     }
   }
@@ -230,7 +230,7 @@ export default function PropertyEvaluationDashboard({ propertyId, propertyName, 
         const errorData = await response.json() as { error?: string }
         setError(errorData.error || "Failed to import evaluation")
       }
-    } catch (error) {
+    } catch {
       setError("Failed to import evaluation")
     } finally {
       setImporting(false)
@@ -241,7 +241,7 @@ export default function PropertyEvaluationDashboard({ propertyId, propertyName, 
     return evaluation.evaluationItems.filter(item => item.category === categoryName)
   }
 
-  const getCategoryScore = (evaluation: PropertyEvaluation, categoryName: string) => {
+  const _getCategoryScore = (evaluation: PropertyEvaluation, categoryName: string) => {
     const items = getCategoryItems(evaluation, categoryName)
     return calculateCategoryScore(items)
   }

@@ -34,7 +34,7 @@ export async function PUT(
     }
 
     const { id } = await params
-    const { name, color } = await request.json()
+    const { name, color } = await request.json() as { name: string; color: string }
 
     if (!name || !color) {
       return NextResponse.json({ error: "Name and color are required" }, { status: 400 })

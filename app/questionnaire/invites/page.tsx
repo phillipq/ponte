@@ -1,8 +1,8 @@
 "use client"
 
-import { useState, useEffect } from "react"
-import { useSession } from "next-auth/react"
 import { useRouter } from "next/navigation"
+import { useSession } from "next-auth/react"
+import { useEffect, useState } from "react"
 import { Button } from "components/Button"
 import Navigation from "components/Navigation"
 
@@ -23,7 +23,7 @@ interface QuestionnaireInvite {
 }
 
 export default function QuestionnaireInvitesPage() {
-  const { data: session, status } = useSession()
+  const { data: _session, status } = useSession()
   const router = useRouter()
   const [invites, setInvites] = useState<QuestionnaireInvite[]>([])
   const [clients, setClients] = useState<Client[]>([])

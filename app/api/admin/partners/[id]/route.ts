@@ -5,14 +5,14 @@ const prisma = new PrismaClient()
 
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const body = await request.json()
     const { isActive } = body as { isActive: boolean }
-    const realtorId = params.id
+    const { id: realtorId } = await params
 
-    const realtor = await prisma.realtor.update({
+    const realtor = await prisma.partner.update({
       where: { id: realtorId },
       data: { isActive }
     })
@@ -38,7 +38,7 @@ export async function PATCH(
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const body = await request.json()
@@ -49,7 +49,7 @@ export async function PUT(
       company?: string
       phone?: string
     }
-    const realtorId = params.id
+    const { id: realtorId } = await params
 
     if (!name || !email) {
       return NextResponse.json(
@@ -59,7 +59,7 @@ export async function PUT(
     }
 
     // Check if email is already taken by another realtor
-    const existingRealtor = await prisma.realtor.findFirst({
+    const existingRealtor = await prisma.partner.findFirst({
       where: {
         email,
         id: { not: realtorId }
@@ -87,7 +87,7 @@ export async function PUT(
       updateData.password = await bcrypt.hash(password, 12)
     }
 
-    const realtor = await prisma.realtor.update({
+    const realtor = await prisma.partner.update({
       where: { id: realtorId },
       data: updateData
     })

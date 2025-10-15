@@ -1,7 +1,7 @@
 "use client"
 
-import { useState, useEffect } from "react"
-import { useRouter, useParams } from "next/navigation"
+import { useParams, useRouter } from "next/navigation"
+import { useEffect, useState } from "react"
 import { Button } from "components/Button"
 import Navigation from "components/Navigation"
 
@@ -38,8 +38,8 @@ export default function QuestionnaireDetailsPage() {
   const [loading, setLoading] = useState(true)
   const [showAddSection, setShowAddSection] = useState(false)
   const [showAddQuestion, setShowAddQuestion] = useState<string | null>(null)
-  const [editingSection, setEditingSection] = useState<QuestionnaireSection | null>(null)
-  const [editingQuestion, setEditingQuestion] = useState<QuestionnaireQuestion | null>(null)
+  const [_editingSection, setEditingSection] = useState<QuestionnaireSection | null>(null)
+  const [_editingQuestion, setEditingQuestion] = useState<QuestionnaireQuestion | null>(null)
   const [newSection, setNewSection] = useState({ title: "", order: 0 })
   const [newQuestion, setNewQuestion] = useState({ question: "", order: 0 })
   const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set())
@@ -97,7 +97,7 @@ export default function QuestionnaireDetailsPage() {
         const data = await response.json() as { error?: string }
         setError(data.error || "Failed to create section")
       }
-    } catch (error) {
+    } catch {
       setError("Failed to create section")
     } finally {
       setSubmitting(false)
@@ -130,7 +130,7 @@ export default function QuestionnaireDetailsPage() {
         const data = await response.json() as { error?: string }
         setError(data.error || "Failed to create question")
       }
-    } catch (error) {
+    } catch {
       setError("Failed to create question")
     } finally {
       setSubmitting(false)
@@ -152,7 +152,7 @@ export default function QuestionnaireDetailsPage() {
       } else {
         setError("Failed to delete section")
       }
-    } catch (error) {
+    } catch {
       setError("Failed to delete section")
     }
   }
@@ -172,7 +172,7 @@ export default function QuestionnaireDetailsPage() {
       } else {
         setError("Failed to delete question")
       }
-    } catch (error) {
+    } catch {
       setError("Failed to delete question")
     }
   }

@@ -1,7 +1,7 @@
 "use client"
 
-import { useState } from "react"
 import { Button } from "components/Button"
+import { useState } from "react"
 
 interface User {
   id: string
@@ -35,13 +35,13 @@ export function SubscriptionManagement({ users }: SubscriptionManagementProps) {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ action, ...data }),
+        body: JSON.stringify({ action, ...(data as Record<string, unknown>) }),
       })
 
       if (response.ok) {
         window.location.reload()
       } else {
-        const error = await response.json()
+        const error = await response.json() as { message?: string }
         alert(`Action failed: ${error.message}`)
       }
     } catch {

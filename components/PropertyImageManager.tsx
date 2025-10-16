@@ -252,7 +252,7 @@ export default function PropertyImageManager({
             
             <div className="relative">
               <Image
-                src={images[currentSlide]}
+                src={images[currentSlide] || ""}
                 alt={`Property image ${currentSlide + 1}`}
                 width={800}
                 height={600}

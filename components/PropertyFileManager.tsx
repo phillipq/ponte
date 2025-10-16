@@ -109,8 +109,8 @@ export default function PropertyFileManager({
         })
 
         if (imageResponse.ok) {
-          const imageData = await imageResponse.json() as { files: unknown[] }
-          onPropertyPhotosChange([...propertyPhotos, ...imageData.files])
+          const imageData = await imageResponse.json() as { files: FileInfo[] }
+          onPropertyPhotosChange([...propertyPhotos as FileInfo[], ...imageData.files])
         }
       }
       
@@ -128,8 +128,8 @@ export default function PropertyFileManager({
         })
 
         if (documentResponse.ok) {
-          const documentData = await documentResponse.json() as { files: unknown[] }
-          onDocumentsChange([...documents, ...documentData.files] as FileInfo[])
+          const documentData = await documentResponse.json() as { files: FileInfo[] }
+          onDocumentsChange([...documents as FileInfo[], ...documentData.files])
         }
       }
       

@@ -1,11 +1,11 @@
 "use client"
 
-import Image from "next/image"
-import { useParams, useRouter } from "next/navigation"
-import { useSession } from "next-auth/react"
-import { useEffect, useState } from "react"
 import { Button } from "components/Button"
 import Navigation from "components/Navigation"
+import { useSession } from "next-auth/react"
+import Image from "next/image"
+import { useParams, useRouter } from "next/navigation"
+import { useEffect, useState } from "react"
 
 interface Client {
   id: string
@@ -35,25 +35,78 @@ interface QuestionnaireQuestion {
   sectionId: string
 }
 
+interface QuestionnaireResponse {
+  id: string
+  answer: string
+  questionText: string
+  sectionTitle?: string
+  question?: {
+    questionType: string
+  }
+}
+
+interface ResponseSet {
+  id: string
+  version: string
+  status: string
+  submittedAt: string
+  responses?: QuestionnaireResponse[]
+}
+
+interface QuestionnaireResponses {
+  responseSets?: ResponseSet[]
+}
+
+interface QuestionnaireInvite {
+  id: string
+  status: string
+  expiresAt: string
+  questionnaireUrl: string
+  client: {
+    id: string
+  }
+}
+
+interface AiAnalysis {
+  id: string
+  summary: string
+  recommendations: string
+  propertyRankings?: PropertyRanking[]
+  createdAt?: string
+}
+
+interface PropertyRanking {
+  id: string
+  name: string
+  score?: string
+}
+
+interface Property {
+  id: string
+  name: string
+  address: string
+  propertyType?: string
+}
+
 export default function ClientDetailPage() {
   const { data: session, status } = useSession()
   const router = useRouter()
   const params = useParams()
   const [client, setClient] = useState<Client | null>(null)
   const [_questionnaireSections, setQuestionnaireSections] = useState<QuestionnaireSection[]>([])
-  const [questionnaireResponses, setQuestionnaireResponses] = useState<unknown>(null)
+  const [questionnaireResponses, setQuestionnaireResponses] = useState<QuestionnaireResponses | null>(null)
   const [selectedResponseSet, setSelectedResponseSet] = useState<string>('')
   const [loading, setLoading] = useState(true)
   const [_deletingResponseSet, setDeletingResponseSet] = useState<string | null>(null)
-  const [aiAnalysis, setAiAnalysis] = useState<unknown>(null)
-  const [propertyRankings, setPropertyRankings] = useState<unknown[]>([])
+  const [aiAnalysis, setAiAnalysis] = useState<AiAnalysis | null>(null)
+  const [propertyRankings, setPropertyRankings] = useState<PropertyRanking[]>([])
   const [generatingAi, setGeneratingAi] = useState(false)
-  const [properties, setProperties] = useState<unknown[]>([])
-  const [questionnaireInvites, setQuestionnaireInvites] = useState<unknown[]>([])
+  const [properties, setProperties] = useState<Property[]>([])
+  const [questionnaireInvites, setQuestionnaireInvites] = useState<QuestionnaireInvite[]>([])
   const [creatingInvite, setCreatingInvite] = useState(false)
   const [inviteExpiresInDays, setInviteExpiresInDays] = useState(30)
   const [destinations, setDestinations] = useState<unknown[]>([])
-  const [storedAiAnalyses, setStoredAiAnalyses] = useState<unknown[]>([])
+  const [storedAiAnalyses, setStoredAiAnalyses] = useState<AiAnalysis[]>([])
   const [selectedAiAnalysis, setSelectedAiAnalysis] = useState<string>("")
   const [showPropertyPreferences, setShowPropertyPreferences] = useState(false)
   const [selectedProperties, setSelectedProperties] = useState<string[]>([])
@@ -65,7 +118,7 @@ export default function ClientDetailPage() {
     company: "",
     notes: ""
   })
-  const [editingResponse, setEditingResponse] = useState<unknown>(null)
+  const [editingResponse, setEditingResponse] = useState<QuestionnaireResponse | null>(null)
   const [editingResponseValue, setEditingResponseValue] = useState("")
   const [updatingResponse, setUpdatingResponse] = useState(false)
   const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set())
@@ -171,11 +224,11 @@ export default function ClientDetailPage() {
       console.log("Fetching questionnaire responses...")
       const response = await fetch(`/api/clients/${params.id}/questionnaire-responses`)
       if (response.ok) {
-        const data = await response.json() as unknown
+        const data = await response.json() as QuestionnaireResponses
         setQuestionnaireResponses(data)
         // Set the first response set as default if none selected
-        if ((data as { responseSets?: unknown[] }).responseSets && (data as { responseSets: unknown[] }).responseSets.length > 0 && !selectedResponseSet) {
-          setSelectedResponseSet(((data as { responseSets: unknown[] }).responseSets[0] as { id: string }).id)
+        if (data.responseSets && data.responseSets.length > 0 && !selectedResponseSet) {
+          setSelectedResponseSet(data.responseSets[0]!.id)
         }
       } else {
         console.error("Failed to fetch questionnaire responses:", response.status)
@@ -193,7 +246,7 @@ export default function ClientDetailPage() {
       ])
 
       if (propertiesResponse.ok) {
-        const data = await propertiesResponse.json() as { properties?: unknown[] }
+        const data = await propertiesResponse.json() as { properties?: Property[] }
         setProperties(data.properties || [])
       }
 
@@ -213,7 +266,7 @@ export default function ClientDetailPage() {
       console.log("AI analysis API response status:", response.status)
       
       if (response.ok) {
-        const data = await response.json() as { aiAnalyses?: unknown[] }
+        const data = await response.json() as { aiAnalyses?: AiAnalysis[] }
         console.log("AI analyses data received:", data)
         setStoredAiAnalyses(data.aiAnalyses || [])
       } else {
@@ -229,9 +282,9 @@ export default function ClientDetailPage() {
     try {
       const response = await fetch(`/api/questionnaire/invite`)
       if (response.ok) {
-        const data = await response.json() as { invites?: unknown[] }
+        const data = await response.json() as { invites?: QuestionnaireInvite[] }
         // Filter invites for this specific client
-        const clientInvites = (data.invites || []).filter((invite: unknown) => (invite as { client: { id: string } }).client.id === params.id)
+        const clientInvites = (data.invites || []).filter((invite) => invite.client.id === params.id)
         setQuestionnaireInvites(clientInvites)
       }
     } catch (error) {
@@ -256,7 +309,7 @@ export default function ClientDetailPage() {
       })
 
       if (response.ok) {
-        const data = await response.json() as { invite: unknown }
+        const data = await response.json() as { invite: QuestionnaireInvite }
         setQuestionnaireInvites(prev => [data.invite, ...prev])
         alert(`Questionnaire invite created! Share this link: ${data.invite.questionnaireUrl}`)
       } else {
@@ -296,13 +349,14 @@ export default function ClientDetailPage() {
     }
   }
 
-  const _loadAiAnalysis = (analysis: unknown) => {
+  const _loadAiAnalysis = (analysis: AiAnalysis) => {
     setAiAnalysis({
-      summary: (analysis as { summary: string }).summary,
-      preferences: (analysis as { preferences: unknown }).preferences,
-      recommendations: (analysis as { recommendations: unknown }).recommendations
+      id: analysis.id,
+      summary: analysis.summary,
+      recommendations: analysis.recommendations,
+      propertyRankings: analysis.propertyRankings
     })
-    setPropertyRankings((analysis as { propertyRankings?: unknown[] }).propertyRankings || [])
+    setPropertyRankings(analysis.propertyRankings || [])
   }
 
   const deleteAiAnalysis = async (analysisId: string) => {
@@ -364,10 +418,12 @@ export default function ClientDetailPage() {
       const response = await fetch(`/api/clients/${params.id}/ai-analysis/${analysisId}`)
       
       if (response.ok) {
-        const data = await response.json() as { summary: string; recommendations: string; propertyRankings?: unknown[] }
+        const data = await response.json() as { id: string; summary: string; recommendations: string; propertyRankings?: PropertyRanking[] }
         setAiAnalysis({
+          id: data.id,
           summary: data.summary,
-          recommendations: data.recommendations
+          recommendations: data.recommendations,
+          propertyRankings: data.propertyRankings
         })
         setPropertyRankings(data.propertyRankings || [])
         setSelectedAiAnalysis(analysisId)
@@ -418,9 +474,9 @@ export default function ClientDetailPage() {
     }
   }
 
-  const _startEditingResponse = (response: unknown) => {
+  const _startEditingResponse = (response: QuestionnaireResponse) => {
     setEditingResponse(response)
-    setEditingResponseValue((response as { answer: string }).answer)
+    setEditingResponseValue(response.answer)
   }
 
   const _cancelEditingResponse = () => {
@@ -475,7 +531,7 @@ export default function ClientDetailPage() {
   }
 
   const startEditResponse = (responseId: string, currentAnswer: string) => {
-    setEditingResponse({ id: responseId })
+    setEditingResponse({ id: responseId, answer: currentAnswer, questionText: '' })
     setEditingResponseValue(currentAnswer)
   }
 
@@ -544,7 +600,7 @@ export default function ClientDetailPage() {
       })
 
       if (response.ok) {
-        const data = await response.json() as { analysis: unknown; propertyRankings: unknown[] }
+        const data = await response.json() as { analysis: AiAnalysis; propertyRankings: PropertyRanking[] }
         setAiAnalysis(data.analysis)
         setPropertyRankings(data.propertyRankings)
         await fetchStoredAiAnalyses()
@@ -974,11 +1030,11 @@ export default function ClientDetailPage() {
                           className="w-full px-3 py-2 border border-ponte-sand rounded-lg focus:ring-2 focus:ring-ponte-terracotta focus:border-transparent"
                         >
                           <option value="">Choose a response set...</option>
-                          {questionnaireResponses.responseSets.map((set: unknown) => (
-                            <option key={(set as { id: string }).id} value={(set as { id: string }).id}>
-                              Response Set #{(set as { version: string }).version} - {new Date((set as { submittedAt: string }).submittedAt).toLocaleDateString()} ({(set as { status: string }).status})
-                            </option>
-                          ))}
+                        {questionnaireResponses.responseSets.map((set) => (
+                          <option key={set.id} value={set.id}>
+                            Response Set #{set.version} - {new Date(set.submittedAt).toLocaleDateString()} ({set.status})
+                          </option>
+                        ))}
                         </select>
                       </div>
                       
@@ -1018,12 +1074,12 @@ export default function ClientDetailPage() {
           <div className="bg-white rounded-lg shadow border border-ponte-sand p-6 mb-6">
             <h2 className="text-xl font-semibold text-ponte-black mb-4 font-header">Response Details</h2>
             {(() => {
-              const selectedSet = questionnaireResponses.responseSets.find((set: unknown) => (set as { id: string }).id === selectedResponseSet)
+              const selectedSet = questionnaireResponses.responseSets.find((set) => set.id === selectedResponseSet)
               if (!selectedSet) return null
 
               // Group responses by section
-              const responsesBySection = selectedSet.responses?.reduce((acc: Record<string, unknown[]>, response: unknown) => {
-                const sectionTitle = (response as { sectionTitle?: string }).sectionTitle || 'Other'
+              const responsesBySection = selectedSet.responses?.reduce((acc: Record<string, QuestionnaireResponse[]>, response) => {
+                const sectionTitle = response.sectionTitle || 'Other'
                 if (!acc[sectionTitle]) {
                   acc[sectionTitle] = []
                 }
@@ -1054,7 +1110,6 @@ export default function ClientDetailPage() {
                   {Object.keys(responsesBySection).length > 0 ? (
                     <div className="space-y-4">
                       {Object.entries(responsesBySection).map(([sectionTitle, responses]) => {
-                        const responsesArray = responses as unknown[]
                         return (
                         <div key={sectionTitle} className="border border-ponte-sand rounded-lg bg-white shadow-sm">
                           <div 
@@ -1064,7 +1119,7 @@ export default function ClientDetailPage() {
                             <h4 className="text-md font-semibold text-ponte-black font-header">
                               {sectionTitle}
                               <span className="ml-2 text-sm text-ponte-olive font-normal">
-                                ({responsesArray.length} {responsesArray.length === 1 ? 'response' : 'responses'})
+                                ({responses.length} {responses.length === 1 ? 'response' : 'responses'})
                               </span>
                             </h4>
                             <div className="flex items-center">
@@ -1084,14 +1139,14 @@ export default function ClientDetailPage() {
                           {expandedSections.has(sectionTitle) && (
                             <div className="px-4 pb-4">
                               <div className="space-y-3">
-                                {responsesArray.map((response: unknown) => (
-                                  <div key={(response as { id: string }).id} className="border-l-4 border-ponte-terracotta pl-4 py-2">
+                                {responses.map((response) => (
+                                  <div key={response.id} className="border-l-4 border-ponte-terracotta pl-4 py-2">
                                     <div className="flex items-start justify-between">
                                       <div className="flex-1">
                                         <p className="font-medium text-ponte-black text-sm mb-1">
-                                          {(response as { questionText: string }).questionText}
+                                          {response.questionText}
                                         </p>
-                                        {editingResponse?.id === (response as { id: string }).id ? (
+                                        {editingResponse?.id === response.id ? (
                                           <div className="space-y-2">
                                             <textarea
                                               value={editingResponseValue}
@@ -1173,19 +1228,19 @@ export default function ClientDetailPage() {
                     <div>
                       <h4 className="font-medium text-ponte-black mb-2">Stored Analyses</h4>
                       <div className="space-y-2">
-                        {storedAiAnalyses.map((analysis: unknown) => (
-                          <div key={(analysis as { id: string }).id} className="flex items-center justify-between p-3 border border-ponte-sand rounded-lg">
+                        {storedAiAnalyses.map((analysis) => (
+                          <div key={analysis.id} className="flex items-center justify-between p-3 border border-ponte-sand rounded-lg">
                             <div>
                               <p className="font-medium text-ponte-black text-sm">
-                                Analysis #{(analysis as { id: string }).id}
+                                Analysis #{analysis.id}
                               </p>
                               <p className="text-xs text-ponte-olive">
-                                {new Date((analysis as { createdAt: string }).createdAt).toLocaleDateString()}
+                                {analysis.createdAt ? new Date(analysis.createdAt).toLocaleDateString() : 'Unknown date'}
                               </p>
                             </div>
                             <div className="flex space-x-2">
                               <Button
-                                onClick={() => loadStoredAnalysis((analysis as { id: string }).id)}
+                                onClick={() => loadStoredAnalysis(analysis.id)}
                                 className="bg-ponte-olive hover:bg-ponte-olive/80 text-white px-3 py-1 text-xs"
                               >
                                 View
@@ -1219,13 +1274,13 @@ export default function ClientDetailPage() {
                           <div>
                             <h5 className="font-medium text-ponte-black text-sm mb-2">Property Rankings</h5>
                             <div className="space-y-2">
-                              {propertyRankings.map((property: unknown, index: number) => (
-                                <div key={(property as { id: string }).id} className="flex items-center justify-between p-2 bg-ponte-cream rounded">
+                              {propertyRankings.map((property, index: number) => (
+                                <div key={property.id} className="flex items-center justify-between p-2 bg-ponte-cream rounded">
                                   <span className="text-sm font-medium text-ponte-black">
-                                    #{index + 1} {(property as { name: string }).name}
+                                    #{index + 1} {property.name}
                                   </span>
                                   <span className="text-sm text-ponte-olive">
-                                    Score: {(property as { score?: string }).score || 'N/A'}
+                                    Score: {property.score || 'N/A'}
                                   </span>
                                 </div>
                               ))}
@@ -1253,15 +1308,15 @@ export default function ClientDetailPage() {
                       <h4 className="font-medium text-ponte-black mb-2">Selected Properties</h4>
                       <div className="space-y-2">
                         {selectedProperties.map((propertyId: string) => {
-                          const property = properties.find((p: unknown) => (p as { id: string }).id === propertyId)
+                          const property = properties.find((p) => p.id === propertyId)
                           return property ? (
                             <div key={propertyId} className="flex items-center justify-between p-3 border border-ponte-sand rounded-lg">
                               <div>
                                 <p className="font-medium text-ponte-black text-sm">
-                                  {(property as { name: string }).name}
+                                  {property.name}
                                 </p>
                                 <p className="text-xs text-ponte-olive">
-                                  {(property as { address: string }).address}
+                                  {property.address}
                                 </p>
                               </div>
                               <Button

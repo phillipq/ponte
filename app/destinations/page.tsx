@@ -1,10 +1,10 @@
 "use client"
 
+import Navigation from "components/Navigation"
+import { useSession } from "next-auth/react"
 import Image from "next/image"
 import { useRouter } from "next/navigation"
-import { useSession } from "next-auth/react"
 import { useEffect, useState } from "react"
-import Navigation from "components/Navigation"
 
 interface Destination {
   id: string
@@ -53,7 +53,7 @@ export default function DestinationsPage() {
     longitude: 0,
     tags: [] as string[]
   })
-  const [geocodingResult, setGeocodingResult] = useState<unknown>(null)
+  const [geocodingResult, setGeocodingResult] = useState<{ formatted_address?: string; latitude?: number; longitude?: number; place_id?: string } | null>(null)
   const [geocodingLoading, setGeocodingLoading] = useState(false)
   const [error, setError] = useState("")
   const [submitting, setSubmitting] = useState(false)
@@ -357,10 +357,10 @@ export default function DestinationsPage() {
         body: JSON.stringify({ address: fullAddress }),
       })
 
-      const data = await response.json() as { result?: unknown, error?: string }
+      const data = await response.json() as { result?: { formatted_address?: string; latitude?: number; longitude?: number; place_id?: string }, error?: string }
 
       if (response.ok) {
-        setGeocodingResult(data.result)
+        setGeocodingResult(data.result || null)
         setNewDestination(prev => ({
           ...prev,
           name: prev.name || data.result?.formatted_address || "",
@@ -969,7 +969,7 @@ export default function DestinationsPage() {
                         <strong>Found:</strong> {geocodingResult.formatted_address}
                       </p>
                       <p className="text-xs text-green-600">
-                        {geocodingResult.latitude.toFixed(8)}, {geocodingResult.longitude.toFixed(8)}
+                        {geocodingResult.latitude?.toFixed(8)}, {geocodingResult.longitude?.toFixed(8)}
                       </p>
                     </div>
                   )}

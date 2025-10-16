@@ -1,10 +1,10 @@
 "use client"
 
+import Navigation from "components/Navigation"
+import { useSession } from "next-auth/react"
 import Image from "next/image"
 import { useParams, useRouter } from "next/navigation"
-import { useSession } from "next-auth/react"
 import { useEffect, useState } from "react"
-import Navigation from "components/Navigation"
 
 interface Client {
   id: string
@@ -208,7 +208,10 @@ export default function ClientProcessPage() {
                       onError={(e) => {
                         // Fallback to number if icon doesn't exist
                         e.currentTarget.style.display = 'none'
-                        e.currentTarget.nextElementSibling.style.display = 'block'
+                        const nextElement = e.currentTarget.nextElementSibling as HTMLElement
+                        if (nextElement) {
+                          nextElement.style.display = 'block'
+                        }
                       }}
                     />
                     <span className="text-2xl font-bold text-ponte-olive" style={{display: 'none'}}>

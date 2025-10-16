@@ -1,11 +1,165 @@
 "use client"
 
-import { useRouter } from "next/navigation"
 import { useSession } from "next-auth/react"
+import { useRouter } from "next/navigation"
 import { useEffect, useRef, useState } from "react"
 // Using traditional Google Maps API loading method
 import { Button } from "components/Button"
 import Navigation from "components/Navigation"
+
+// Google Maps type declarations
+declare global {
+  interface Window {
+    google: typeof google
+  }
+}
+
+declare namespace google {
+  namespace maps {
+    class Map {
+      constructor(element: HTMLElement, options: MapOptions)
+      getCenter(): LatLng | undefined
+      getBounds(): LatLngBounds | undefined
+      getDiv(): HTMLElement
+      setCenter(latLng: LatLng | LatLngLiteral): void
+      setZoom(zoom: number): void
+      addListener(eventName: string, handler: Function): MapsEventListener
+    }
+    
+    class Marker {
+      constructor(options: MarkerOptions)
+      setPosition(latLng: LatLng | LatLngLiteral): void
+      getPosition(): LatLng | undefined
+      setMap(map: Map | null): void
+      addListener(eventName: string, handler: Function): void
+    }
+    
+    class InfoWindow {
+      constructor(options?: InfoWindowOptions)
+      setContent(content: string): void
+      open(map: Map, marker?: Marker): void
+      close(): void
+      addListener(eventName: string, handler: Function): void
+    }
+    
+    class LatLng {
+      constructor(lat: number, lng: number)
+      lat(): number
+      lng(): number
+    }
+    
+    class LatLngBounds {
+      getNorthEast(): LatLng
+      getSouthWest(): LatLng
+    }
+    
+    class Size {
+      constructor(width: number, height: number)
+    }
+    
+    class Point {
+      constructor(x: number, y: number)
+    }
+    
+    interface MapOptions {
+      center: LatLng | LatLngLiteral
+      zoom: number
+      mapTypeId?: MapTypeId
+      mapTypeControl?: boolean
+      mapTypeControlOptions?: MapTypeControlOptions
+      streetViewControl?: boolean
+      fullscreenControl?: boolean
+      zoomControl?: boolean
+    }
+    
+    interface MarkerOptions {
+      position: LatLng | LatLngLiteral
+      map?: Map
+      title?: string
+      icon?: string | Icon | Symbol
+      draggable?: boolean
+    }
+    
+    interface InfoWindowOptions {
+      content?: string
+    }
+    
+    interface MapTypeControlOptions {
+      position?: ControlPosition
+    }
+    
+    interface Icon {
+      url: string
+      scaledSize?: Size
+      anchor?: Point
+    }
+    
+    interface Symbol {
+      path: SymbolPath
+      scale?: number
+      fillColor?: string
+      fillOpacity?: number
+      strokeColor?: string
+      strokeWeight?: number
+    }
+    
+    interface LatLngLiteral {
+      lat: number
+      lng: number
+    }
+    
+    interface MapMouseEvent {
+      latLng: LatLng | null
+      domEvent?: MouseEvent
+    }
+    
+    interface MapsEventListener {
+      remove(): void
+    }
+    
+    enum MapTypeId {
+      SATELLITE = 'satellite'
+    }
+    
+    enum ControlPosition {
+      TOP_RIGHT = 1
+    }
+    
+    enum SymbolPath {
+      CIRCLE = 0
+    }
+    
+    namespace places {
+      class PlacesService {
+        constructor(map: Map)
+        textSearch(request: TextSearchRequest, callback: (results: PlaceResult[] | null, status: PlacesServiceStatus) => void): void
+      }
+      
+      interface TextSearchRequest {
+        query: string
+        fields: string[]
+        locationBias?: LatLng | LatLngLiteral
+      }
+      
+      interface PlaceResult {
+        name?: string
+        formatted_address?: string
+        place_id?: string
+        geometry?: {
+          location: LatLng
+        }
+      }
+      
+      enum PlacesServiceStatus {
+        OK = 'OK'
+      }
+    }
+    
+    namespace event {
+      function clearListeners(instance: any, eventName?: string): void
+    }
+  }
+}
 
 interface Property {
   id: string
@@ -67,7 +221,7 @@ export default function MapPage() {
     const savedSettings = localStorage.getItem("mapSettings")
     if (savedSettings) {
       try {
-        const settings = JSON.parse(savedSettings)
+        const settings = JSON.parse(savedSettings) as { defaultLocation?: { lat: number; lng: number; zoom: number } }
         if (settings.defaultLocation) {
           setDefaultLocation(settings.defaultLocation)
         }
@@ -98,13 +252,13 @@ export default function MapPage() {
   })
   const [newTag, setNewTag] = useState("")
   const [searchQuery, setSearchQuery] = useState("")
-  const [searchResults, setSearchResults] = useState<unknown[]>([])
+  const [searchResults, setSearchResults] = useState<google.maps.places.PlaceResult[]>([])
   const [showSearchResults, setShowSearchResults] = useState(false)
   const [_placesService, _setPlacesService] = useState<google.maps.places.PlacesService | null>(null)
   const [showLocationMenu, setShowLocationMenu] = useState(false)
   const [menuPosition, setMenuPosition] = useState({ x: 0, y: 0 })
   const [contextLocation, setContextLocation] = useState<{ lat: number; lng: number } | null>(null)
-  const [googleMapsPopup, setGoogleMapsPopup] = useState<unknown>(null)
+  const [googleMapsPopup, setGoogleMapsPopup] = useState<google.maps.places.PlaceResult | null>(null)
   const [showGoogleMapsMenu, setShowGoogleMapsMenu] = useState(false)
   const [movingDestination, setMovingDestination] = useState<string | null>(null)
   const [moveMarker, setMoveMarker] = useState<google.maps.Marker | null>(null)
@@ -320,7 +474,7 @@ export default function MapPage() {
               
               if (lines.length > 1) {
                 // Multiple lines - use the original logic
-                name = lines[0].trim()
+                name = lines[0]?.trim() || ""
                 address = lines.slice(1)
                   .filter(line => 
                     !line.includes('View on') && 
@@ -334,7 +488,7 @@ export default function MapPage() {
                   .join(', ')
               } else if (lines.length === 1) {
                 // Single line - try to parse it
-                const singleLine = lines[0].trim()
+                const singleLine = lines[0]?.trim() || ""
                 console.log("📝 Single line detected from marker click, parsing:", singleLine)
                 
                 // Look for patterns like "Business Name Business Name Address"
@@ -589,7 +743,7 @@ export default function MapPage() {
             
             if (lines.length > 1) {
               // Multiple lines - use the original logic
-              name = lines[0].trim()
+              name = lines[0]?.trim() || ""
               address = lines.slice(1)
                 .filter(line => 
                   !line.includes('View on') && 
@@ -603,7 +757,7 @@ export default function MapPage() {
                 .join(', ')
             } else if (lines.length === 1) {
               // Single line - try to parse it
-              const singleLine = lines[0].trim()
+              const singleLine = lines[0]?.trim() || ""
               console.log("📝 Single line detected, parsing:", singleLine)
               
               // Look for patterns like "Business Name Business Name Address"
@@ -740,7 +894,7 @@ export default function MapPage() {
             console.log("📝 All text nodes:", textNodes)
             
             if (textNodes.length > 0) {
-              name = textNodes[0]
+              name = textNodes[0] || ""
               if (textNodes.length > 1) {
                 address = textNodes.slice(1).join(', ')
               }
@@ -882,7 +1036,7 @@ export default function MapPage() {
             
             if (lines.length > 0) {
               // Get the first line as name, but clean it up
-              name = lines[0].trim()
+              name = lines[0]?.trim() || ""
               
               // If the name contains the business name twice (common issue), clean it up
               const nameWords = name.split(' ')
@@ -1054,7 +1208,7 @@ export default function MapPage() {
                       
                       if (lines.length > 1) {
                         // Multiple lines - use the original logic
-                        name = lines[0].trim()
+                        name = lines[0]?.trim() || ""
                         address = lines.slice(1)
                           .filter(line => 
                             !line.includes('View on') && 
@@ -1068,7 +1222,7 @@ export default function MapPage() {
                           .join(', ')
                       } else if (lines.length === 1) {
                         // Single line - try to parse it with duplicate pattern detection
-                        const singleLine = lines[0].trim()
+                        const singleLine = lines[0]?.trim() || ""
                         console.log("📝 Single line detected from observer, parsing:", singleLine)
                         
                         // Look for patterns like "Business Name Business Name Address"
@@ -1209,7 +1363,7 @@ export default function MapPage() {
 
     return () => {
       if (map) {
-        google.maps.event.clearListeners(map, "click")
+        window.google.maps.event.clearListeners(map, "click")
       }
       document.removeEventListener('click', handleGoogleMapsPopupClick)
       document.removeEventListener('click', handleGoogleMapsInteraction)
@@ -1247,7 +1401,7 @@ export default function MapPage() {
         const propertiesData = await propertiesRes.json()
         console.log("Properties response:", propertiesData)
         // Handle both array and object response formats
-        const properties = Array.isArray(propertiesData) ? propertiesData : (propertiesData as { properties?: unknown[] }).properties || []
+        const properties = Array.isArray(propertiesData) ? propertiesData as Property[] : (propertiesData as { properties?: Property[] }).properties || []
         console.log("Properties loaded:", properties.length)
         setProperties(properties)
       }
@@ -1256,7 +1410,7 @@ export default function MapPage() {
         const destinationsData = await destinationsRes.json()
         console.log("Destinations response:", destinationsData)
         // Handle both array and object response formats
-        const destinations = Array.isArray(destinationsData) ? destinationsData : (destinationsData as { destinations?: unknown[] }).destinations || []
+        const destinations = Array.isArray(destinationsData) ? destinationsData as Destination[] : (destinationsData as { destinations?: Destination[] }).destinations || []
         console.log("Destinations loaded:", destinations.length)
         setDestinations(destinations)
       }
@@ -1289,7 +1443,7 @@ export default function MapPage() {
     }
 
     // Check if Google Maps is already loaded
-    if (window.google && window.google.maps) {
+    if (typeof window !== 'undefined' && window.google && window.google.maps) {
       console.log("Google Maps already loaded, creating map...")
       createMapInstance()
       return
@@ -1355,12 +1509,12 @@ export default function MapPage() {
       console.log("Creating map instance...")
       
       // Check if Google Maps API is fully loaded
-      if (typeof google === 'undefined' || !google.maps || !google.maps.Map) {
+      if (typeof window === 'undefined' || !window.google || !window.google.maps || !window.google.maps.Map) {
         if (retryCount < 50) { // Max 5 seconds of retries
           console.log(`Google Maps API not ready (attempt ${retryCount + 1}/50), retrying in 100ms...`)
-          console.log("Google object:", typeof google)
-          console.log("Google.maps:", typeof google?.maps)
-          console.log("Google.maps.Map:", typeof google?.maps?.Map)
+          console.log("Google object:", typeof window.google)
+          console.log("Google.maps:", typeof window.google?.maps)
+          console.log("Google.maps.Map:", typeof window.google?.maps?.Map)
           setTimeout(() => createMapInstance(retryCount + 1), 100)
           return
         } else {
@@ -1370,13 +1524,13 @@ export default function MapPage() {
         }
       }
       
-      const mapInstance = new google.maps.Map(mapRef.current!, {
+      const mapInstance = new window.google.maps.Map(mapRef.current!, {
         center: { lat: defaultLocation.lat, lng: defaultLocation.lng },
         zoom: defaultLocation.zoom,
-        mapTypeId: google.maps.MapTypeId.SATELLITE,
+        mapTypeId: window.google.maps.MapTypeId.SATELLITE,
         mapTypeControl: true,
         mapTypeControlOptions: {
-          position: google.maps.ControlPosition?.TOP_RIGHT || 0,
+          position: window.google.maps.ControlPosition?.TOP_RIGHT || 0,
         },
         streetViewControl: true,
         fullscreenControl: true,
@@ -1411,8 +1565,8 @@ export default function MapPage() {
     
     return {
       url: iconUrl,
-      scaledSize: new google.maps.Size(32, 32),
-      anchor: new google.maps.Point(16, 32)
+      scaledSize: new window.google.maps.Size(32, 32),
+      anchor: new window.google.maps.Point(16, 32)
     }
   }
 
@@ -1451,8 +1605,8 @@ export default function MapPage() {
     
     return {
       url: categoryInfo.icon,
-      scaledSize: new google.maps.Size(32, 32),
-      anchor: new google.maps.Point(16, 32),
+      scaledSize: new window.google.maps.Size(32, 32),
+      anchor: new window.google.maps.Point(16, 32),
       displayName: categoryInfo.displayName
     }
   }
@@ -1474,7 +1628,7 @@ export default function MapPage() {
   const addPropertyMarker = (property: Property) => {
     if (!map) return
 
-    const marker = new google.maps.Marker({
+    const marker = new window.google.maps.Marker({
       position: { lat: property.latitude, lng: property.longitude },
       map: map,
       title: property.name || `${property.streetAddress}, ${property.city}`,
@@ -1482,15 +1636,15 @@ export default function MapPage() {
     })
 
     const typeConfig = propertyTypes.find(type => type.value === property.propertyType) || propertyTypes[0]
-    const infoWindow = new google.maps.InfoWindow({
+    const infoWindow = new window.google.maps.InfoWindow({
       content: `
         <div class="p-2">
           <div class="flex items-center space-x-2 mb-2">
-            <span class="text-lg">${typeConfig.icon}</span>
+            <span class="text-lg">${typeConfig?.icon || "🏠"}</span>
             <h3 class="font-semibold">${property.name || "Property"}</h3>
           </div>
           <p class="text-sm text-gray-600">${property.streetAddress}, ${property.city}</p>
-          <p class="text-xs text-gray-500 mt-1">${typeConfig.label}</p>
+          <p class="text-xs text-gray-500 mt-1">${typeConfig?.label || "Property"}</p>
           ${property.tags.length > 0 ? `
             <div class="mt-2">
               ${property.tags.map(tag => `<span class="inline-block bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded mr-1">${tag}</span>`).join('')}
@@ -1508,16 +1662,14 @@ export default function MapPage() {
       setNewProperty({
         name: property.name || "",
         tags: property.tags,
-        latitude: property.latitude,
-        longitude: property.longitude,
+        useMapLocation: false,
         propertyType: property.propertyType,
         recipientName: property.recipientName || "",
         streetAddress: property.streetAddress,
         postalCode: property.postalCode,
         city: property.city,
         province: property.province || "",
-        country: property.country,
-        useMapLocation: false
+        country: property.country
       })
       setClickedLocation({ lat: property.latitude, lng: property.longitude })
       setShowInlineForm(true)
@@ -1531,14 +1683,14 @@ export default function MapPage() {
     if (!map) return
 
     const iconInfo = getDestinationIcon(category)
-    const marker = new google.maps.Marker({
+    const marker = new window.google.maps.Marker({
       position: { lat: destination.latitude, lng: destination.longitude },
       map: map,
       title: destination.name,
       icon: iconInfo
     })
 
-    const infoWindow = new google.maps.InfoWindow({
+    const infoWindow = new window.google.maps.InfoWindow({
       content: `
         <div class="p-2">
           <h3 class="font-semibold">${destination.name}</h3>
@@ -1647,9 +1799,9 @@ export default function MapPage() {
         locationBias: map.getCenter()
       }
 
-      const service = new google.maps.places.PlacesService(map)
-      service.textSearch(request, (results, status) => {
-        if (status === (window as { google: { maps: { places: { PlacesServiceStatus: { OK: string } } } } }).google.maps.places.PlacesServiceStatus.OK && results) {
+      const service = new window.google.maps.places.PlacesService(map)
+      service.textSearch(request, (results: google.maps.places.PlaceResult[] | null, status: google.maps.places.PlacesServiceStatus) => {
+        if (status === window.google.maps.places.PlacesServiceStatus.OK && results) {
           setSearchResults(results)
           setShowSearchResults(true)
         } else {
@@ -1663,18 +1815,20 @@ export default function MapPage() {
     }
   }
 
-  const handleSearchResultClick = (result: unknown) => {
+  const handleSearchResultClick = (result: google.maps.places.PlaceResult) => {
     if (!map) return
 
-    const location = (result as { geometry: { location: google.maps.LatLng } }).geometry.location
-    map.setCenter(location)
-    map.setZoom(15)
-    
-    // Set clicked location for property/destination adding
-    setClickedLocation({
-      lat: location.lat(),
-      lng: location.lng()
-    })
+    const location = result.geometry?.location
+    if (location) {
+      map.setCenter(location)
+      map.setZoom(15)
+      
+      // Set clicked location for property/destination adding
+      setClickedLocation({
+        lat: location.lat(),
+        lng: location.lng()
+      })
+    }
 
     // Close search results
     setShowSearchResults(false)
@@ -1713,8 +1867,8 @@ export default function MapPage() {
       })
 
       if (response.ok) {
-        const data = await response.json() as unknown
-        const address = (data as { result: { formatted_address: string } }).result.formatted_address
+        const data = await response.json() as { result?: { formatted_address?: string } }
+        const address = data.result?.formatted_address || "Unknown Address"
         
         // Update both property and destination forms with the geocoded address
         setNewProperty(prev => ({
@@ -1795,9 +1949,9 @@ export default function MapPage() {
     try {
       // Extract information from Google Maps popup
       const name = googleMapsPopup.name || "Unknown Location"
-      const address = googleMapsPopup.formatted_address || googleMapsPopup.vicinity || ""
-      const lat = googleMapsPopup.geometry?.location?.lat() || googleMapsPopup.lat
-      const lng = googleMapsPopup.geometry?.location?.lng() || googleMapsPopup.lng
+      const address = googleMapsPopup.formatted_address || ""
+      const lat = googleMapsPopup.geometry?.location?.lat() || 0
+      const lng = googleMapsPopup.geometry?.location?.lng() || 0
 
       // Create destination
       const response = await fetch("/api/destinations", {
@@ -1823,8 +1977,8 @@ export default function MapPage() {
         setGoogleMapsPopup(null)
         alert(`"${name}" added to destinations successfully!`)
       } else {
-        const errorData = await response.json() as unknown
-        alert(`Failed to add destination: ${(errorData as { error: string }).error}`)
+        const errorData = await response.json() as { error?: string }
+        alert(`Failed to add destination: ${errorData.error || "Unknown error"}`)
       }
     } catch (error) {
       console.error("Error adding destination from Google Maps:", error)
@@ -1862,8 +2016,8 @@ export default function MapPage() {
         })
 
         if (response.ok) {
-          const data = await response.json() as unknown
-          const address = (data as { result: { formatted_address: string } }).result.formatted_address
+          const data = await response.json() as { result?: { formatted_address?: string } }
+          const address = data.result?.formatted_address || "Unknown Address"
           
           // Parse the address components
           const addressParts = address.split(', ')
@@ -1919,8 +2073,8 @@ export default function MapPage() {
         clearMapPin()
         setClickedLocation(null)
       } else {
-        const errorData = await propertyResponse.json() as unknown
-        alert(`Failed to create property: ${(errorData as { error: string }).error}`)
+        const errorData = await propertyResponse.json() as { error?: string }
+        alert(`Failed to create property: ${errorData.error || "Unknown error"}`)
       }
     } catch (error) {
       console.error("Error adding property:", error)
@@ -1948,14 +2102,14 @@ export default function MapPage() {
         })
       })
 
-      const data = await response.json() as unknown
+      const data = await response.json() as { result?: { formatted_address?: string } }
       if (response.ok) {
         const destinationResponse = await fetch("/api/destinations", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             name: newDestination.name,
-            address: data.result.formatted_address,
+            address: data.result?.formatted_address || "Unknown Address",
             latitude: clickedLocation.lat,
             longitude: clickedLocation.lng,
             category: newDestination.category,
@@ -1968,8 +2122,8 @@ export default function MapPage() {
           setNewDestination({ name: "", address: "", category: "", latitude: 0, longitude: 0 })
           setClickedLocation(null)
         } else {
-          const errorData = await destinationResponse.json() as unknown
-          alert(`Failed to create destination: ${(errorData as { error: string }).error}`)
+        const errorData = await destinationResponse.json() as { error?: string }
+        alert(`Failed to create destination: ${errorData.error || "Unknown error"}`)
         }
       } else {
         alert("Failed to get address for the selected location.")
@@ -1988,12 +2142,12 @@ export default function MapPage() {
       moveMarker.setMap(null)
     }
     
-    const tempMarker = new google.maps.Marker({
+    const tempMarker = new window.google.maps.Marker({
       position: { lat: destination.latitude, lng: destination.longitude },
-      map: map,
+      map: map || undefined,
       title: `Moving: ${destination.name}`,
       icon: {
-        path: google.maps.SymbolPath.CIRCLE,
+        path: window.google.maps.SymbolPath.CIRCLE,
         scale: 8,
         fillColor: '#FF0000',
         fillOpacity: 0.8,
@@ -2013,7 +2167,9 @@ export default function MapPage() {
     })
     
     // Store the listener for cleanup
-    ;(tempMarker as { moveListener: google.maps.MapsEventListener }).moveListener = moveListener
+    if (moveListener) {
+      ;(tempMarker as any).moveListener = moveListener
+    }
   }
 
   const handleConfirmMoveDestination = async () => {
@@ -2035,8 +2191,8 @@ export default function MapPage() {
         })
       })
       
-      const data = await response.json() as unknown
-      const newAddress = (data as { result?: { formatted_address?: string } }).result?.formatted_address || "Unknown Address"
+      const data = await response.json() as { result?: { formatted_address?: string } }
+      const newAddress = data.result?.formatted_address || "Unknown Address"
       
       // Update the destination
       const updateResponse = await fetch(`/api/destinations/${movingDestination}`, {
@@ -2053,8 +2209,8 @@ export default function MapPage() {
         await fetchData()
         alert("Destination moved successfully!")
       } else {
-        const errorData = await updateResponse.json() as unknown
-        alert(`Failed to move destination: ${(errorData as { error: string }).error}`)
+        const errorData = await updateResponse.json() as { error?: string }
+        alert(`Failed to move destination: ${errorData.error || "Unknown error"}`)
       }
     } catch (error) {
       console.error("Error moving destination:", error)
@@ -2774,7 +2930,7 @@ export default function MapPage() {
                     >
                       <option value="">Select a category</option>
                       {destinationCategories.map(category => (
-                        <option key={category} value={category}>{category}</option>
+                        <option key={category.value} value={category.value}>{category.icon} {category.label}</option>
                       ))}
                     </select>
                   </div>

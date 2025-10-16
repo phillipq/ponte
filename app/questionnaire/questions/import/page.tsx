@@ -1,11 +1,11 @@
 "use client"
 
-import Image from "next/image"
-import { useRouter } from "next/navigation"
-import { useSession } from "next-auth/react"
-import { useRef, useState } from "react"
 import { Button } from "components/Button"
 import Navigation from "components/Navigation"
+import { useSession } from "next-auth/react"
+import Image from "next/image"
+import { useRouter } from "next/navigation"
+import { useRef, useState } from "react"
 
 interface _Questionnaire {
   id: string
@@ -22,13 +22,19 @@ interface QuestionImportResult {
   isNew: boolean
 }
 
+interface ValidationResults {
+  totalQuestions: number
+  sections?: Array<{ name: string; questionCount: number }>
+  newQuestions: number
+}
+
 export default function QuestionImportPage() {
   const { data: _session, status } = useSession()
   const router = useRouter()
   const [file, setFile] = useState<File | null>(null)
   const [importing, setImporting] = useState(false)
   const [validating, setValidating] = useState(false)
-  const [validationResults, setValidationResults] = useState<unknown>(null)
+  const [validationResults, setValidationResults] = useState<ValidationResults | null>(null)
   const [showValidation, setShowValidation] = useState(false)
   const [results, setResults] = useState<QuestionImportResult[]>([])
   const [showResults, setShowResults] = useState(false)
@@ -78,7 +84,7 @@ export default function QuestionImportPage() {
         body: formData,
       })
 
-      const data = await response.json() as { error?: string, [key: string]: unknown }
+      const data = await response.json() as { error?: string } & ValidationResults
 
       if (response.ok) {
         setValidationResults(data)
@@ -300,10 +306,10 @@ export default function QuestionImportPage() {
               <div>
                 <h3 className="text-lg font-medium text-ponte-black mb-3">Sections Found:</h3>
                 <div className="space-y-2">
-                  {validationResults.sections.map((section: unknown, index: number) => (
+                  {validationResults.sections.map((section, index) => (
                     <div key={index} className="flex justify-between items-center p-3 bg-ponte-sand rounded-md">
-                      <span className="font-medium text-ponte-black">{(section as { name: string }).name}</span>
-                      <span className="text-sm text-ponte-olive">{(section as { questionCount: number }).questionCount} questions</span>
+                      <span className="font-medium text-ponte-black">{section.name}</span>
+                      <span className="text-sm text-ponte-olive">{section.questionCount} questions</span>
                     </div>
                   ))}
                 </div>

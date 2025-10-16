@@ -76,5 +76,5 @@ export function formatPropertyNumber(propertyNumber: number): string {
  */
 export function parsePropertyNumber(formattedNumber: string): number {
   const match = formattedNumber.match(/P-(\d+)/)
-  return match ? parseInt(match[1], 10) : 0
+  return match?.[1] ? parseInt(match[1], 10) : 0
 }

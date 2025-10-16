@@ -1,7 +1,7 @@
 "use client"
 
-import { useState } from "react"
 import { Button } from "components/Button"
+import { useState } from "react"
 
 interface User {
   id: string
@@ -38,7 +38,7 @@ export function UserManagement({ users }: UserManagementProps) {
       })
 
       if (response.ok) {
-        const data = await response.json()
+        const data = await response.json() as { newPassword?: string; message?: string }
         if (action === 'change_password' && data.newPassword) {
           alert(`Password changed successfully. New password: ${data.newPassword}`)
         } else {
@@ -47,7 +47,7 @@ export function UserManagement({ users }: UserManagementProps) {
         // Refresh the page or update state
         window.location.reload()
       } else {
-        const errorData = await response.json()
+        const errorData = await response.json() as { error?: string }
         alert(errorData.error || 'Action failed')
       }
     } catch {

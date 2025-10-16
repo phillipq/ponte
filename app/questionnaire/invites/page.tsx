@@ -1,10 +1,10 @@
 "use client"
 
-import { useRouter } from "next/navigation"
-import { useSession } from "next-auth/react"
-import { useEffect, useState } from "react"
 import { Button } from "components/Button"
 import Navigation from "components/Navigation"
+import { useSession } from "next-auth/react"
+import { useRouter } from "next/navigation"
+import { useEffect, useState } from "react"
 
 interface Client {
   id: string
@@ -51,12 +51,12 @@ export default function QuestionnaireInvitesPage() {
       ])
 
       if (invitesRes.ok) {
-        const data = await invitesRes.json()
+        const data = await invitesRes.json() as { invites?: QuestionnaireInvite[] }
         setInvites(data.invites || [])
       }
 
       if (clientsRes.ok) {
-        const data = await clientsRes.json()
+        const data = await clientsRes.json() as { clients?: Client[] }
         setClients(data.clients || [])
       }
     } catch (error) {
@@ -86,12 +86,12 @@ export default function QuestionnaireInvitesPage() {
       })
 
       if (response.ok) {
-        const data = await response.json()
+        const data = await response.json() as { invite: QuestionnaireInvite }
         setInvites(prev => [data.invite, ...prev])
         setSelectedClientId("")
         alert(`Questionnaire invite created! Share this link: ${data.invite.questionnaireUrl}`)
       } else {
-        const error = await response.json()
+        const error = await response.json() as { error?: string }
         alert(error.error || "Failed to create invite")
       }
     } catch (error) {

@@ -1,11 +1,10 @@
 "use client"
 
+import Navigation from "components/Navigation"
+import { useSession } from "next-auth/react"
 import Image from "next/image"
 import { useRouter } from "next/navigation"
-import { useSession } from "next-auth/react"
 import { useEffect, useState } from "react"
-import { _Button } from "components/Button"
-import Navigation from "components/Navigation"
 
 interface Property {
   id: string
@@ -38,6 +37,13 @@ interface Client {
   createdAt: string
   aiAnalyses?: unknown[]
   questionnaireResponseSets?: unknown[]
+}
+
+interface StatItem {
+  type?: string
+  category?: string
+  count: number
+  percentage: number
 }
 
 export default function Dashboard() {
@@ -212,8 +218,8 @@ export default function Dashboard() {
   }
 
   // Simple pie chart component
-  const PieChart = ({ data, title, getInfo }: { data: unknown[], title: string, getInfo: (item: string) => { label: string, icon: string } }) => {
-    const total = data.reduce((sum, item) => sum + (item as { count: number }).count, 0)
+  const PieChart = ({ data, title, getInfo }: { data: StatItem[], title: string, getInfo: (item: string) => { label: string, icon: string } }) => {
+    const total = data.reduce((sum, item) => sum + item.count, 0)
     if (total === 0) return null
 
     let currentAngle = 0
@@ -266,7 +272,7 @@ export default function Dashboard() {
         <div className="flex-1 space-y-2">
           <h3 className="font-semibold text-ponte-black">{title}</h3>
           {data.map((item, _index) => {
-            const info = getInfo(item.type || item.category)
+            const info = getInfo(item.type || item.category || '')
             return (
               <div key={item.type || item.category} className="flex items-center justify-between">
                 <div className="flex items-center">

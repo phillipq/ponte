@@ -1,9 +1,46 @@
 "use client"
 
-import { useRouter } from "next/navigation"
-import { useSession } from "next-auth/react"
-import { useEffect, useState } from "react"
 import Navigation from "components/Navigation"
+import { useSession } from "next-auth/react"
+import { useRouter } from "next/navigation"
+import { useEffect, useState } from "react"
+
+interface Tag {
+  id: string
+  name: string
+  color: string
+}
+
+interface Keyword {
+  id: string
+  name: string
+  color: string
+}
+
+interface User {
+  id: string
+  name: string
+  email: string
+  role: string
+  createdAt: string
+  _count?: {
+    properties: number
+    clients: number
+  }
+}
+
+interface Partner {
+  id: string
+  name: string
+  email: string
+  company?: string
+  phone?: string
+  isActive: boolean
+  createdAt: string
+  _count?: {
+    properties: number
+  }
+}
 
 export default function SettingsPage() {
   const { data: _session, status } = useSession()
@@ -29,10 +66,10 @@ export default function SettingsPage() {
   const [passwordSuccess, setPasswordSuccess] = useState("")
 
   // Tag management settings
-  const [tags, setTags] = useState<unknown[]>([])
+  const [tags, setTags] = useState<Tag[]>([])
   const [newTagName, setNewTagName] = useState("")
   const [newTagColor, setNewTagColor] = useState("#C1664A") // Default to terracotta
-  const [editingTag, setEditingTag] = useState<unknown>(null)
+  const [editingTag, setEditingTag] = useState<Tag | null>(null)
   const [editTagName, setEditTagName] = useState("")
   const [editTagColor, setEditTagColor] = useState("")
   const [tagLoading, setTagLoading] = useState(false)
@@ -40,10 +77,10 @@ export default function SettingsPage() {
   const [tagSuccess, setTagSuccess] = useState("")
 
   // Keywords & Features management settings
-  const [keywords, setKeywords] = useState<unknown[]>([])
+  const [keywords, setKeywords] = useState<Keyword[]>([])
   const [newKeywordName, setNewKeywordName] = useState("")
   const [newKeywordColor, setNewKeywordColor] = useState("#7A8664") // Default to olive
-  const [editingKeyword, setEditingKeyword] = useState<unknown>(null)
+  const [editingKeyword, setEditingKeyword] = useState<Keyword | null>(null)
   const [editKeywordName, setEditKeywordName] = useState("")
   const [editKeywordColor, setEditKeywordColor] = useState("")
   const [keywordLoading, setKeywordLoading] = useState(false)
@@ -70,7 +107,7 @@ export default function SettingsPage() {
   const [activeTab, setActiveTab] = useState("user")
 
   // User management state
-  const [users, setUsers] = useState<unknown[]>([])
+  const [users, setUsers] = useState<User[]>([])
   const [userLoading, setUserLoading] = useState(false)
   const [showAddUser, setShowAddUser] = useState(false)
   const [newUser, setNewUser] = useState({
@@ -81,7 +118,7 @@ export default function SettingsPage() {
   })
   const [userSubmitting, setUserSubmitting] = useState(false)
   const [userError, setUserError] = useState("")
-  const [editingUser, setEditingUser] = useState<unknown>(null)
+  const [editingUser, setEditingUser] = useState<User | null>(null)
   const [editUser, setEditUser] = useState({
     name: "",
     email: "",
@@ -92,7 +129,7 @@ export default function SettingsPage() {
   const [editUserError, setEditUserError] = useState("")
 
   // Partner management state
-  const [partners, setPartners] = useState<unknown[]>([])
+  const [partners, setPartners] = useState<Partner[]>([])
   const [partnerLoading, setPartnerLoading] = useState(false)
   const [showAddPartner, setShowAddPartner] = useState(false)
   const [newPartner, setNewPartner] = useState({
@@ -104,7 +141,7 @@ export default function SettingsPage() {
   })
   const [partnerSubmitting, setPartnerSubmitting] = useState(false)
   const [partnerError, setPartnerError] = useState("")
-  const [editingPartner, setEditingPartner] = useState<unknown>(null)
+  const [editingPartner, setEditingPartner] = useState<Partner | null>(null)
   const [editPartner, setEditPartner] = useState({
     name: "",
     email: "",
@@ -163,8 +200,13 @@ export default function SettingsPage() {
       // In a real app, you'd fetch from your API
       const savedSettings = localStorage.getItem("mapSettings")
       if (savedSettings) {
-        const settings = JSON.parse(savedSettings) as { defaultLocation?: unknown }
-        setDefaultLocation(settings.defaultLocation || defaultLocation)
+        const settings = JSON.parse(savedSettings) as { defaultLocation?: { lat: number; lng: number; zoom: number } }
+        if (settings.defaultLocation && 
+            typeof settings.defaultLocation.lat === 'number' && 
+            typeof settings.defaultLocation.lng === 'number' && 
+            typeof settings.defaultLocation.zoom === 'number') {
+          setDefaultLocation(settings.defaultLocation)
+        }
       }
     } catch {
       console.error("Error loading settings:", error)
@@ -255,7 +297,7 @@ export default function SettingsPage() {
     try {
       const response = await fetch("/api/tags")
       if (response.ok) {
-        const data = await response.json() as { tags?: unknown[] }
+        const data = await response.json() as { tags?: Tag[] }
         setTags(data.tags || [])
       }
     } catch {
@@ -298,6 +340,7 @@ export default function SettingsPage() {
 
   const updateTag = async (e: React.FormEvent) => {
     e.preventDefault()
+    if (!editingTag) return
     setTagLoading(true)
     setTagError("")
     setTagSuccess("")
@@ -361,7 +404,7 @@ export default function SettingsPage() {
     try {
       const response = await fetch("/api/admin/keywords")
       if (response.ok) {
-        const data = await response.json() as { keywords?: unknown[] }
+        const data = await response.json() as { keywords?: Keyword[] }
         setKeywords(data.keywords || [])
       }
     } catch {
@@ -468,7 +511,7 @@ export default function SettingsPage() {
     }
   }
 
-  const startEditTag = (tag: unknown) => {
+  const startEditTag = (tag: Tag) => {
     setEditingTag(tag)
     setEditTagName(tag.name)
     setEditTagColor(tag.color || "#C1664A")
@@ -562,7 +605,7 @@ export default function SettingsPage() {
     try {
       setPartnerLoading(true)
       const response = await fetch("/api/admin/partners")
-      const data = await response.json() as { partners: unknown[] }
+      const data = await response.json() as { partners: Partner[] }
       
       if (response.ok) {
         setPartners(data.partners)
@@ -622,7 +665,7 @@ export default function SettingsPage() {
     }
   }
 
-  const startEditPartner = (realtor: unknown) => {
+  const startEditPartner = (realtor: Partner) => {
     setEditingPartner(realtor)
     setEditPartner({
       name: realtor.name,
@@ -648,6 +691,7 @@ export default function SettingsPage() {
 
   const handleEditPartner = async (e: React.FormEvent) => {
     e.preventDefault()
+    if (!editingPartner) return
     setEditPartnerSubmitting(true)
     setEditPartnerError("")
 
@@ -687,7 +731,7 @@ export default function SettingsPage() {
     try {
       setUserLoading(true)
       const response = await fetch("/api/admin/users")
-      const data = await response.json() as { users: unknown[] }
+      const data = await response.json() as { users: User[] }
       
       if (response.ok) {
         setUsers(data.users)
@@ -729,7 +773,7 @@ export default function SettingsPage() {
     }
   }
 
-  const startEditUser = (user: unknown) => {
+  const startEditUser = (user: User) => {
     setEditingUser(user)
     setEditUser({
       name: user.name,
@@ -753,6 +797,7 @@ export default function SettingsPage() {
 
   const handleEditUser = async (e: React.FormEvent) => {
     e.preventDefault()
+    if (!editingUser) return
     setEditUserSubmitting(true)
     setEditUserError("")
 
@@ -1137,7 +1182,7 @@ export default function SettingsPage() {
               <div className="mt-6">
                 <h3 className="text-sm font-medium text-ponte-black mb-3">Existing Tags</h3>
                 <div className="space-y-2">
-                  {tags.map((tag: unknown) => (
+                  {tags.map((tag) => (
                     <div key={tag.id} className="flex items-center justify-between p-3 bg-white border border-ponte-sand rounded-md">
                       {editingTag?.id === tag.id ? (
                         <form onSubmit={updateTag} className="flex items-center space-x-2 flex-1">
@@ -1289,7 +1334,7 @@ export default function SettingsPage() {
               <div className="mt-6">
                 <h3 className="text-sm font-medium text-ponte-black mb-3">Existing Keywords</h3>
                 <div className="space-y-2">
-                  {keywords.map((keyword: unknown) => (
+                  {keywords.map((keyword) => (
                     <div key={keyword.id} className="flex items-center justify-between p-3 bg-white border border-ponte-sand rounded-md">
                       {editingKeyword?.id === keyword.id ? (
                         <form onSubmit={updateKeyword} className="flex items-center space-x-2 flex-1">
@@ -1558,7 +1603,7 @@ export default function SettingsPage() {
                         <div className="ml-4">
                           <p className="text-sm font-medium text-ponte-olive">Admins</p>
                           <p className="text-2xl font-bold text-ponte-black">
-                            {users.filter((u: unknown) => u.role === "admin").length}
+                            {users.filter((u) => u.role === "admin").length}
                           </p>
                         </div>
                       </div>
@@ -1574,7 +1619,7 @@ export default function SettingsPage() {
                         <div className="ml-4">
                           <p className="text-sm font-medium text-ponte-olive">Regular Users</p>
                           <p className="text-2xl font-bold text-ponte-black">
-                            {users.filter((u: unknown) => u.role === "user").length}
+                            {users.filter((u) => u.role === "user").length}
                           </p>
                         </div>
                       </div>
@@ -1630,7 +1675,7 @@ export default function SettingsPage() {
                             </tr>
                           </thead>
                           <tbody className="bg-white divide-y divide-ponte-sand">
-                            {users.map((user: unknown) => (
+                            {users.map((user) => (
                               <tr key={user.id} className="hover:bg-gray-50">
                                 <td className="px-6 py-4 whitespace-nowrap">
                                   <div>
@@ -1732,7 +1777,7 @@ export default function SettingsPage() {
                         <div className="ml-4">
                           <p className="text-sm font-medium text-ponte-olive">Active Realtors</p>
                           <p className="text-2xl font-bold text-ponte-black">
-                            {partners.filter((r: unknown) => r.isActive).length}
+                            {partners.filter((r) => r.isActive).length}
                           </p>
                         </div>
                       </div>
@@ -1748,7 +1793,7 @@ export default function SettingsPage() {
                         <div className="ml-4">
                           <p className="text-sm font-medium text-ponte-olive">Total Properties</p>
                           <p className="text-2xl font-bold text-ponte-black">
-                            {partners.reduce((sum: number, r: unknown) => sum + (r._count?.properties || 0), 0)}
+                            {partners.reduce((sum: number, r) => sum + (r._count?.properties || 0), 0)}
                           </p>
                         </div>
                       </div>
@@ -1804,7 +1849,7 @@ export default function SettingsPage() {
                             </tr>
                           </thead>
                           <tbody className="bg-white divide-y divide-ponte-sand">
-                            {partners.map((realtor: unknown) => (
+                            {partners.map((realtor) => (
                               <tr key={realtor.id} className="hover:bg-gray-50">
                                 <td className="px-6 py-4 whitespace-nowrap">
                                   <div>

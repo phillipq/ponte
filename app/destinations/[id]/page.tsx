@@ -1,9 +1,9 @@
 "use client"
 
-import { useParams, useRouter } from "next/navigation"
-import { useSession } from "next-auth/react"
-import { useEffect, useState } from "react"
 import Navigation from "components/Navigation"
+import { useSession } from "next-auth/react"
+import { useParams, useRouter } from "next/navigation"
+import { useEffect, useState } from "react"
 
 interface Destination {
   id: string
@@ -38,7 +38,7 @@ export default function DestinationDetailsPage() {
   const [error, setError] = useState("")
   const [availableTags, setAvailableTags] = useState<Array<{id: string, name: string, color: string}>>([])
   const [availableKeywords, setAvailableKeywords] = useState<Array<{id: string, name: string, color: string}>>([])
-  const [geocodingResult, setGeocodingResult] = useState<unknown>(null)
+  const [geocodingResult, setGeocodingResult] = useState<{ formatted_address?: string; geometry?: { location?: { lat?: number; lng?: number } } } | null>(null)
   const [geocodingLoading, setGeocodingLoading] = useState(false)
 
   // Form state
@@ -305,16 +305,16 @@ export default function DestinationDetailsPage() {
         body: JSON.stringify({ address: fullAddress }),
       })
 
-      const data = await response.json() as { result?: unknown, error?: string }
+      const data = await response.json() as { result?: { formatted_address?: string; geometry?: { location?: { lat?: number; lng?: number } } }, error?: string }
 
       if (response.ok) {
-        setGeocodingResult(data.result)
-        if ((data.result as { geometry?: { location?: unknown } })?.geometry?.location) {
+        setGeocodingResult(data.result || null)
+        if (data.result?.geometry?.location) {
           setFormData(prev => ({
             ...prev,
-            latitude: (data.result as { geometry: { location: { lat: number } } }).geometry.location.lat,
-            longitude: (data.result as { geometry: { location: { lng: number } } }).geometry.location.lng,
-            address: (data.result as { formatted_address?: string }).formatted_address || fullAddress
+            latitude: data.result!.geometry!.location!.lat || 0,
+            longitude: data.result!.geometry!.location!.lng || 0,
+            address: data.result!.formatted_address || fullAddress
           }))
         }
       } else {

@@ -46,9 +46,10 @@ export default function SignIn() {
             <Image 
               src="/logos/ponte_black.png" 
               alt="Ponte" 
-              width={48}
+              width={192}
               height={48}
               className="h-12 w-auto"
+              priority
             />
           </div>
           <h2 className="mt-6 text-center text-3xl font-extrabold text-ponte-black">

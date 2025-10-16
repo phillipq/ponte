@@ -3,7 +3,7 @@
 import Image from "next/image"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { signOut } from "next-auth/react"
+import { signOut, useSession } from "next-auth/react"
 import { Button } from "components/Button"
 
 const navigation = [
@@ -19,6 +19,7 @@ const navigation = [
 
 export default function Navigation() {
   const pathname = usePathname()
+  const { data: session } = useSession()
 
   return (
     <nav className="bg-ponte-cream shadow-sm border-b border-ponte-sand">
@@ -30,9 +31,10 @@ export default function Navigation() {
                 <Image 
                   src="/logos/ponte_black.png" 
                   alt="Ponte" 
-                  width={32}
+                  width={128}
                   height={32}
                   className="h-8 w-auto"
+                  priority
                 />
               </Link>
             </div>
@@ -52,7 +54,12 @@ export default function Navigation() {
               ))}
             </div>
           </div>
-          <div className="flex items-center">
+          <div className="flex items-center space-x-3">
+            {session?.user?.name && (
+              <span className="text-sm font-medium text-ponte-olive">
+                {session.user.name}
+              </span>
+            )}
             <Button
               onClick={() => signOut()}
               intent="secondary"

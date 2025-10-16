@@ -736,7 +736,7 @@ export default function SettingsPage() {
       if (response.ok) {
         setUsers(data.users)
       }
-    } catch {
+    } catch (error) {
       console.error("Error fetching users:", error)
     } finally {
       setUserLoading(false)

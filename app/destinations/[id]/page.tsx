@@ -30,7 +30,7 @@ export default function DestinationDetailsPage() {
   const { data: _session, status } = useSession()
   const router = useRouter()
   const params = useParams()
-  const destinationId = params.id as string
+  const destinationId = params?.id as string
 
   const [destination, setDestination] = useState<Destination | null>(null)
   const [loading, setLoading] = useState(true)

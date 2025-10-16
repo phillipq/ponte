@@ -150,7 +150,7 @@ interface Property {
 }
 
 export default function PropertyDetailPage() {
-  const { id } = useParams()
+  const { id } = useParams() as { id: string }
   const router = useRouter()
   const { data: _session, status } = useSession()
   const [property, setProperty] = useState<Property | null>(null)

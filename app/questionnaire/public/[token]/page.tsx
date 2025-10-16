@@ -35,7 +35,7 @@ interface QuestionnaireData {
 
 export default function PublicQuestionnairePage() {
   const params = useParams()
-  const token = params.token as string
+  const token = params?.token as string
   
   const [questionnaireData, setQuestionnaireData] = useState<QuestionnaireData | null>(null)
   const [loading, setLoading] = useState(true)

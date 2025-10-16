@@ -94,7 +94,7 @@ export default function ClientProcessPage() {
   const fetchClient = async () => {
     try {
       setLoading(true)
-      const response = await fetch(`/api/clients/${params.id}`)
+      const response = await fetch(`/api/clients/${params?.id}`)
       const data = await response.json() as { client: Client }
       
       if (response.ok) {

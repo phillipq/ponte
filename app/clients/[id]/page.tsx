@@ -173,7 +173,7 @@ export default function ClientDetailPage() {
       return
     }
 
-    if (status === "authenticated" && params.id) {
+    if (status === "authenticated" && params?.id) {
       fetchClient()
       fetchQuestionnaireSections()
       fetchQuestionnaireResponses()
@@ -181,11 +181,11 @@ export default function ClientDetailPage() {
       fetchStoredAiAnalyses()
       fetchQuestionnaireInvites()
     }
-  }, [status, router, params.id])
+  }, [status, router, params?.id])
 
   const fetchClient = async () => {
     try {
-      const response = await fetch(`/api/clients/${params.id}`)
+      const response = await fetch(`/api/clients/${params?.id}`)
       
       if (response.ok) {
         const data = await response.json() as { client?: Client }
@@ -222,7 +222,7 @@ export default function ClientDetailPage() {
   const fetchQuestionnaireResponses = async () => {
     try {
       console.log("Fetching questionnaire responses...")
-      const response = await fetch(`/api/clients/${params.id}/questionnaire-responses`)
+      const response = await fetch(`/api/clients/${params?.id}/questionnaire-responses`)
       if (response.ok) {
         const data = await response.json() as QuestionnaireResponses
         setQuestionnaireResponses(data)
@@ -262,7 +262,7 @@ export default function ClientDetailPage() {
   const fetchStoredAiAnalyses = async () => {
     try {
       console.log("Fetching stored AI analyses...")
-      const response = await fetch(`/api/clients/${params.id}/ai-analysis`)
+      const response = await fetch(`/api/clients/${params?.id}/ai-analysis`)
       console.log("AI analysis API response status:", response.status)
       
       if (response.ok) {
@@ -284,7 +284,7 @@ export default function ClientDetailPage() {
       if (response.ok) {
         const data = await response.json() as { invites?: QuestionnaireInvite[] }
         // Filter invites for this specific client
-        const clientInvites = (data.invites || []).filter((invite) => invite.client.id === params.id)
+        const clientInvites = (data.invites || []).filter((invite) => invite.client.id === params?.id)
         setQuestionnaireInvites(clientInvites)
       }
     } catch (error) {
@@ -365,7 +365,7 @@ export default function ClientDetailPage() {
     }
 
     try {
-      const response = await fetch(`/api/clients/${params.id}/ai-analysis/${analysisId}`, {
+      const response = await fetch(`/api/clients/${params?.id}/ai-analysis/${analysisId}`, {
         method: 'DELETE'
       })
 
@@ -390,7 +390,7 @@ export default function ClientDetailPage() {
 
   const deleteResponseSet = async (responseSetId: string) => {
     try {
-      const response = await fetch(`/api/clients/${params.id}/questionnaire-responses?responseSetId=${responseSetId}`, {
+      const response = await fetch(`/api/clients/${params?.id}/questionnaire-responses?responseSetId=${responseSetId}`, {
         method: 'DELETE'
       })
 
@@ -415,7 +415,7 @@ export default function ClientDetailPage() {
 
   const loadStoredAnalysis = async (analysisId: string) => {
     try {
-      const response = await fetch(`/api/clients/${params.id}/ai-analysis/${analysisId}`)
+      const response = await fetch(`/api/clients/${params?.id}/ai-analysis/${analysisId}`)
       
       if (response.ok) {
         const data = await response.json() as { id: string; summary: string; recommendations: string; propertyRankings?: PropertyRanking[] }
@@ -448,7 +448,7 @@ export default function ClientDetailPage() {
   const savePropertyPreferences = async () => {
     try {
       setUpdatingPreferences(true)
-      const response = await fetch(`/api/clients/${params.id}/preferences`, {
+      const response = await fetch(`/api/clients/${params?.id}/preferences`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -504,7 +504,7 @@ export default function ClientDetailPage() {
     try {
       setUpdatingResponse(true)
       
-      const response = await fetch(`/api/clients/${params.id}/responses/${editingResponse.id}`, {
+      const response = await fetch(`/api/clients/${params?.id}/responses/${editingResponse.id}`, {
         method: 'PUT',
         headers: {
           "Content-Type": "application/json",
@@ -546,7 +546,7 @@ export default function ClientDetailPage() {
     try {
       setUpdatingResponse(true)
       
-      const response = await fetch(`/api/clients/${params.id}/responses/${responseId}`, {
+      const response = await fetch(`/api/clients/${params?.id}/responses/${responseId}`, {
         method: 'PUT',
         headers: {
           "Content-Type": "application/json",
@@ -591,7 +591,7 @@ export default function ClientDetailPage() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          clientId: params.id,
+          clientId: params?.id,
           questionnaireResponses: questionnaireResponses,
           properties: properties,
           destinations: destinations,
@@ -646,7 +646,7 @@ export default function ClientDetailPage() {
 
   const handleSaveClient = async () => {
     try {
-      const response = await fetch(`/api/clients/${params.id}`, {
+      const response = await fetch(`/api/clients/${params?.id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -671,7 +671,7 @@ export default function ClientDetailPage() {
     if (!confirm("Are you sure you want to delete this client? This action cannot be undone.")) return
 
     try {
-      const response = await fetch(`/api/clients/${params.id}`, { method: "DELETE" })
+      const response = await fetch(`/api/clients/${params?.id}`, { method: "DELETE" })
       if (response.ok) {
         router.push("/clients")
       } else {

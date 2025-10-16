@@ -32,7 +32,7 @@ interface QuestionnaireQuestion {
 export default function QuestionnaireDetailsPage() {
   const router = useRouter()
   const params = useParams()
-  const questionnaireId = params.id as string
+  const questionnaireId = params?.id as string
 
   const [questionnaire, setQuestionnaire] = useState<Questionnaire | null>(null)
   const [loading, setLoading] = useState(true)

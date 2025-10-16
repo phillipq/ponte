@@ -23,8 +23,6 @@ export async function GET() {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    const userId = (session?.user as { id: string })?.id as string
-
     // All users can see all tags
     const tags = await prisma.tag.findMany({
       where: {},

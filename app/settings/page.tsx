@@ -29,6 +29,13 @@ interface User {
   }
 }
 
+interface SessionUser {
+  id: string
+  name: string
+  email: string
+  role: string
+}
+
 interface Partner {
   id: string
   name: string
@@ -908,7 +915,7 @@ export default function SettingsPage() {
                 >
                   Import Data
                 </button>
-                {(session?.user as any)?.role === "admin" && (
+                {(session?.user as SessionUser)?.role === "admin" && (
                   <button
                     onClick={() => setActiveTab("users")}
                     className={`py-2 px-1 border-b-2 font-medium text-sm ${
@@ -1565,7 +1572,7 @@ export default function SettingsPage() {
             )}
 
             {/* Users Tab Content */}
-            {activeTab === "users" && (session?.user as any)?.role === "admin" && (
+            {activeTab === "users" && (session?.user as SessionUser)?.role === "admin" && (
               <div className="space-y-8">
                 {/* User Management */}
                 <div>

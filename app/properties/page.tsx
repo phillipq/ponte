@@ -1,10 +1,10 @@
 "use client"
 
+import Navigation from "components/Navigation"
+import { useSession } from "next-auth/react"
 import Image from "next/image"
 import { useRouter } from "next/navigation"
-import { useSession } from "next-auth/react"
 import { useEffect, useState } from "react"
-import Navigation from "components/Navigation"
 
 interface Property {
   id: string
@@ -368,7 +368,7 @@ export default function PropertiesPage() {
         body: JSON.stringify({ address: fullAddress }),
       })
 
-      const data = await response.json() as { result?: unknown, error?: string }
+      const data = await response.json() as { result?: { formatted_address: string; latitude: number; longitude: number }, error?: string }
 
       if (response.ok) {
         setGeocodingResult(data.result)

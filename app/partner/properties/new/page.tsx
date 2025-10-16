@@ -129,14 +129,14 @@ export default function NewPartnerProperty() {
   })
 
   const [newTag, setNewTag] = useState("")
-  const [_geocodingResult, setGeocodingResult] = useState<unknown>(null)
-  const [_geocodingLoading, setGeocodingLoading] = useState(false)
+  const [geocodingResult, setGeocodingResult] = useState<unknown>(null)
+  const [geocodingLoading, setGeocodingLoading] = useState(false)
   const [language, setLanguage] = useState<"en" | "it">("en")
   const [uploadedFiles, setUploadedFiles] = useState<File[]>([])
-  const [_uploading, _setUploading] = useState(false)
+  const [uploading, setUploading] = useState(false)
   const [uploadedPictures, setUploadedPictures] = useState<File[]>([])
   const [picturePreview, setPicturePreview] = useState<string[]>([])
-  const [_uploadingPictures, _setUploadingPictures] = useState(false)
+  const [uploadingPictures, setUploadingPictures] = useState(false)
 
   // Translations
   const translations = {
@@ -308,7 +308,7 @@ export default function NewPartnerProperty() {
     }
   }, [picturePreview])
 
-  const _handleGeocode = async () => {
+  const handleGeocode = async () => {
     if (!formData.streetAddress.trim() || !formData.city.trim()) {
       setError(t.requiredFields)
       return
@@ -327,14 +327,14 @@ export default function NewPartnerProperty() {
         body: JSON.stringify({ address }),
       })
 
-      const data = await response.json() as { result?: unknown; error?: string }
+      const data = await response.json() as { result?: { latitude: string; longitude: string }; error?: string }
 
       if (response.ok) {
         setGeocodingResult(data.result)
         setFormData(prev => ({
           ...prev,
-          latitude: data.result.latitude,
-          longitude: data.result.longitude
+          latitude: data.result?.latitude || "",
+          longitude: data.result?.longitude || ""
         }))
       } else {
         setError(data.error || t.geocodingError)
@@ -346,7 +346,7 @@ export default function NewPartnerProperty() {
     }
   }
 
-  const _addTag = () => {
+  const addTag = () => {
     if (newTag.trim() && !formData.tags.includes(newTag.trim())) {
       setFormData(prev => ({
         ...prev,
@@ -356,19 +356,19 @@ export default function NewPartnerProperty() {
     }
   }
 
-  const _removeTag = (tagToRemove: string) => {
+  const removeTag = (tagToRemove: string) => {
     setFormData(prev => ({
       ...prev,
       tags: prev.tags.filter(tag => tag !== tagToRemove)
     }))
   }
 
-  const _handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(event.target.files || [])
     setUploadedFiles(prev => [...prev, ...files])
   }
 
-  const _removeFile = (index: number) => {
+  const removeFile = (index: number) => {
     setUploadedFiles(prev => prev.filter((_, i) => i !== index))
   }
 

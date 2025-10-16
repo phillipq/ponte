@@ -1,10 +1,10 @@
 "use client"
 
+import Navigation from "components/Navigation"
+import { useSession } from "next-auth/react"
 import Image from "next/image"
 import { useRouter } from "next/navigation"
-import { useSession } from "next-auth/react"
 import { useEffect, useState } from "react"
-import Navigation from "components/Navigation"
 
 export default function NewProperty() {
   const { data: _session, status } = useSession()
@@ -115,7 +115,7 @@ export default function NewProperty() {
   })
 
   const [availableTags, setAvailableTags] = useState<Array<{id: string, name: string, color: string}>>([])
-  const [geocodingResult, setGeocodingResult] = useState<unknown>(null)
+  const [geocodingResult, setGeocodingResult] = useState<{ latitude: number; longitude: number } | null>(null)
   const [geocodingLoading, setGeocodingLoading] = useState(false)
   const [uploadedPictures, setUploadedPictures] = useState<File[]>([])
   const [picturePreview, setPicturePreview] = useState<string[]>([])
@@ -202,14 +202,14 @@ export default function NewProperty() {
         body: JSON.stringify({ address: formData.fullAddress }),
       })
 
-      const data = await response.json() as { result?: unknown; error?: string }
+      const data = await response.json() as { result?: { latitude: number; longitude: number }; error?: string }
 
-      if (response.ok) {
+      if (response.ok && data.result) {
         setGeocodingResult(data.result)
         setFormData(prev => ({
           ...prev,
-          latitude: data.result.latitude.toString(),
-          longitude: data.result.longitude.toString()
+          latitude: data.result!.latitude.toString(),
+          longitude: data.result!.longitude.toString()
         }))
       } else {
         setError(data.error || "Failed to geocode address")

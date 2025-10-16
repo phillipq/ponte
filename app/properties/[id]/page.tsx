@@ -1,12 +1,12 @@
 "use client"
 
-import Image from "next/image"
-import { useParams, useRouter } from "next/navigation"
-import { useSession } from "next-auth/react"
-import { useEffect, useState } from "react"
 import Navigation from "components/Navigation"
 import PropertyEvaluationDashboard from "components/PropertyEvaluationDashboard"
 import PropertyFileManager from "components/PropertyFileManager"
+import { useSession } from "next-auth/react"
+import Image from "next/image"
+import { useParams, useRouter } from "next/navigation"
+import { useEffect, useState } from "react"
 
 interface FileInfo {
   url: string
@@ -1219,10 +1219,10 @@ export default function PropertyDetailPage() {
             propertyId={property.id}
             propertyPhotos={property.propertyPhotos || []}
             documents={[
-              ...(Array.isArray(property.floorPlans) ? property.floorPlans as unknown[] : []),
-              ...(Array.isArray(property.dronePhotos) ? property.dronePhotos as unknown[] : []),
-              ...(Array.isArray(property.energyCertificate) ? property.energyCertificate as unknown[] : [])
-            ]}
+              ...(Array.isArray(property.floorPlans) ? property.floorPlans : []),
+              ...(Array.isArray(property.dronePhotos) ? property.dronePhotos : []),
+              ...(Array.isArray(property.energyCertificate) ? property.energyCertificate : [])
+            ] as (string[] | FileInfo[])}
             onPropertyPhotosChange={(photos) => setProperty(prev => ({...prev!, propertyPhotos: photos}))}
             onDocumentsChange={(documents) => {
               // Split documents back into the original arrays
@@ -1341,24 +1341,24 @@ export default function PropertyDetailPage() {
                   // Group destinations by category
                   console.log('Destinations in reduce:', destinations, 'Type:', typeof destinations, 'Is Array:', Array.isArray(destinations))
                   console.log('Distances in reduce:', distances, 'Type:', typeof distances, 'Is Array:', Array.isArray(distances))
-                  const categories = (destinations || []).reduce((acc, dest) => {
+                  const categories = (destinations || []).reduce((acc: Record<string, any[]>, dest: any) => {
                     const category = dest.category || 'Other'
                     if (!acc[category]) {
                       acc[category] = []
                     }
                     acc[category].push(dest)
                     return acc
-                  }, {} as Record<string, unknown[]>)
+                  }, {} as Record<string, any[]>)
 
                   console.log('Categories created:', categories)
                   console.log('Category entries:', Object.entries(categories))
 
-                  return Object.entries(categories).map(([category, categoryDestinations]) => {
-                    const categoryDistances = (distances || []).filter(d => 
-                      (categoryDestinations as unknown[]).some((dest: unknown) => (dest as { id: string }).id === (d as { destinationId: string }).destinationId)
+                  return Object.entries(categories).map(([category, categoryDestinations]: [string, any[]]) => {
+                    const categoryDistances = (distances || []).filter((d: any) => 
+                      categoryDestinations.some((dest: any) => dest.id === d.destinationId)
                     )
                     
-                    console.log(`Category ${category} - Destinations:`, (categoryDestinations as unknown[]).length, 'Distances:', categoryDistances.length)
+                    console.log(`Category ${category} - Destinations:`, categoryDestinations.length, 'Distances:', categoryDistances.length)
 
                     const isExpanded = expandedCategories.has(category)
                     
@@ -1388,15 +1388,15 @@ export default function PropertyDetailPage() {
                         {isExpanded && (
                           <div className="px-4 pb-4">
                             <div className="space-y-2">
-                              {categoryDistances.map((distance, _index) => {
-                                const destination = destinations.find(d => d.id === distance.destinationId)
+                              {categoryDistances.map((distance: any, _index) => {
+                                const destination = destinations.find((d: any) => d.id === distance.destinationId)
                                 if (!destination) return null
                                 
                                 return (
                                   <div key={distance.destinationId} className="py-3 px-3 bg-ponte-cream rounded">
                                     <div className="flex justify-between items-start mb-2">
                                       <span className="text-sm font-medium text-ponte-black font-body">
-                                        {destination.name}
+                                        {(destination as any).name}
                                       </span>
                                     </div>
                                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs">

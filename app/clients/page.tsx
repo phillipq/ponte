@@ -232,7 +232,7 @@ export default function ClientsPage() {
                           <Button
                             size="sm"
                             intent="secondary"
-                            onClick={(e) => {
+                            onClick={(e: React.MouseEvent) => {
                               e.stopPropagation()
                               handleEditClient(client)
                             }}
@@ -242,7 +242,7 @@ export default function ClientsPage() {
                           <Button
                             size="sm"
                             intent="secondary"
-                            onClick={(e) => {
+                            onClick={(e: React.MouseEvent) => {
                               e.stopPropagation()
                               handleDeleteClient(client.id)
                             }}

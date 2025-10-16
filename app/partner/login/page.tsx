@@ -33,7 +33,7 @@ export default function PartnerLogin() {
         localStorage.setItem("partnerSession", JSON.stringify(data))
         router.push("/partner/dashboard")
       } else {
-        setError(data.error || "Login failed")
+        setError((data as any)?.error || "Login failed")
       }
     } catch {
       setError("Login failed. Please try again.")

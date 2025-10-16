@@ -43,7 +43,7 @@ interface Partner {
 }
 
 export default function SettingsPage() {
-  const { data: _session, status } = useSession()
+  const { data: session, status } = useSession()
   const router = useRouter()
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
@@ -908,16 +908,18 @@ export default function SettingsPage() {
                 >
                   Import Data
                 </button>
-                <button
-                  onClick={() => setActiveTab("users")}
-                  className={`py-2 px-1 border-b-2 font-medium text-sm ${
-                    activeTab === "users"
-                      ? "border-ponte-terracotta text-ponte-terracotta"
-                      : "border-transparent text-ponte-olive hover:text-ponte-black hover:border-ponte-sand"
-                  }`}
-                >
-                  Users
-                </button>
+                {(session?.user as any)?.role === "admin" && (
+                  <button
+                    onClick={() => setActiveTab("users")}
+                    className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                      activeTab === "users"
+                        ? "border-ponte-terracotta text-ponte-terracotta"
+                        : "border-transparent text-ponte-olive hover:text-ponte-black hover:border-ponte-sand"
+                    }`}
+                  >
+                    Users
+                  </button>
+                )}
                 <button
                   onClick={() => setActiveTab("partners")}
                   className={`py-2 px-1 border-b-2 font-medium text-sm ${
@@ -1563,7 +1565,7 @@ export default function SettingsPage() {
             )}
 
             {/* Users Tab Content */}
-            {activeTab === "users" && (
+            {activeTab === "users" && (session?.user as any)?.role === "admin" && (
               <div className="space-y-8">
                 {/* User Management */}
                 <div>

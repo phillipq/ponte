@@ -15,7 +15,7 @@ export default async function AdminDashboard() {
   }
 
   // Check if user can access admin
-  if (!session.user?.email || !canAccessAdmin(session.user.email)) {
+  if (!session.user?.email || !(await canAccessAdmin(session.user.email))) {
     redirect("/dashboard")
   }
 

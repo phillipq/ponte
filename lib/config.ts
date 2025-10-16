@@ -40,15 +40,25 @@ export function withAppFilter<T extends Record<string, unknown>>(data: T): T & {
 }
 
 // Helper functions for admin access
-export function isAdmin(email: string): boolean {
-  return email === APP_CONFIG.ADMIN.EMAIL || email === APP_CONFIG.ADMIN.MASTER_ADMIN_EMAIL
+export async function isAdmin(email: string): Promise<boolean> {
+  try {
+    const { prisma } = await import("./prisma")
+    const user = await prisma.user.findUnique({
+      where: { email },
+      select: { role: true }
+    })
+    return user?.role === "admin"
+  } catch {
+    // Fallback to email-based check for backward compatibility
+    return email === APP_CONFIG.ADMIN.EMAIL || email === APP_CONFIG.ADMIN.MASTER_ADMIN_EMAIL
+  }
 }
 
 export function isMasterAdmin(email: string): boolean {
   return email === APP_CONFIG.ADMIN.MASTER_ADMIN_EMAIL
 }
 
-export function canAccessAdmin(email: string): boolean {
-  return isAdmin(email) || (APP_CONFIG.ADMIN.IS_MASTER_ADMIN && isMasterAdmin(email))
+export async function canAccessAdmin(email: string): Promise<boolean> {
+  return (await isAdmin(email)) || (APP_CONFIG.ADMIN.IS_MASTER_ADMIN && isMasterAdmin(email))
 }
 

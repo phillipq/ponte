@@ -25,8 +25,9 @@ export async function GET() {
 
     const userId = (session?.user as { id: string })?.id as string
 
+    // All users can see all tags
     const tags = await prisma.tag.findMany({
-      where: { userId },
+      where: {},
       orderBy: { name: 'asc' }
     })
 

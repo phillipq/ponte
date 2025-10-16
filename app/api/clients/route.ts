@@ -34,8 +34,9 @@ export async function GET() {
       })
     }
 
+    // All users can see all clients
     const clients = await prisma.client.findMany({
-      where: { userId: user.id },
+      where: {},
       include: {
         aiAnalyses: {
           orderBy: { createdAt: "desc" }

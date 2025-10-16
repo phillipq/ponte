@@ -30,12 +30,9 @@ export async function GET(
 
     const { id } = await params
 
-    // Verify client belongs to user
+    // All users can access any client
     const client = await prisma.client.findFirst({
-      where: {
-        id: id,
-        userId: user.id
-      }
+      where: { id: id }
     })
 
     if (!client) {
@@ -67,9 +64,9 @@ export async function GET(
       ]
     })
 
-    // Get questionnaire structure
+    // All users can see all questionnaire sections
     const sections = await prisma.questionnaireSection.findMany({
-      where: { userId: user.id },
+      where: {},
       include: {
         questions: {
           orderBy: { order: 'asc' }

@@ -215,10 +215,9 @@ export async function GET(_request: NextRequest) {
       return NextResponse.json({ error: "User ID not found" }, { status: 401 })
     }
 
+    // All users can see all properties
     const properties = await prisma.property.findMany({
-      where: {
-        userId: userId
-      },
+      where: {},
       include: {
         partner: {
           select: {

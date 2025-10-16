@@ -108,7 +108,7 @@ export async function DELETE(
     }
 
     const { id } = await params
-    const { imageUrl } = await request.json()
+    const { imageUrl } = await request.json() as { imageUrl?: string }
     
     // Verify the user owns this property
     const property = await prisma.property.findFirst({

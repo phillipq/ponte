@@ -10,6 +10,7 @@ export async function PUT(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id: userId } = await params
     const session = await getServerSession(authOptions)
     
     if (!session?.user?.email) {
@@ -26,7 +27,7 @@ export async function PUT(
       return NextResponse.json({ error: "Forbidden - Admin access required" }, { status: 403 })
     }
 
-    const { name, email, password, role } = await request.json()
+    const { name, email, password, role } = await request.json() as { name: string; email: string; password?: string; role: string }
 
     if (!name || !email || !role) {
       return NextResponse.json({ error: "Name, email, and role are required" }, { status: 400 })
@@ -35,8 +36,6 @@ export async function PUT(
     if (!["user", "admin"].includes(role)) {
       return NextResponse.json({ error: "Role must be 'user' or 'admin'" }, { status: 400 })
     }
-
-    const { id: userId } = await params
 
     // Check if user exists
     const existingUser = await prisma.user.findUnique({
@@ -93,9 +92,10 @@ export async function PUT(
 // DELETE /api/admin/users/[id] - Delete user
 export async function DELETE(
   _request: NextRequest,
-  { params: _params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id: userId } = await params
     const session = await getServerSession(authOptions)
     
     if (!session?.user?.email) {

@@ -43,7 +43,16 @@ export async function PUT(
     }
 
     const { id } = await params
-    const body = await request.json() as unknown
+    const body = await request.json() as {
+      name?: string; tags?: string[]; latitude?: number; longitude?: number; propertyType?: string; recipientName?: string; streetAddress?: string; postalCode?: string; city?: string; province?: string; country?: string;
+      propertyNumber?: number; whoProvided?: string; dateProvided?: string; propertyLink?: string; pictures?: string[]; picturesUploaded?: boolean; featuredImage?: string; comune?: string; dateAdded?: string;
+      decision?: string; peterNotes?: string; wesNotes?: string; elenaNotes?: string; hazelNotes?: string;
+      sellPrice?: number; homeSizeM2?: number; pricePerM2?: number; landSizeM2?: number; yearBuilt?: number; renovationCost?: number; totalInvestment?: number;
+      foundationGood?: boolean; roofGood?: boolean; extraBuildings?: string; rooms?: number; bathrooms?: number;
+      kmToTown?: number; kmToBeaches?: number; kmToAirport?: number; kmToTransit?: number;
+      gasOnSite?: boolean; waterOnSite?: boolean; electricalOnSite?: boolean; views?: string;
+      manualScore?: number; aiScore?: number; portfolioPotential?: string; status?: string
+    }
     
     // Extract all the new property fields
     const {
@@ -80,8 +89,8 @@ export async function PUT(
         whoProvided,
         dateProvided: dateProvided ? new Date(dateProvided) : undefined,
         propertyLink,
-        pictures,
-        picturesUploaded,
+        pictures: pictures ? pictures.join(',') : null,
+        picturesUploaded: picturesUploaded ? ['uploaded'] : [],
         featuredImage,
         comune,
         dateAdded: dateAdded ? new Date(dateAdded) : undefined,
@@ -99,7 +108,7 @@ export async function PUT(
         totalInvestment,
         foundationGood,
         roofGood,
-        extraBuildings,
+        extraBuildings: extraBuildings ? extraBuildings === 'true' : false,
         rooms,
         bathrooms,
         kmToTown,
@@ -109,7 +118,7 @@ export async function PUT(
         gasOnSite,
         waterOnSite,
         electricalOnSite,
-        views,
+        views: views ? views === 'true' : false,
         manualScore,
         aiScore,
         portfolioPotential,

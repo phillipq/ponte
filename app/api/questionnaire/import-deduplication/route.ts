@@ -21,7 +21,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "User not found" }, { status: 404 })
     }
 
-    const { csvData, importSource } = await request.json()
+    const { csvData, importSource } = await request.json() as { csvData?: unknown[]; importSource?: string }
 
     if (!csvData || !Array.isArray(csvData) || csvData.length === 0) {
       return NextResponse.json({ error: "No CSV data provided" }, { status: 400 })
@@ -51,25 +51,27 @@ export async function POST(request: NextRequest) {
     // Analyze CSV for potential duplicates
     const analysis = {
       totalRows: csvData.length,
-      potentialDuplicates: [],
-      newResponses: [],
-      existingEmails: new Set(),
-      newEmails: new Set()
+      potentialDuplicates: [] as { email: string; submissionDate: string; existingResponseSetId: string; existingResponseCount: number }[],
+      newResponses: [] as { email: string; submissionDate: string }[],
+      existingEmails: new Set<string>(),
+      newEmails: new Set<string>()
     }
 
     for (const row of csvData) {
-      const email = row.email || row['email address'] || row.Email
+      const rowData = row as { email?: string; 'email address'?: string; Email?: string }
+      const email = rowData.email || rowData['email address'] || rowData.Email
       const submissionDate = new Date().toISOString().split('T')[0] // Today's date for new imports
       
-      if (email) {
+      if (email && submissionDate) {
         const key = `${email}-${submissionDate}`
         
         if (existingResponsesMap.has(key)) {
+          const existingResponse = existingResponsesMap.get(key) as { id: string; responses: unknown[] }
           analysis.potentialDuplicates.push({
             email,
             submissionDate,
-            existingResponseSetId: existingResponsesMap.get(key).id,
-            existingResponseCount: existingResponsesMap.get(key).responses.length
+            existingResponseSetId: existingResponse.id,
+            existingResponseCount: existingResponse.responses.length
           })
           analysis.existingEmails.add(email)
         } else {

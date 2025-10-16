@@ -53,7 +53,7 @@ export default function SignUp() {
         }
       } else {
         const data = await response.json()
-        setError(data.error || "Registration failed")
+        setError((data as { error?: string }).error || "Registration failed")
       }
     } catch {
       setError("An error occurred. Please try again.")

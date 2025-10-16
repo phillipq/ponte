@@ -23,7 +23,7 @@ export async function POST(request: NextRequest) {
 
     // Get the current user
     const user = await prisma.user.findUnique({
-      where: { id: session.user.id }
+      where: { id: (session.user as { id: string }).id }
     })
 
     if (!user) {
@@ -52,7 +52,7 @@ export async function POST(request: NextRequest) {
 
     // Update password
     await prisma.user.update({
-      where: { id: session.user.id },
+      where: { id: (session.user as { id: string }).id },
       data: { password: hashedNewPassword }
     })
 
@@ -61,7 +61,7 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { error: error.errors[0].message },
+        { error: error.errors[0]?.message || 'Validation error' },
         { status: 400 }
       )
     }

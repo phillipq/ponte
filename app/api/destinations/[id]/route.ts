@@ -80,11 +80,11 @@ export async function GET(
   try {
     const session = await getServerSession(authOptions)
     
-    if (!session?.user?.id) {
+    if (!(session?.user as { id: string })?.id) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    const userId = session.user.id as string
+    const userId = (session?.user as { id: string })?.id
     const { id: destinationId } = await params
 
     const destination = await prisma.destination.findFirst({
@@ -116,11 +116,11 @@ export async function PUT(
   try {
     const session = await getServerSession(authOptions)
     
-    if (!session?.user?.id) {
+    if (!(session?.user as { id: string })?.id) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    const userId = session.user.id as string
+    const userId = (session?.user as { id: string })?.id
     const { id: destinationId } = await params
 
     // Verify the user owns this destination
@@ -143,18 +143,23 @@ export async function PUT(
       updateData.category = normalizeCategory(updateData.category) || updateData.category
     }
 
+    // Filter out null values
+    const filteredUpdateData = Object.fromEntries(
+      Object.entries(updateData).filter(([_, value]) => value !== null)
+    )
+
     const destination = await prisma.destination.update({
       where: {
         id: destinationId
       },
-      data: updateData
+      data: filteredUpdateData
     })
 
     return NextResponse.json({ destination })
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { error: error.errors[0].message },
+        { error: error.errors[0]?.message || 'Validation error' },
         { status: 400 }
       )
     }
@@ -175,11 +180,11 @@ export async function DELETE(
   try {
     const session = await getServerSession(authOptions)
     
-    if (!session?.user?.id) {
+    if (!(session?.user as { id: string })?.id) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    const userId = session.user.id as string
+    const userId = (session?.user as { id: string })?.id
     const { id: destinationId } = await params
 
     // Verify the user owns this destination

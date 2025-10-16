@@ -40,16 +40,10 @@ export async function GET(
       destinationCategory: distance.destination.category,
       drivingDistance: distance.drivingDistance,
       drivingDuration: distance.drivingDuration,
-      drivingDistanceText: distance.drivingDistanceText,
-      drivingDurationText: distance.drivingDurationText,
       transitDistance: distance.transitDistance,
       transitDuration: distance.transitDuration,
-      transitDistanceText: distance.transitDistanceText,
-      transitDurationText: distance.transitDurationText,
       walkingDistance: distance.walkingDistance,
-      walkingDuration: distance.walkingDuration,
-      walkingDistanceText: distance.walkingDistanceText,
-      walkingDurationText: distance.walkingDurationText
+      walkingDuration: distance.walkingDuration
     }))
 
     return NextResponse.json({ distances: transformedDistances })

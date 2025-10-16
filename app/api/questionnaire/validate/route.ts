@@ -6,11 +6,11 @@ import { prisma } from "lib/prisma"
 export async function POST(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions)
-    if (!session?.user?.id) {
+    if (!(session?.user as { id: string })?.id) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    const { csvData } = await request.json()
+    const { csvData } = await request.json() as { csvData?: unknown[] }
 
     if (!csvData || !Array.isArray(csvData) || csvData.length === 0) {
       return NextResponse.json({ error: "No CSV data provided" }, { status: 400 })
@@ -20,7 +20,7 @@ export async function POST(request: NextRequest) {
     const dbQuestions = await prisma.questionnaireQuestion.findMany({
       where: {
         section: {
-          userId: session.user.id
+          userId: (session?.user as { id: string })?.id
         }
       },
       include: {
@@ -33,7 +33,7 @@ export async function POST(request: NextRequest) {
     })
 
     // Get CSV headers (first row)
-    const csvHeaders = Object.keys(csvData[0])
+    const csvHeaders = Object.keys(csvData[0] as Record<string, unknown>)
     
     // Remove standard columns that aren't questions
     const standardColumns = ['timestamp', 'email', 'email address', 'name']
@@ -50,9 +50,10 @@ export async function POST(request: NextRequest) {
       questionColumns: questionColumns.length,
       emptyColumns: questionColumns.filter(header => {
         // Check if column has any non-empty values
-        return !csvData.slice(1).some(row => 
-          row[header] && row[header].toString().trim() !== ''
-        )
+        return !csvData.slice(1).some(row => {
+          const rowData = row as Record<string, unknown>
+          return rowData[header] && rowData[header]?.toString().trim() !== ''
+        })
       }),
       duplicateQuestions: findDuplicateQuestions(questionColumns)
     }
@@ -68,10 +69,10 @@ export async function POST(request: NextRequest) {
         order: q.order
       })),
       csvQuestions: questionColumns,
-      matches: [],
-      missingInCsv: [],
-      missingInDb: [],
-      partialMatches: []
+      matches: [] as { dbQuestion: string; csvQuestion: string; section: string }[],
+      missingInCsv: [] as { question: string; section: string }[],
+      missingInDb: [] as { question: string }[],
+      partialMatches: [] as { dbQuestion: string; csvQuestion: string; section: string; similarity: number }[]
     }
 
     // Find exact matches
@@ -133,8 +134,9 @@ export async function POST(request: NextRequest) {
 
     // Calculate response completeness for each client
     const clientAnalysis = csvData.slice(1).map((row, index) => {
-      const email = row['Email Address'] || row['email'] || row['Email']
-      const responses = Object.entries(row).filter(([key, value]) => {
+      const rowData = row as Record<string, unknown>
+      const email = rowData['Email Address'] || rowData['email'] || rowData['Email']
+      const responses = Object.entries(rowData).filter(([key, value]) => {
         const lowerKey = key.toLowerCase()
         return !['timestamp', 'email', 'email address', 'name'].includes(lowerKey) && 
                value && 
@@ -208,31 +210,31 @@ function calculateSimilarity(str1: string, str2: string): number {
 }
 
 function levenshteinDistance(str1: string, str2: string): number {
-  const matrix = []
+  const matrix: number[][] = []
   
   for (let i = 0; i <= str2.length; i++) {
     matrix[i] = [i]
   }
   
   for (let j = 0; j <= str1.length; j++) {
-    matrix[0][j] = j
+    matrix[0]![j] = j
   }
   
   for (let i = 1; i <= str2.length; i++) {
     for (let j = 1; j <= str1.length; j++) {
       if (str2.charAt(i - 1) === str1.charAt(j - 1)) {
-        matrix[i][j] = matrix[i - 1][j - 1]
+        matrix[i]![j] = matrix[i - 1]![j - 1]!
       } else {
-        matrix[i][j] = Math.min(
-          matrix[i - 1][j - 1] + 1,
-          matrix[i][j - 1] + 1,
-          matrix[i - 1][j] + 1
+        matrix[i]![j] = Math.min(
+          matrix[i - 1]![j - 1]! + 1,
+          matrix[i]![j - 1]! + 1,
+          matrix[i - 1]![j]! + 1
         )
       }
     }
   }
   
-  return matrix[str2.length][str1.length]
+  return matrix[str2.length]![str1.length]!
 }
 
 function findDuplicateQuestions(questions: string[]): string[] {
@@ -242,7 +244,9 @@ function findDuplicateQuestions(questions: string[]): string[] {
   for (let i = 0; i < normalizedQuestions.length; i++) {
     for (let j = i + 1; j < normalizedQuestions.length; j++) {
       if (normalizedQuestions[i] === normalizedQuestions[j]) {
-        duplicates.push(questions[i])
+        if (questions[i]) {
+          duplicates.push(questions[i]!)
+        }
         break
       }
     }

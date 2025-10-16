@@ -12,7 +12,7 @@ export async function GET(
   try {
     const session = await getServerSession(authOptions)
     
-    if (!session?.user?.id) {
+    if (!(session?.user as { id: string })?.id) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
@@ -21,7 +21,7 @@ export async function GET(
     const evaluations = await prisma.propertyEvaluation.findMany({
       where: {
         propertyId: id,
-        userId: session.user.id
+        userId: (session?.user as { id: string })?.id
       },
       include: {
         evaluationItems: true
@@ -49,19 +49,19 @@ export async function POST(
   try {
     const session = await getServerSession(authOptions)
     
-    if (!session?.user?.id) {
+    if (!(session?.user as { id: string })?.id) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
     const { id } = await params
-    const body = await request.json()
+    const body = await request.json() as { clientName?: string; propertyAddress?: string; createdBy?: string }
     const { clientName, propertyAddress, createdBy } = body
 
     // Verify property belongs to user
     const property = await prisma.property.findFirst({
       where: {
         id: id,
-        userId: session.user.id
+        userId: (session?.user as { id: string })?.id
       }
     })
 
@@ -73,10 +73,10 @@ export async function POST(
     const evaluation = await prisma.propertyEvaluation.create({
       data: {
         propertyId: id,
-        userId: session.user.id,
+        userId: (session?.user as { id: string })?.id,
         clientName: clientName || null,
         propertyAddress: propertyAddress || null,
-        createdBy: createdBy || session.user.name || "Unknown",
+        createdBy: createdBy || (session?.user as { name?: string })?.name || "Unknown",
         evaluationItems: {
           create: [
             // Legal Status items

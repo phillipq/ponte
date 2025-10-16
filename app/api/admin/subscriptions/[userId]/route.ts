@@ -16,12 +16,12 @@ export async function POST(
     }
 
     // Check if user is admin
-    const isAdmin = session.user.email === "admin@rocketlaunchingllama.com" // Replace with your admin email
+    const isAdmin = session.user?.email === "admin@rocketlaunchingllama.com" // Replace with your admin email
     if (!isAdmin) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 })
     }
 
-    const { action, trialDays, planId } = await request.json()
+    const { action, trialDays, planId } = await request.json() as { action: string; trialDays?: number; planId?: string }
     const { userId } = await params
 
     const user = await prisma.user.findUnique({
@@ -112,7 +112,7 @@ export async function POST(
 
         // Create refund
         const refund = await stripe.refunds.create({
-          payment_intent: invoices.data[0].payment_intent as string,
+          payment_intent: invoices.data[0]?.payment_intent as string,
           reason: 'requested_by_customer'
         })
 

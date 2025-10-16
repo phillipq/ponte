@@ -65,7 +65,7 @@ const _validCategories = [
 export async function POST(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions)
-    if (!session?.user?.id) {
+    if (!session?.user || !(session.user as { id: string }).id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
@@ -94,20 +94,35 @@ export async function POST(request: NextRequest) {
     if (type === 'properties') {
       for (const record of records) {
         try {
+          const recordData = record as { 
+            name?: string; 
+            propertyType?: string; 
+            propertyNumber?: string;
+            recipientName?: string; 
+            streetAddress?: string; 
+            postalCode?: string; 
+            city?: string; 
+            province?: string; 
+            country?: string; 
+            latitude?: string; 
+            longitude?: string; 
+            tags?: string 
+          }
           await prisma.property.create({
             data: {
-              name: record.name || '',
-              propertyType: record.propertyType || 'house',
-              recipientName: record.recipientName || '',
-              streetAddress: record.streetAddress || '',
-              postalCode: record.postalCode || '',
-              city: record.city || '',
-              province: record.province || '',
-              country: record.country || '',
-              latitude: parseFloat(record.latitude) || 0,
-              longitude: parseFloat(record.longitude) || 0,
-              tags: record.tags ? record.tags.split(',').map((tag: string) => tag.trim()) : [],
-              userId: session.user.id
+              name: recordData.name || '',
+              propertyType: recordData.propertyType || 'house',
+              propertyNumber: parseInt(recordData.propertyNumber || '0') || 0,
+              recipientName: recordData.recipientName || '',
+              streetAddress: recordData.streetAddress || '',
+              postalCode: recordData.postalCode || '',
+              city: recordData.city || '',
+              province: recordData.province || '',
+              country: recordData.country || '',
+              latitude: parseFloat(recordData.latitude || '0') || 0,
+              longitude: parseFloat(recordData.longitude || '0') || 0,
+              tags: recordData.tags ? recordData.tags.split(',').map((tag: string) => tag.trim()) : [],
+              userId: (session.user as { id: string }).id
             }
           })
           count++
@@ -119,41 +134,53 @@ export async function POST(request: NextRequest) {
     } else if (type === 'destinations') {
       for (const record of records) {
         try {
+          const recordData = record as { 
+            name?: string; 
+            category?: string; 
+            streetAddress?: string; 
+            postalCode?: string; 
+            city?: string; 
+            province?: string; 
+            country?: string; 
+            latitude?: string; 
+            longitude?: string; 
+            tags?: string 
+          }
           // Construct address from individual fields
           const addressParts = [
-            record.streetAddress,
-            record.postalCode,
-            record.city,
-            record.province,
-            record.country
+            recordData.streetAddress,
+            recordData.postalCode,
+            recordData.city,
+            recordData.province,
+            recordData.country
           ].filter(part => part && part.trim())
           
           const address = addressParts.join(', ') || ''
 
           // Normalize and validate category
-          const rawCategory = record.category || 'other'
+          const rawCategory = recordData.category || 'other'
           const normalizedCategory = normalizeCategory(rawCategory)
           
           if (!normalizedCategory) {
-            console.warn(`Invalid category "${rawCategory}" for destination "${record.name}". Using 'other' instead.`)
+            console.warn(`Invalid category "${rawCategory}" for destination "${recordData.name}". Using 'other' instead.`)
           }
           
           const category = normalizedCategory || 'other'
 
           await prisma.destination.create({
             data: {
-              name: record.name || '',
+              name: recordData.name || '',
               category: category,
               address: address,
-              streetAddress: record.streetAddress || '',
-              postalCode: record.postalCode || '',
-              city: record.city || '',
-              province: record.province || '',
-              country: record.country || 'ITALY',
-              latitude: parseFloat(record.latitude) || 0,
-              longitude: parseFloat(record.longitude) || 0,
-              tags: record.tags ? record.tags.split(',').map((tag: string) => tag.trim()) : [],
-              userId: session.user.id
+              streetAddress: recordData.streetAddress || '',
+              postalCode: recordData.postalCode || '',
+              city: recordData.city || '',
+              province: recordData.province || '',
+              country: recordData.country || 'ITALY',
+              latitude: parseFloat(recordData.latitude || '0') || 0,
+              longitude: parseFloat(recordData.longitude || '0') || 0,
+              tags: recordData.tags ? recordData.tags.split(',').map((tag: string) => tag.trim()) : [],
+              userId: (session.user as { id: string }).id
             }
           })
           count++

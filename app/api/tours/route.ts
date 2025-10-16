@@ -35,9 +35,12 @@ export async function POST(request: NextRequest) {
       data: {
         userId: (session.user as { id: string }).id,
         name: (tourData as { name: string }).name,
-        startingPoint: (tourData as { startingPoint: unknown }).startingPoint,
-        steps: (tourData as { steps: unknown }).steps,
-        route: (tourData as { route: unknown }).route
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        startingPoint: JSON.parse(JSON.stringify((tourData as { startingPoint: unknown }).startingPoint)) as any,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        steps: JSON.parse(JSON.stringify((tourData as { steps: unknown }).steps)) as any,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        route: JSON.parse(JSON.stringify((tourData as { route: unknown }).route)) as any
       }
     })
     

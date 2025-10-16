@@ -17,6 +17,8 @@ interface ScrapedPropertyData {
   postalCode?: string
   propertyType?: string
   features?: string[]
+  propertyLink?: string
+  guidance?: string
 }
 
 export async function POST(request: NextRequest) {
@@ -26,7 +28,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    const { url } = await request.json()
+    const { url } = await request.json() as { url?: string }
     
     if (!url) {
       return NextResponse.json({ error: "URL is required" }, { status: 400 })
@@ -112,14 +114,19 @@ async function extractPropertyContent(url: string): Promise<{success: boolean, d
         headers: {
           'User-Agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 14_7_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/14.1.2 Mobile/15E148 Safari/604.1',
           'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-          'Accept-Language': 'en-US,en;q=0.9,it;q=0.8'
+          'Accept-Language': 'en-US,en;q=0.9,it;q=0.8',
+          'Cache-Control': 'no-cache',
+          'Pragma': 'no-cache'
         }
       },
       // Approach 3: Simple bot-like approach
       {
         headers: {
           'User-Agent': 'Mozilla/5.0 (compatible; PropertyBot/1.0; +https://example.com/bot)',
-          'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8'
+          'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+          'Accept-Language': 'en-US,en;q=0.9,it;q=0.8',
+          'Cache-Control': 'no-cache',
+          'Pragma': 'no-cache'
         }
       }
     ]
@@ -366,14 +373,31 @@ Return only valid JSON, no other text.`
       throw new Error(`OpenAI API error: ${openaiResponse.status}`)
     }
 
-    const aiData = await openaiResponse.json()
-    const aiContent = aiData.choices[0].message.content
+    const aiData = await openaiResponse.json() as { choices?: { message?: { content?: string } }[] }
+    const aiContent = aiData.choices?.[0]?.message?.content
     
     console.log('OpenAI response:', aiContent)
     
+    if (!aiContent) {
+      throw new Error('No content received from OpenAI')
+    }
+    
     // Parse the AI response
     try {
-      const parsedData = JSON.parse(aiContent)
+      const parsedData = JSON.parse(aiContent) as {
+        name?: string;
+        price?: number;
+        size?: number;
+        rooms?: number;
+        bathrooms?: number;
+        yearBuilt?: number;
+        propertyType?: string;
+        address?: string;
+        city?: string;
+        postalCode?: string;
+        description?: string;
+        features?: string[];
+      }
       console.log('Parsed AI data:', parsedData)
       return {
         name: parsedData.name,
@@ -479,7 +503,7 @@ function _parsePropertyHTML(html: string, url: string): ScrapedPropertyData {
   // Extract price
   for (const pattern of patterns.price) {
     const matches = html.match(pattern)
-    if (matches) {
+    if (matches && matches[0]) {
       const price = matches[0].replace(/[€EUR\s,]/g, '').replace('.', '')
       const numPrice = parseInt(price)
       if (numPrice > 1000) { // Reasonable price threshold
@@ -492,7 +516,7 @@ function _parsePropertyHTML(html: string, url: string): ScrapedPropertyData {
   // Extract size
   for (const pattern of patterns.size) {
     const matches = html.match(pattern)
-    if (matches) {
+    if (matches && matches[0]) {
       const size = matches[0].replace(/[^\d,]/g, '').replace(',', '.')
       const numSize = parseFloat(size)
       if (numSize > 10) { // Reasonable size threshold
@@ -505,7 +529,7 @@ function _parsePropertyHTML(html: string, url: string): ScrapedPropertyData {
   // Extract rooms
   for (const pattern of patterns.rooms) {
     const matches = html.match(pattern)
-    if (matches) {
+    if (matches && matches[0]) {
       const rooms = parseInt(matches[0].replace(/\D/g, ''))
       if (rooms > 0 && rooms < 20) { // Reasonable room count
         result.rooms = rooms
@@ -517,7 +541,7 @@ function _parsePropertyHTML(html: string, url: string): ScrapedPropertyData {
   // Extract bathrooms
   for (const pattern of patterns.bathrooms) {
     const matches = html.match(pattern)
-    if (matches) {
+    if (matches && matches[0]) {
       const bathrooms = parseInt(matches[0].replace(/\D/g, ''))
       if (bathrooms > 0 && bathrooms < 10) { // Reasonable bathroom count
         result.bathrooms = bathrooms
@@ -529,7 +553,7 @@ function _parsePropertyHTML(html: string, url: string): ScrapedPropertyData {
   // Extract year built
   for (const pattern of patterns.yearBuilt) {
     const matches = html.match(pattern)
-    if (matches) {
+    if (matches && matches[0]) {
       const year = parseInt(matches[0].replace(/\D/g, ''))
       if (year > 1800 && year <= new Date().getFullYear()) {
         result.yearBuilt = year
@@ -541,7 +565,7 @@ function _parsePropertyHTML(html: string, url: string): ScrapedPropertyData {
   // Extract property type
   for (const pattern of patterns.propertyType) {
     const matches = html.match(pattern)
-    if (matches) {
+    if (matches && matches[0]) {
       const type = matches[0].toLowerCase()
       if (type.includes('casa') || type.includes('house') || type.includes('villa')) {
         result.propertyType = 'house'
@@ -557,7 +581,7 @@ function _parsePropertyHTML(html: string, url: string): ScrapedPropertyData {
   // Extract address
   for (const pattern of patterns.address) {
     const matches = html.match(pattern)
-    if (matches) {
+    if (matches && matches[0]) {
       result.address = matches[0].replace(/via[:\s]*/gi, '').trim()
       break
     }
@@ -566,7 +590,7 @@ function _parsePropertyHTML(html: string, url: string): ScrapedPropertyData {
   // Extract city from postal code pattern
   for (const pattern of patterns.city) {
     const matches = html.match(pattern)
-    if (matches) {
+    if (matches && matches[0]) {
       const parts = matches[0].split(' ')
       if (parts.length >= 2) {
         result.postalCode = parts[0]
@@ -605,7 +629,7 @@ function _parsePropertyHTML(html: string, url: string): ScrapedPropertyData {
   }
   
   if (images.length > 0) {
-    result.images = [...new Set(images)] // Remove duplicates
+    result.images = Array.from(new Set(images)) // Remove duplicates
   }
   
   // Extract description (look for common description patterns)

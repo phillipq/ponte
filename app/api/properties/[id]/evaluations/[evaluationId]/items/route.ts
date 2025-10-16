@@ -11,12 +11,12 @@ export async function PUT(
   try {
     const session = await getServerSession(authOptions)
     
-    if (!session?.user?.id) {
+    if (!session?.user || !(session.user as { id: string }).id) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
     const { id, evaluationId } = await params
-    const body = await request.json()
+    const body = await request.json() as { items?: unknown[] }
     const { items } = body
 
     // Verify evaluation belongs to user
@@ -24,7 +24,7 @@ export async function PUT(
       where: {
         id: evaluationId,
         propertyId: id,
-        userId: session.user.id
+        userId: (session.user as { id: string }).id
       },
       include: {
         evaluationItems: true
@@ -36,16 +36,23 @@ export async function PUT(
     }
 
     // Update each evaluation item
-    for (const item of items) {
+    for (const item of items || []) {
+      const itemData = item as { 
+        id: string; 
+        notes?: string; 
+        score?: number; 
+        date?: string; 
+        evaluatedBy?: string 
+      }
       await prisma.propertyEvaluationItem.update({
         where: {
-          id: item.id
+          id: itemData.id
         },
         data: {
-          notes: item.notes || null,
-          score: item.score || 0,
-          date: item.date ? new Date(item.date) : null,
-          evaluatedBy: item.evaluatedBy || null
+          notes: itemData.notes || null,
+          score: itemData.score || 0,
+          date: itemData.date ? new Date(itemData.date) : null,
+          evaluatedBy: itemData.evaluatedBy || null
         }
       })
     }
@@ -59,16 +66,17 @@ export async function PUT(
     if (updatedEvaluation) {
       // Group items by category and calculate scores
       const categories = updatedEvaluation.evaluationItems.reduce((acc, item) => {
-        if (!acc[item.category]) {
-          acc[item.category] = []
+        const category = (item as { category: string }).category
+        if (!acc[category]) {
+          acc[category] = []
         }
-        acc[item.category].push(item)
+        acc[category].push(item)
         return acc
       }, {} as Record<string, unknown[]>)
 
       // Calculate overall score
       const categoryScores = Object.values(categories).map(categoryItems => {
-        const totalScore = categoryItems.reduce((sum, item) => sum + (item.score || 0), 0)
+        const totalScore = categoryItems.reduce((sum: number, item) => sum + ((item as { score?: number }).score || 0), 0)
         const maxScore = categoryItems.length * 10
         return { totalScore, maxScore }
       })

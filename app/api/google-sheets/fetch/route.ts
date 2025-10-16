@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 
 export async function POST(request: NextRequest) {
   try {
-    const { url } = await request.json()
+    const { url } = await request.json() as { url?: string }
     
     if (!url) {
       return NextResponse.json({ error: "Google Sheets URL is required" }, { status: 400 })
@@ -44,7 +44,7 @@ function extractSpreadsheetId(url: string): string | null {
   for (const pattern of patterns) {
     const match = url.match(pattern)
     if (match) {
-      return match[1]
+      return match[1] || null
     }
   }
   

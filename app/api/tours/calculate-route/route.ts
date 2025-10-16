@@ -11,7 +11,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    const { tourSteps } = await request.json()
+    const { tourSteps } = await request.json() as { tourSteps?: unknown[] }
 
     if (!tourSteps || tourSteps.length < 2) {
       return NextResponse.json({ error: "At least 2 stops required" }, { status: 400 })
@@ -36,11 +36,12 @@ export async function POST(request: NextRequest) {
     let totalTransitDuration = 0
 
     // Add starting point
+    const firstStep = validSteps[0] as { name?: string; type?: string; address?: string }
     routeSteps.push({
       step: 1,
-      name: validSteps[0].name,
-      type: validSteps[0].type,
-      address: validSteps[0].address,
+      name: firstStep.name || 'Unknown',
+      type: firstStep.type || 'Unknown',
+      address: firstStep.address || 'Unknown',
       duration: 0,
       distance: 0,
       durationText: 'Starting Point',
@@ -51,8 +52,8 @@ export async function POST(request: NextRequest) {
 
     // Calculate distances between consecutive stops
     for (let i = 0; i < validSteps.length - 1; i++) {
-      const currentStep = validSteps[i]
-      const nextStep = validSteps[i + 1]
+      const currentStep = validSteps[i] as { latitude: number; longitude: number; name?: string; type?: string; address?: string }
+      const nextStep = validSteps[i + 1] as { latitude: number; longitude: number; name?: string; type?: string; address?: string }
 
       try {
         // Get driving data
@@ -94,9 +95,9 @@ export async function POST(request: NextRequest) {
 
           routeSteps.push({
             step: i + 2,
-            name: nextStep.name,
-            type: nextStep.type,
-            address: nextStep.address,
+            name: nextStep.name || 'Unknown',
+            type: nextStep.type || 'Unknown',
+            address: nextStep.address || 'Unknown',
             duration: duration,
             distance: distance,
             durationText: formatDuration(duration),
@@ -123,9 +124,9 @@ export async function POST(request: NextRequest) {
 
           routeSteps.push({
             step: i + 2,
-            name: nextStep.name,
-            type: nextStep.type,
-            address: nextStep.address,
+            name: nextStep.name || 'Unknown',
+            type: nextStep.type || 'Unknown',
+            address: nextStep.address || 'Unknown',
             duration: estimatedDuration,
             distance: distance * 1000,
             durationText: formatDuration(estimatedDuration),
@@ -152,9 +153,9 @@ export async function POST(request: NextRequest) {
 
         routeSteps.push({
           step: i + 2,
-          name: nextStep.name,
-          type: nextStep.type,
-          address: nextStep.address,
+          name: nextStep.name || 'Unknown',
+          type: nextStep.type || 'Unknown',
+          address: nextStep.address || 'Unknown',
           duration: estimatedDuration,
           distance: distance * 1000,
           durationText: formatDuration(estimatedDuration),

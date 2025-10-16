@@ -68,7 +68,7 @@ export async function POST(request: NextRequest) {
       })
     }
 
-    const body = await request.json()
+    const body = await request.json() as { title?: string; order?: number }
     const { title, order } = body
 
     if (!title) {

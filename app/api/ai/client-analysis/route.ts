@@ -25,7 +25,7 @@ export async function POST(request: NextRequest) {
       })
     }
 
-    const { clientId, questionnaireResponses, properties, destinations } = await request.json()
+    const { clientId, questionnaireResponses, properties, destinations } = await request.json() as { clientId: string; questionnaireResponses: unknown; properties: unknown; destinations: unknown }
 
     // Verify client belongs to user
     const client = await prisma.client.findFirst({
@@ -40,18 +40,21 @@ export async function POST(request: NextRequest) {
     }
 
     // Get the selected response set or the latest one
-    const responseSet = questionnaireResponses.responseSets.find((rs: unknown) => 
-      (rs as { id: string }).id === questionnaireResponses.selectedResponseSet
-    ) || questionnaireResponses.responseSets[0]
+    const responses = questionnaireResponses as { responseSets: unknown[]; selectedResponseSet?: string }
+    const responseSet = responses.responseSets.find((rs: unknown) => 
+      (rs as { id: string }).id === responses.selectedResponseSet
+    ) || responses.responseSets[0]
 
     if (!responseSet) {
       return NextResponse.json({ error: "No questionnaire responses found" }, { status: 400 })
     }
 
     // Prepare questionnaire data for AI analysis
-    const questionnaireData = questionnaireResponses.sections.map((section: unknown) => ({
+    const questionnaireResponsesData = questionnaireResponses as { sections: unknown[] }
+    const responseSetData = responseSet as { responses: unknown[] }
+    const questionnaireData = questionnaireResponsesData.sections.map((section: unknown) => ({
       section: (section as { title: string }).title,
-      questions: responseSet.responses
+      questions: responseSetData.responses
         .filter((r: unknown) => (r as { sectionTitle: string }).sectionTitle === (section as { title: string }).title)
         .map((r: unknown) => ({
           question: (r as { question: string }).question,
@@ -60,34 +63,35 @@ export async function POST(request: NextRequest) {
     })).filter((section: unknown) => (section as { questions: unknown[] }).questions.length > 0)
 
   console.log("Debug - Questionnaire data:", JSON.stringify(questionnaireData, null, 2))
-  console.log("Debug - Properties count:", properties.length)
-  console.log("Debug - Destinations count:", destinations.length)
-  console.log("Debug - Properties:", JSON.stringify(properties.slice(0, 2), null, 2))
-  console.log("Debug - Destinations:", JSON.stringify(destinations.slice(0, 2), null, 2))
+  console.log("Debug - Properties count:", (properties as unknown[]).length)
+  console.log("Debug - Destinations count:", (destinations as unknown[]).length)
+  console.log("Debug - Properties:", JSON.stringify((properties as unknown[]).slice(0, 2), null, 2))
+  console.log("Debug - Destinations:", JSON.stringify((destinations as unknown[]).slice(0, 2), null, 2))
 
     // Calculate distances between properties and destinations
-    const propertyDistances = await calculatePropertyDistances(properties, destinations)
-    console.log("Debug - Property distances:", JSON.stringify(propertyDistances.slice(0, 1), null, 2))
+    const propertyDistances = await calculatePropertyDistances(properties as unknown[], destinations as unknown[])
+    console.log("Debug - Property distances:", JSON.stringify((propertyDistances as unknown[]).slice(0, 1), null, 2))
 
     // Generate AI analysis using OpenAI
-    const aiAnalysis = await generateOpenAIAnalysis(client, questionnaireData, properties, propertyDistances)
+    const aiAnalysis = await generateOpenAIAnalysis(client, questionnaireData, properties as unknown[], propertyDistances as unknown[])
 
     // Store AI analysis in database
     const storedAnalysis = await prisma.clientAiAnalysis.create({
       data: {
         clientId: client.id,
-        responseSetId: questionnaireData?.responseSetId || null,
-        summary: aiAnalysis.summary,
-        preferences: aiAnalysis.preferences,
-        recommendations: aiAnalysis.recommendations,
-        propertyRankings: aiAnalysis.propertyRankings || []
+        responseSetId: (responseSet as { id: string }).id || null,
+        summary: (aiAnalysis as { summary: string }).summary,
+        preferences: (aiAnalysis as { preferences: string[] }).preferences,
+        recommendations: (aiAnalysis as { recommendations: string }).recommendations,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        propertyRankings: (aiAnalysis as { propertyRankings?: unknown[] }).propertyRankings || [] as any
       }
     })
 
     return NextResponse.json({
       success: true,
       analysis: aiAnalysis,
-      propertyRankings: aiAnalysis.propertyRankings || [],
+      propertyRankings: (aiAnalysis as { propertyRankings?: unknown[] }).propertyRankings || [],
       analysisId: storedAnalysis.id
     })
 
@@ -132,7 +136,7 @@ async function calculatePropertyDistances(properties: unknown[], destinations: u
             `https://maps.googleapis.com/maps/api/distancematrix/json?origins=${(property as { latitude: number }).latitude},${(property as { longitude: number }).longitude}&destinations=${(destination as { latitude: number }).latitude},${(destination as { longitude: number }).longitude}&units=metric&key=${process.env.GOOGLE_MAPS_API_KEY}`
           )
           
-          const data = await response.json()
+          const data = await response.json() as { rows?: { elements?: { status?: string; distance?: { value: number; text: string }; duration?: { value: number; text: string } }[] }[] }
           
           if (data.rows?.[0]?.elements?.[0]?.status === 'OK') {
             const element = data.rows[0].elements[0]
@@ -141,24 +145,24 @@ async function calculatePropertyDistances(properties: unknown[], destinations: u
             await prisma.propertyDistance.upsert({
               where: {
                 propertyId_destinationId: {
-                  propertyId: property.id,
-                  destinationId: destination.id
+              propertyId: (property as { id: string }).id,
+              destinationId: (destination as { id: string }).id
                 }
               },
               update: {
-                drivingDistance: element.distance.value,
-                drivingDuration: element.duration.value,
-                distanceKm: element.distance.value / 1000,
-                durationMinutes: element.duration.value / 60,
+                drivingDistance: (element as { distance: { value: number } }).distance.value,
+                drivingDuration: (element as { duration: { value: number } }).duration.value,
+                distanceKm: (element as { distance: { value: number } }).distance.value / 1000,
+                durationMinutes: (element as { duration: { value: number } }).duration.value / 60,
                 calculatedAt: new Date()
               },
               create: {
                 propertyId: (property as { id: string }).id,
                 destinationId: (destination as { id: string }).id,
-                drivingDistance: element.distance.value,
-                drivingDuration: element.duration.value,
-                distanceKm: element.distance.value / 1000,
-                durationMinutes: element.duration.value / 60,
+                drivingDistance: (element as { distance: { value: number } }).distance.value,
+                drivingDuration: (element as { duration: { value: number } }).duration.value,
+                distanceKm: (element as { distance: { value: number } }).distance.value / 1000,
+                durationMinutes: (element as { duration: { value: number } }).duration.value / 60,
                 calculatedAt: new Date()
               }
             })
@@ -166,9 +170,9 @@ async function calculatePropertyDistances(properties: unknown[], destinations: u
             propertyDistances.push({
               destination: (destination as { name: string }).name,
               category: (destination as { category?: string }).category || 'Unknown',
-              distance: element.distance.text,
-              duration: element.duration.text,
-              value: element.distance.value
+              distance: (element as { distance: { text: string } }).distance.text,
+              duration: (element as { duration: { text: string } }).duration.text,
+              value: (element as { distance: { value: number } }).distance.value
             })
           }
         }
@@ -197,30 +201,30 @@ async function generateOpenAIAnalysis(client: unknown, questionnaireData: unknow
   const prompt = `Analyze this client and provide property recommendations.
 
 CLIENT INFORMATION:
-- Name: ${client.name}
-- Email: ${client.email}
-- Company: ${client.company || 'Not specified'}
+- Name: ${(client as { name: string }).name}
+- Email: ${(client as { email: string }).email}
+- Company: ${(client as { company?: string }).company || 'Not specified'}
 
 QUESTIONNAIRE RESPONSES:
-${questionnaireData.length > 0 ? questionnaireData.map(section => `
-${section.section}:
-${section.questions.map((q: unknown) => `- ${(q as { question: string }).question}: ${(q as { answer: string }).answer}`).join('\n')}
+${questionnaireData.length > 0 ? questionnaireData.map((section: unknown) => `
+${(section as { section: string }).section}:
+${(section as { questions: unknown[] }).questions.map((q: unknown) => `- ${(q as { question: string }).question}: ${(q as { answer: string }).answer}`).join('\n')}
 `).join('\n') : 'No questionnaire responses available'}
 
 AVAILABLE PROPERTIES:
-${properties.length > 0 ? properties.map((p, index) => `
-${index + 1}. ${p.name}
-   - Type: ${p.propertyType || 'Not specified'}
-   - Location: ${p.city || 'Not specified'}, ${p.country || 'Not specified'}
-   - Size: ${p.size || 'Not specified'}
-   - Features: ${p.features || 'Not specified'}
-   - Description: ${p.description || 'Not specified'}
+${(properties as unknown[]).length > 0 ? (properties as unknown[]).map((p: unknown, index: number) => `
+${index + 1}. ${(p as { name: string }).name}
+   - Type: ${(p as { propertyType?: string }).propertyType || 'Not specified'}
+   - Location: ${(p as { city?: string }).city || 'Not specified'}, ${(p as { country?: string }).country || 'Not specified'}
+   - Size: ${(p as { size?: string }).size || 'Not specified'}
+   - Features: ${(p as { features?: string }).features || 'Not specified'}
+   - Description: ${(p as { description?: string }).description || 'Not specified'}
 `).join('\n') : 'No properties available'}
 
 PROPERTY DISTANCES TO DESTINATIONS:
-${propertyDistances.length > 0 ? propertyDistances.map(pd => `
-${pd.propertyName}:
-${pd.distances.map((d: unknown) => `  - ${(d as { destination: string }).destination} (${(d as { category: string }).category}): ${(d as { distance: string }).distance} (${(d as { duration: string }).duration})`).join('\n')}
+${(propertyDistances as unknown[]).length > 0 ? (propertyDistances as unknown[]).map((pd: unknown) => `
+${(pd as { propertyName: string }).propertyName}:
+${(pd as { distances: unknown[] }).distances.map((d: unknown) => `  - ${(d as { destination: string }).destination} (${(d as { category: string }).category}): ${(d as { distance: string }).distance} (${(d as { duration: string }).duration})`).join('\n')}
 `).join('\n') : 'No distance data available'}
 
 Please provide:
@@ -284,8 +288,12 @@ CRITICAL: You MUST return ONLY valid JSON. Do not include any explanatory text, 
     
     console.log("Debug - API call completed, checking response...")
 
-    const message = completion.choices[0].message
+    const message = completion.choices[0]?.message
     console.log("Debug - Full message object:", JSON.stringify(message, null, 2))
+    
+    if (!message) {
+      throw new Error("No message received from OpenAI")
+    }
     
     // Check for tool calls first
     if (message.tool_calls && message.tool_calls.length > 0) {
@@ -313,7 +321,7 @@ CRITICAL: You MUST return ONLY valid JSON. Do not include any explanatory text, 
           max_tokens: 500
         })
         
-        const fallbackResponse = fallbackCompletion.choices[0].message.content
+        const fallbackResponse = fallbackCompletion.choices[0]?.message?.content
         console.log("Debug - Fallback response:", fallbackResponse)
         
         if (fallbackResponse && fallbackResponse.trim() !== '') {
@@ -361,12 +369,12 @@ CRITICAL: You MUST return ONLY valid JSON. Do not include any explanatory text, 
           summary: "AI analysis was requested but the response format was invalid. Please try generating the analysis again.",
           preferences: ["Analysis incomplete - please try again"],
           recommendations: "Unable to generate recommendations due to response format error. Please try again.",
-          propertyRankings: properties.map((property, _index) => ({
-            id: property.id,
-            name: property.name,
+          propertyRankings: (properties as unknown[]).map((property: unknown, _index: number) => ({
+            id: (property as { id: string }).id,
+            name: (property as { name: string }).name,
             score: 0.5,
             matchReasons: ["Analysis incomplete - please try again"],
-            distances: propertyDistances.find(pd => pd.propertyId === property.id)?.distances || []
+            distances: (propertyDistances as unknown[]).find((pd: unknown) => (pd as { propertyId: string }).propertyId === (property as { id: string }).id) ? ((propertyDistances as unknown[]).find((pd: unknown) => (pd as { propertyId: string }).propertyId === (property as { id: string }).id) as { distances: unknown[] }).distances : []
           }))
         }
       }
@@ -379,7 +387,7 @@ CRITICAL: You MUST return ONLY valid JSON. Do not include any explanatory text, 
       // Try to extract some information from the raw response
       if (response.includes("summary") || response.includes("Summary")) {
         const summaryMatch = response.match(/summary["\s]*:["\s]*([^"]+)/i)
-        if (summaryMatch) {
+        if (summaryMatch && summaryMatch[1]) {
           summary = summaryMatch[1]
         }
       }
@@ -388,12 +396,12 @@ CRITICAL: You MUST return ONLY valid JSON. Do not include any explanatory text, 
         summary: summary,
         preferences: preferences,
         recommendations: recommendations,
-        propertyRankings: properties.map((property, _index) => ({
-          id: property.id,
-          name: property.name,
+        propertyRankings: (properties as unknown[]).map((property: unknown, _index: number) => ({
+          id: (property as { id: string }).id,
+          name: (property as { name: string }).name,
           score: 0.5,
           matchReasons: ["Analysis incomplete - please try again"],
-          distances: propertyDistances.find(pd => pd.propertyId === property.id)?.distances || []
+          distances: (propertyDistances as unknown[]).find((pd: unknown) => (pd as { propertyId: string }).propertyId === (property as { id: string }).id) ? ((propertyDistances as unknown[]).find((pd: unknown) => (pd as { propertyId: string }).propertyId === (property as { id: string }).id) as { distances: unknown[] }).distances : []
         }))
       }
     }

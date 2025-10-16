@@ -23,11 +23,11 @@ export async function POST(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions)
     
-    if (!session?.user?.id) {
+    if (!session?.user || !(session.user as { id: string }).id) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    const userId = session.user.id as string
+    const userId = (session.user as { id: string }).id
     const body = await request.json()
     const { propertyId, destinationIds } = distanceMatrixSchema.parse(body)
 
@@ -116,7 +116,7 @@ export async function POST(request: NextRequest) {
             await prisma.propertyDistance.create({
               data: {
                 propertyId,
-                destinationId: destination.id,
+                destinationId: (destination as { id: string }).id,
                 drivingDistance: distance,
                 drivingDuration: duration,
                 trafficDuration: trafficDuration,
@@ -125,7 +125,7 @@ export async function POST(request: NextRequest) {
 
             results.push({
               propertyId,
-              destinationId: destination.id,
+              destinationId: (destination as { id: string }).id,
               drivingDistance: distance,
               drivingDuration: duration,
               trafficDuration: trafficDuration,
@@ -134,8 +134,8 @@ export async function POST(request: NextRequest) {
           } else {
             results.push({
               propertyId,
-              destinationId: destination.id,
-              status: element.status
+              destinationId: (destination as { id: string }).id,
+              status: (element as { status: string }).status
             })
           }
         }
@@ -146,7 +146,7 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { error: error.errors[0].message },
+        { error: error.errors[0]?.message || 'Validation error' },
         { status: 400 }
       )
     }

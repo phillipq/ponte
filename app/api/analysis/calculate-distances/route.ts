@@ -60,16 +60,10 @@ export async function POST(_request: NextRequest) {
                 destinationId: destination.id,
                 drivingDistance: distance.drivingDistance,
                 drivingDuration: distance.drivingDuration,
-                drivingDistanceText: distance.drivingDistanceText,
-                drivingDurationText: distance.drivingDurationText,
                 transitDistance: distance.transitDistance,
                 transitDuration: distance.transitDuration,
-                transitDistanceText: distance.transitDistanceText,
-                transitDurationText: distance.transitDurationText,
                 walkingDistance: distance.walkingDistance,
-                walkingDuration: distance.walkingDuration,
-                walkingDistanceText: distance.walkingDistanceText,
-                walkingDurationText: distance.walkingDurationText
+                walkingDuration: distance.walkingDuration
               }
             })
             calculated++
@@ -116,23 +110,23 @@ async function calculateDistance(
     const drivingResponse = await fetch(
       `https://maps.googleapis.com/maps/api/distancematrix/json?origins=${origin}&destinations=${destination}&mode=driving&key=${googleMapsApiKey}`
     )
-    const drivingData = await drivingResponse.json()
+    const drivingData = await drivingResponse.json() as { rows?: { elements?: { distance?: { value: number; text: string }; duration?: { value: number; text: string } }[] }[] }
 
     // Calculate transit distance
     const transitResponse = await fetch(
       `https://maps.googleapis.com/maps/api/distancematrix/json?origins=${origin}&destinations=${destination}&mode=transit&key=${googleMapsApiKey}`
     )
-    const transitData = await transitResponse.json()
+    const transitData = await transitResponse.json() as { rows?: { elements?: { distance?: { value: number; text: string }; duration?: { value: number; text: string } }[] }[] }
 
     // Calculate walking distance
     const walkingResponse = await fetch(
       `https://maps.googleapis.com/maps/api/distancematrix/json?origins=${origin}&destinations=${destination}&mode=walking&key=${googleMapsApiKey}`
     )
-    const walkingData = await walkingResponse.json()
+    const walkingData = await walkingResponse.json() as { rows?: { elements?: { distance?: { value: number; text: string }; duration?: { value: number; text: string } }[] }[] }
 
-    const drivingElement = drivingData.rows[0]?.elements[0]
-    const transitElement = transitData.rows[0]?.elements[0]
-    const walkingElement = walkingData.rows[0]?.elements[0]
+    const drivingElement = drivingData.rows?.[0]?.elements?.[0]
+    const transitElement = transitData.rows?.[0]?.elements?.[0]
+    const walkingElement = walkingData.rows?.[0]?.elements?.[0]
 
     return {
       drivingDistance: drivingElement?.distance?.value || 0,

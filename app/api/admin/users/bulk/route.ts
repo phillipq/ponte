@@ -13,12 +13,12 @@ export async function POST(request: NextRequest) {
     }
 
     // Check if user is admin
-    const isAdmin = session.user.email === "admin@rocketlaunchingllama.com" // Replace with your admin email
+    const isAdmin = session.user?.email === "admin@rocketlaunchingllama.com" // Replace with your admin email
     if (!isAdmin) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 })
     }
 
-    const { userIds, action } = await request.json()
+    const { userIds, action } = await request.json() as { userIds: string[]; action: string }
 
     if (!userIds || !Array.isArray(userIds) || userIds.length === 0) {
       return NextResponse.json({ error: "User IDs required" }, { status: 400 })

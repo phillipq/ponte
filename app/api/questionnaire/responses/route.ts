@@ -17,7 +17,7 @@ const createResponseSchema = z.object({
 export async function POST(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions)
-    if (!session?.user?.id) {
+    if (!(session?.user as { id: string })?.id) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
@@ -28,7 +28,7 @@ export async function POST(request: NextRequest) {
     const client = await prisma.client.findFirst({
       where: {
         id: validatedData.clientId,
-        userId: session.user.id
+        userId: (session?.user as { id: string })?.id
       }
     })
 
@@ -81,7 +81,7 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error("Error creating questionnaire response:", error)
     if (error instanceof z.ZodError) {
-      return NextResponse.json({ error: error.errors[0].message }, { status: 400 })
+      return NextResponse.json({ error: error.errors[0]?.message || 'Validation error' }, { status: 400 })
     }
     return NextResponse.json({ error: "Failed to create questionnaire response" }, { status: 500 })
   }

@@ -19,11 +19,11 @@ export async function GET() {
   try {
     const session = await getServerSession(authOptions)
     
-    if (!session?.user?.id) {
+    if (!(session?.user as { id: string })?.id) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    const userId = session.user.id as string
+    const userId = (session?.user as { id: string })?.id as string
 
     const tags = await prisma.tag.findMany({
       where: { userId },
@@ -45,11 +45,11 @@ export async function POST(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions)
     
-    if (!session?.user?.id) {
+    if (!(session?.user as { id: string })?.id) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    const userId = session.user.id as string
+    const userId = (session?.user as { id: string })?.id as string
     const body = await request.json()
     const validatedData = createTagSchema.parse(body)
 
@@ -80,7 +80,7 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { error: error.errors[0].message },
+        { error: error.errors[0]?.message || 'Validation error' },
         { status: 400 }
       )
     }

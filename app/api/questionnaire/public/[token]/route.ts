@@ -81,7 +81,7 @@ export async function GET(
           questions: []
         }
       }
-      acc[sectionId].questions.push({
+      (acc[sectionId] as { questions: unknown[] }).questions.push({
         id: question.id,
         question: question.question,
         questionType: question.questionType,
@@ -195,7 +195,7 @@ export async function POST(
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { error: error.errors[0].message },
+        { error: error.errors[0]?.message || 'Validation error' },
         { status: 400 }
       )
     }

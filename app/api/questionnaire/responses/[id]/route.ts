@@ -9,7 +9,7 @@ export async function DELETE(
 ) {
   try {
     const session = await getServerSession(authOptions)
-    if (!session?.user?.id) {
+    if (!(session?.user as { id: string })?.id) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
@@ -20,7 +20,7 @@ export async function DELETE(
       where: {
         id: id,
         client: {
-          userId: session.user.id
+          userId: (session?.user as { id: string })?.id
         }
       },
       include: {

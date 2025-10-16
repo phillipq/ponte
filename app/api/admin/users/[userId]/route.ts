@@ -18,11 +18,11 @@ export async function POST(
     }
 
     // Check if user can access admin
-    if (!canAccessAdmin(session.user.email!)) {
+    if (!session.user?.email || !canAccessAdmin(session.user.email)) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 })
     }
 
-    const { action } = await request.json()
+    const { action } = await request.json() as { action: string }
     const { userId } = await params
 
     const user = await prisma.user.findUnique({

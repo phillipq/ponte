@@ -11,7 +11,7 @@ interface GeocodingResult {
 // POST /api/geocoding - Geocode an address to lat/lng or reverse geocode lat/lng to address
 export async function POST(request: NextRequest) {
   try {
-    const { address, latlng } = await request.json()
+    const { address, latlng } = await request.json() as { address?: string; latlng?: string }
 
     if (!address && !latlng) {
       return NextResponse.json({ error: "Address or latlng is required" }, { status: 400 })
@@ -40,7 +40,15 @@ export async function POST(request: NextRequest) {
 
     console.log("Geocoding URL:", url.replace(apiKey, "API_KEY_HIDDEN"))
     const response = await fetch(url)
-    const data = await response.json()
+    const data = await response.json() as { 
+      status: string; 
+      results?: { 
+        formatted_address: string; 
+        geometry: { location: { lat: number; lng: number } }; 
+        place_id?: string 
+      }[]; 
+      error_message?: string 
+    }
 
     console.log("Google Geocoding API response:", {
       status: data.status,
@@ -61,7 +69,13 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const result = data.results[0]
+    const result = data.results?.[0]
+    if (!result) {
+      return NextResponse.json(
+        { error: "No geocoding results found" },
+        { status: 404 }
+      )
+    }
     const geocodingResult: GeocodingResult = {
       address: result.formatted_address,
       latitude: result.geometry.location.lat,

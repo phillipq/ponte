@@ -15,7 +15,7 @@ export async function PUT(
 ) {
   try {
     const session = await getServerSession(authOptions)
-    if (!session?.user?.id) {
+    if (!(session?.user as { id: string })?.id) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
@@ -26,7 +26,7 @@ export async function PUT(
     const section = await prisma.questionnaireSection.updateMany({
       where: {
         id,
-        userId: session.user.id
+        userId: (session?.user as { id: string })?.id
       },
       data: validatedData
     })
@@ -48,7 +48,7 @@ export async function PUT(
   } catch (error) {
     console.error("Error updating section:", error)
     if (error instanceof z.ZodError) {
-      return NextResponse.json({ error: error.errors[0].message }, { status: 400 })
+      return NextResponse.json({ error: error.errors[0]?.message || 'Validation error' }, { status: 400 })
     }
     return NextResponse.json({ error: "Failed to update section" }, { status: 500 })
   }
@@ -60,7 +60,7 @@ export async function DELETE(
 ) {
   try {
     const session = await getServerSession(authOptions)
-    if (!session?.user?.id) {
+    if (!(session?.user as { id: string })?.id) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
@@ -68,7 +68,7 @@ export async function DELETE(
     const section = await prisma.questionnaireSection.deleteMany({
       where: {
         id,
-        userId: session.user.id
+        userId: (session?.user as { id: string })?.id
       }
     })
 

@@ -69,7 +69,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Forbidden - Admin access required" }, { status: 403 })
     }
 
-    const { name, email, password, role } = await request.json()
+    const { name, email, password, role } = await request.json() as { name: string; email: string; password: string; role: string }
 
     if (!name || !email || !password || !role) {
       return NextResponse.json({ error: "Name, email, password, and role are required" }, { status: 400 })

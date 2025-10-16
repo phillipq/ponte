@@ -15,7 +15,7 @@ const importResponseSchema = z.object({
 export async function POST(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions)
-    if (!session?.user?.id) {
+    if (!session?.user || !(session.user as { id: string }).id) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
@@ -26,7 +26,7 @@ export async function POST(request: NextRequest) {
     const existingClient = await prisma.client.findFirst({
       where: {
         email: validatedData.email,
-        userId: session.user.id
+        userId: (session.user as { id: string }).id
       }
     })
 
@@ -39,7 +39,7 @@ export async function POST(request: NextRequest) {
         data: {
           name: validatedData.name || "Unknown Client",
           email: validatedData.email,
-          userId: session.user.id
+          userId: (session.user as { id: string }).id
         }
       })
     }
@@ -66,7 +66,7 @@ export async function POST(request: NextRequest) {
     const questions = await prisma.questionnaireQuestion.findMany({
       where: {
         section: {
-          userId: session.user.id
+          userId: (session.user as { id: string }).id
         }
       },
       include: {
@@ -90,7 +90,7 @@ export async function POST(request: NextRequest) {
       if (!question && validatedData.confirmedMatches) {
         for (const confirmedMatch of validatedData.confirmedMatches) {
           const [dbQuestion, csvQuestion] = confirmedMatch.split('-')
-          if (normalizeText(questionText) === normalizeText(csvQuestion)) {
+          if (csvQuestion && dbQuestion && normalizeText(questionText) === normalizeText(csvQuestion)) {
             question = questions.find(q => normalizeText(q.question) === normalizeText(dbQuestion))
             break
           }
@@ -127,7 +127,7 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error("Error importing questionnaire response:", error)
     if (error instanceof z.ZodError) {
-      return NextResponse.json({ error: error.errors[0].message }, { status: 400 })
+      return NextResponse.json({ error: error.errors[0]?.message || 'Validation error' }, { status: 400 })
     }
     return NextResponse.json({ error: "Failed to import questionnaire response" }, { status: 500 })
   }

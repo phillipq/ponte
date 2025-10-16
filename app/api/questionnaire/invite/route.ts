@@ -14,18 +14,18 @@ const createInviteSchema = z.object({
 export async function POST(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions)
-    if (!session?.user?.id) {
+    if (!(session?.user as { id: string })?.id) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    const body = await request.json()
+    const body = await request.json() as { clientId?: string; expiresInDays?: number }
     const validatedData = createInviteSchema.parse(body)
 
     // Verify client belongs to user
     const client = await prisma.client.findFirst({
       where: {
         id: validatedData.clientId,
-        userId: session.user.id
+        userId: (session?.user as { id: string })?.id
       }
     })
 
@@ -46,7 +46,7 @@ export async function POST(request: NextRequest) {
         clientId: validatedData.clientId,
         token,
         expiresAt,
-        userId: session.user.id
+        userId: (session?.user as { id: string })?.id
       },
       include: {
         client: {
@@ -78,7 +78,7 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { error: error.errors[0].message },
+        { error: error.errors[0]?.message || 'Validation error' },
         { status: 400 }
       )
     }
@@ -95,13 +95,13 @@ export async function POST(request: NextRequest) {
 export async function GET(_request: NextRequest) {
   try {
     const session = await getServerSession(authOptions)
-    if (!session?.user?.id) {
+    if (!(session?.user as { id: string })?.id) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
     const invites = await prisma.questionnaireInvite.findMany({
       where: {
-        userId: session.user.id
+        userId: (session?.user as { id: string })?.id
       },
       include: {
         client: {

@@ -1,7 +1,7 @@
 "use client"
 
-import { calculateCategoryScore } from "lib/property-evaluation"
 import { useEffect, useState } from "react"
+import { calculateCategoryScore } from "lib/property-evaluation"
 import PropertyEvaluationCard from "./PropertyEvaluationCard"
 
 interface PropertyEvaluationItem {

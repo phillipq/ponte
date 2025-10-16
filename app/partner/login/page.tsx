@@ -26,14 +26,14 @@ export default function PartnerLogin() {
         body: JSON.stringify(formData),
       })
 
-      const data = await response.json()
+      const data = await response.json() as { error?: string }
 
       if (response.ok) {
         // Store partner session
         localStorage.setItem("partnerSession", JSON.stringify(data))
         router.push("/partner/dashboard")
       } else {
-        setError((data as any)?.error || "Login failed")
+        setError(data.error || "Login failed")
       }
     } catch {
       setError("Login failed. Please try again.")

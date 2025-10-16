@@ -1,12 +1,12 @@
 "use client"
 
+import Image from "next/image"
+import { useParams, useRouter } from "next/navigation"
+import { useSession } from "next-auth/react"
+import { useEffect, useState } from "react"
 import Navigation from "components/Navigation"
 import PropertyEvaluationDashboard from "components/PropertyEvaluationDashboard"
 import PropertyFileManager from "components/PropertyFileManager"
-import { useSession } from "next-auth/react"
-import Image from "next/image"
-import { useParams, useRouter } from "next/navigation"
-import { useEffect, useState } from "react"
 
 interface FileInfo {
   url: string
@@ -14,6 +14,27 @@ interface FileInfo {
   storageName: string
   size: number
   type: string
+}
+
+interface Destination {
+  id: string
+  name: string
+  address: string
+  latitude: number
+  longitude: number
+  category: string
+  placeId?: string
+  createdAt: string
+}
+
+interface Distance {
+  destinationId: string
+  drivingDistance?: number
+  drivingDurationText?: string
+  transitDistance?: number
+  transitDurationText?: string
+  walkingDistance?: number
+  walkingDurationText?: string
 }
 
 interface Property {
@@ -139,8 +160,8 @@ export default function PropertyDetailPage() {
   const [saving, setSaving] = useState(false)
   const [availableTags, setAvailableTags] = useState<Array<{id: string, name: string, color: string}>>([])
   const [evaluationChanged, setEvaluationChanged] = useState(false)
-  const [destinations, setDestinations] = useState<unknown[]>([])
-  const [distances, setDistances] = useState<unknown[]>([])
+  const [destinations, setDestinations] = useState<Destination[]>([])
+  const [distances, setDistances] = useState<Distance[]>([])
   const [loadingDistances, setLoadingDistances] = useState(false)
   const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set())
 
@@ -209,7 +230,7 @@ export default function PropertyDetailPage() {
       console.log('Destinations response status:', response.status)
       
       if (response.ok) {
-        const data = await response.json() as { destinations: unknown[] }
+        const data = await response.json() as { destinations: Destination[] }
         console.log('Destinations API response:', data)
         console.log('Destinations API response destinations:', data.destinations)
         // Handle the API response format: { destinations: [...] }
@@ -254,7 +275,7 @@ export default function PropertyDetailPage() {
       const response = await fetch(`/api/properties/${property.id}/distances`)
       
       if (response.ok) {
-        const data = await response.json() as { distances: unknown[] }
+        const data = await response.json() as { distances: Distance[] }
         console.log('Distance fetch successful:', data.distances.length, 'distances')
         // Ensure distances is an array before setting it
         setDistances(Array.isArray(data.distances) ? data.distances : [])
@@ -1341,21 +1362,21 @@ export default function PropertyDetailPage() {
                   // Group destinations by category
                   console.log('Destinations in reduce:', destinations, 'Type:', typeof destinations, 'Is Array:', Array.isArray(destinations))
                   console.log('Distances in reduce:', distances, 'Type:', typeof distances, 'Is Array:', Array.isArray(distances))
-                  const categories = (destinations || []).reduce((acc: Record<string, any[]>, dest: any) => {
+                  const categories = (destinations || []).reduce((acc: Record<string, Destination[]>, dest: Destination) => {
                     const category = dest.category || 'Other'
                     if (!acc[category]) {
                       acc[category] = []
                     }
                     acc[category].push(dest)
                     return acc
-                  }, {} as Record<string, any[]>)
+                  }, {} as Record<string, Destination[]>)
 
                   console.log('Categories created:', categories)
                   console.log('Category entries:', Object.entries(categories))
 
-                  return Object.entries(categories).map(([category, categoryDestinations]: [string, any[]]) => {
-                    const categoryDistances = (distances || []).filter((d: any) => 
-                      categoryDestinations.some((dest: any) => dest.id === d.destinationId)
+                  return Object.entries(categories).map(([category, categoryDestinations]: [string, Destination[]]) => {
+                    const categoryDistances = (distances || []).filter((d: Distance) => 
+                      categoryDestinations.some((dest: Destination) => dest.id === d.destinationId)
                     )
                     
                     console.log(`Category ${category} - Destinations:`, categoryDestinations.length, 'Distances:', categoryDistances.length)
@@ -1388,15 +1409,15 @@ export default function PropertyDetailPage() {
                         {isExpanded && (
                           <div className="px-4 pb-4">
                             <div className="space-y-2">
-                              {categoryDistances.map((distance: any, _index) => {
-                                const destination = destinations.find((d: any) => d.id === distance.destinationId)
+                              {categoryDistances.map((distance: Distance, _index) => {
+                                const destination = destinations.find((d: Destination) => d.id === distance.destinationId)
                                 if (!destination) return null
                                 
                                 return (
                                   <div key={distance.destinationId} className="py-3 px-3 bg-ponte-cream rounded">
                                     <div className="flex justify-between items-start mb-2">
                                       <span className="text-sm font-medium text-ponte-black font-body">
-                                        {(destination as any).name}
+                                        {destination.name}
                                       </span>
                                     </div>
                                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs">

@@ -1,7 +1,7 @@
 "use client"
 
-import { useSession } from "next-auth/react"
 import { useRouter } from "next/navigation"
+import { useSession } from "next-auth/react"
 import { useEffect, useRef, useState } from "react"
 // Using traditional Google Maps API loading method
 import { Button } from "components/Button"
@@ -10,156 +10,153 @@ import Navigation from "components/Navigation"
 // Google Maps type declarations
 declare global {
   interface Window {
-    google: typeof google
+    google: {
+      maps: {
+        Map: new (element: HTMLElement, options: MapOptions) => Map
+        Marker: new (options: MarkerOptions) => Marker
+        InfoWindow: new (options?: InfoWindowOptions) => InfoWindow
+        LatLng: new (lat: number, lng: number) => LatLng
+        LatLngBounds: new () => LatLngBounds
+        Size: new (width: number, height: number) => Size
+        Point: new (x: number, y: number) => Point
+        PlacesService: new (map: Map) => PlacesService
+        MapTypeId: { SATELLITE: string }
+        ControlPosition: { TOP_RIGHT: number }
+        SymbolPath: { CIRCLE: number }
+        places: {
+          PlacesService: new (map: Map) => PlacesService
+          PlacesServiceStatus: { OK: string }
+        }
+        event: {
+          clearListeners: (instance: unknown, eventName?: string) => void
+        }
+      }
+    }
   }
 }
 
-declare namespace google {
-  namespace maps {
-    class Map {
-      constructor(element: HTMLElement, options: MapOptions)
-      getCenter(): LatLng | undefined
-      getBounds(): LatLngBounds | undefined
-      getDiv(): HTMLElement
-      setCenter(latLng: LatLng | LatLngLiteral): void
-      setZoom(zoom: number): void
-      addListener(eventName: string, handler: Function): MapsEventListener
-    }
-    
-    class Marker {
-      constructor(options: MarkerOptions)
-      setPosition(latLng: LatLng | LatLngLiteral): void
-      getPosition(): LatLng | undefined
-      setMap(map: Map | null): void
-      addListener(eventName: string, handler: Function): void
-    }
-    
-    class InfoWindow {
-      constructor(options?: InfoWindowOptions)
-      setContent(content: string): void
-      open(map: Map, marker?: Marker): void
-      close(): void
-      addListener(eventName: string, handler: Function): void
-    }
-    
-    class LatLng {
-      constructor(lat: number, lng: number)
-      lat(): number
-      lng(): number
-    }
-    
-    class LatLngBounds {
-      getNorthEast(): LatLng
-      getSouthWest(): LatLng
-    }
-    
-    class Size {
-      constructor(width: number, height: number)
-    }
-    
-    class Point {
-      constructor(x: number, y: number)
-    }
-    
-    interface MapOptions {
-      center: LatLng | LatLngLiteral
-      zoom: number
-      mapTypeId?: MapTypeId
-      mapTypeControl?: boolean
-      mapTypeControlOptions?: MapTypeControlOptions
-      streetViewControl?: boolean
-      fullscreenControl?: boolean
-      zoomControl?: boolean
-    }
-    
-    interface MarkerOptions {
-      position: LatLng | LatLngLiteral
-      map?: Map
-      title?: string
-      icon?: string | Icon | Symbol
-      draggable?: boolean
-    }
-    
-    interface InfoWindowOptions {
-      content?: string
-    }
-    
-    interface MapTypeControlOptions {
-      position?: ControlPosition
-    }
-    
-    interface Icon {
-      url: string
-      scaledSize?: Size
-      anchor?: Point
-    }
-    
-    interface Symbol {
-      path: SymbolPath
-      scale?: number
-      fillColor?: string
-      fillOpacity?: number
-      strokeColor?: string
-      strokeWeight?: number
-    }
-    
-    interface LatLngLiteral {
-      lat: number
-      lng: number
-    }
-    
-    interface MapMouseEvent {
-      latLng: LatLng | null
-      domEvent?: MouseEvent
-    }
-    
-    interface MapsEventListener {
-      remove(): void
-    }
-    
-    enum MapTypeId {
-      SATELLITE = 'satellite'
-    }
-    
-    enum ControlPosition {
-      TOP_RIGHT = 1
-    }
-    
-    enum SymbolPath {
-      CIRCLE = 0
-    }
-    
-    namespace places {
-      class PlacesService {
-        constructor(map: Map)
-        textSearch(request: TextSearchRequest, callback: (results: PlaceResult[] | null, status: PlacesServiceStatus) => void): void
-      }
-      
-      interface TextSearchRequest {
-        query: string
-        fields: string[]
-        locationBias?: LatLng | LatLngLiteral
-      }
-      
-      interface PlaceResult {
-        name?: string
-        formatted_address?: string
-        place_id?: string
-        geometry?: {
-          location: LatLng
-        }
-      }
-      
-      enum PlacesServiceStatus {
-        OK = 'OK'
-      }
-    }
-    
-    namespace event {
-      function clearListeners(instance: any, eventName?: string): void
-    }
+
+// Type definitions for Google Maps classes
+interface Map {
+  getCenter(): LatLng | undefined
+  getBounds(): LatLngBounds | undefined
+  getDiv(): HTMLElement
+  setCenter(latLng: LatLng | LatLngLiteral): void
+  setZoom(zoom: number): void
+  addListener(eventName: string, handler: (event: MapMouseEvent) => void): MapsEventListener
+}
+
+interface Marker {
+  setPosition(latLng: LatLng | LatLngLiteral): void
+  getPosition(): LatLng | undefined
+  setMap(map: Map | null): void
+  addListener(eventName: string, handler: (event: MapMouseEvent) => void): void
+}
+
+interface InfoWindow {
+  setContent(content: string): void
+  open(map: Map, marker?: Marker): void
+  close(): void
+  addListener(eventName: string, handler: (event: MapMouseEvent) => void): void
+}
+
+interface LatLng {
+  lat(): number
+  lng(): number
+}
+
+interface LatLngBounds {
+  getNorthEast(): LatLng
+  getSouthWest(): LatLng
+}
+
+interface Size {
+  width: number
+  height: number
+}
+
+interface Point {
+  x: number
+  y: number
+}
+
+interface PlacesService {
+  textSearch(request: TextSearchRequest, callback: (results: PlaceResult[] | null, status: PlacesServiceStatus) => void): void
+}
+
+interface MapOptions {
+  center: LatLng | LatLngLiteral
+  zoom: number
+  mapTypeId?: string
+  mapTypeControl?: boolean
+  mapTypeControlOptions?: MapTypeControlOptions
+  streetViewControl?: boolean
+  fullscreenControl?: boolean
+  zoomControl?: boolean
+}
+
+interface MarkerOptions {
+  position: LatLng | LatLngLiteral
+  map?: Map
+  title?: string
+  icon?: string | Icon | Symbol
+  draggable?: boolean
+}
+
+interface InfoWindowOptions {
+  content?: string
+}
+
+interface MapTypeControlOptions {
+  position?: number
+}
+
+interface Icon {
+  url: string
+  scaledSize?: Size
+  anchor?: Point
+}
+
+interface Symbol {
+  path: number
+  scale?: number
+  fillColor?: string
+  fillOpacity?: number
+  strokeColor?: string
+  strokeWeight?: number
+}
+
+interface LatLngLiteral {
+  lat: number
+  lng: number
+}
+
+interface MapMouseEvent {
+  latLng: LatLng | null
+  domEvent?: MouseEvent
+}
+
+interface MapsEventListener {
+  remove(): void
+}
+
+interface TextSearchRequest {
+  query: string
+  fields: string[]
+  locationBias?: LatLng | LatLngLiteral
+}
+
+interface PlaceResult {
+  name?: string
+  formatted_address?: string
+  place_id?: string
+  geometry?: {
+    location: LatLng
   }
 }
+
+type PlacesServiceStatus = string
+
 
 interface Property {
   id: string
@@ -192,22 +189,22 @@ export default function MapPage() {
   const { data: _session, status } = useSession()
   const router = useRouter()
   const mapRef = useRef<HTMLDivElement>(null)
-  const [map, setMap] = useState<google.maps.Map | null>(null)
+  const [map, setMap] = useState<Map | null>(null)
   const [properties, setProperties] = useState<Property[]>([])
   const [destinations, setDestinations] = useState<Destination[]>([])
   const [_selectedCategory, _setSelectedCategory] = useState<string>("")
   const [loading, setLoading] = useState(true)
   const [mapLoading, setMapLoading] = useState(true)
   const [scriptLoaded, setScriptLoaded] = useState(false)
-  const [mapPin, setMapPin] = useState<google.maps.Marker | null>(null)
+  const [mapPin, setMapPin] = useState<Marker | null>(null)
   const [showAddLocation, setShowAddLocation] = useState(false)
   const [locationType, setLocationType] = useState<"property" | "destination">("property")
   const [showInlineForm, setShowInlineForm] = useState(false)
   const [clickedLocation, setClickedLocation] = useState<{ lat: number; lng: number } | null>(null)
   
   // Marker management
-  const [propertyMarkers, setPropertyMarkers] = useState<google.maps.Marker[]>([])
-  const [destinationMarkers, setDestinationMarkers] = useState<google.maps.Marker[]>([])
+  const [propertyMarkers, setPropertyMarkers] = useState<Marker[]>([])
+  const [destinationMarkers, setDestinationMarkers] = useState<Marker[]>([])
   
   // Default map location (can be configured)
   const [defaultLocation, setDefaultLocation] = useState({
@@ -252,16 +249,16 @@ export default function MapPage() {
   })
   const [newTag, setNewTag] = useState("")
   const [searchQuery, setSearchQuery] = useState("")
-  const [searchResults, setSearchResults] = useState<google.maps.places.PlaceResult[]>([])
+  const [searchResults, setSearchResults] = useState<PlaceResult[]>([])
   const [showSearchResults, setShowSearchResults] = useState(false)
-  const [_placesService, _setPlacesService] = useState<google.maps.places.PlacesService | null>(null)
+  const [_placesService, _setPlacesService] = useState<PlacesService | null>(null)
   const [showLocationMenu, setShowLocationMenu] = useState(false)
   const [menuPosition, setMenuPosition] = useState({ x: 0, y: 0 })
   const [contextLocation, setContextLocation] = useState<{ lat: number; lng: number } | null>(null)
-  const [googleMapsPopup, setGoogleMapsPopup] = useState<google.maps.places.PlaceResult | null>(null)
+  const [googleMapsPopup, setGoogleMapsPopup] = useState<PlaceResult | null>(null)
   const [showGoogleMapsMenu, setShowGoogleMapsMenu] = useState(false)
   const [movingDestination, setMovingDestination] = useState<string | null>(null)
-  const [moveMarker, setMoveMarker] = useState<google.maps.Marker | null>(null)
+  const [moveMarker, setMoveMarker] = useState<Marker | null>(null)
 
   // Simplified property types with icons
   const propertyTypes = [
@@ -330,7 +327,7 @@ export default function MapPage() {
   useEffect(() => {
     if (!map) return
 
-    const handleMapClick = (event: google.maps.MapMouseEvent) => {
+    const handleMapClick = (event: MapMouseEvent) => {
       if (event.latLng && showInlineForm) {
         const lat = event.latLng.lat()
         const lng = event.latLng.lng()
@@ -340,7 +337,7 @@ export default function MapPage() {
         if (mapPin) {
           mapPin.setPosition({ lat, lng })
         } else {
-          const pin = new google.maps.Marker({
+          const pin = new window.google.maps.Marker({
             position: { lat, lng },
             map: map,
             draggable: true,
@@ -351,13 +348,13 @@ export default function MapPage() {
                   <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z" fill="#3B82F6"/>
                 </svg>
               `),
-              scaledSize: new google.maps.Size(24, 24),
-              anchor: new google.maps.Point(12, 24)
+              scaledSize: new window.google.maps.Size(24, 24),
+              anchor: new window.google.maps.Point(12, 24)
             }
           })
           
           // Add drag listener to update location
-          pin.addListener("dragend", (dragEvent: google.maps.MapMouseEvent) => {
+          pin.addListener("dragend", (dragEvent: MapMouseEvent) => {
             if (dragEvent.latLng) {
               const newLat = dragEvent.latLng.lat()
               const newLng = dragEvent.latLng.lng()
@@ -1800,7 +1797,7 @@ export default function MapPage() {
       }
 
       const service = new window.google.maps.places.PlacesService(map)
-      service.textSearch(request, (results: google.maps.places.PlaceResult[] | null, status: google.maps.places.PlacesServiceStatus) => {
+      service.textSearch(request, (results: PlaceResult[] | null, status: PlacesServiceStatus) => {
         if (status === window.google.maps.places.PlacesServiceStatus.OK && results) {
           setSearchResults(results)
           setShowSearchResults(true)
@@ -1815,7 +1812,7 @@ export default function MapPage() {
     }
   }
 
-  const handleSearchResultClick = (result: google.maps.places.PlaceResult) => {
+  const handleSearchResultClick = (result: PlaceResult) => {
     if (!map) return
 
     const location = result.geometry?.location
@@ -1835,7 +1832,7 @@ export default function MapPage() {
     setSearchQuery("")
   }
 
-  const _handleMapClick = (event: google.maps.MapMouseEvent) => {
+  const _handleMapClick = (event: MapMouseEvent) => {
     if (!event.latLng) return
 
     const lat = event.latLng.lat()
@@ -2160,7 +2157,7 @@ export default function MapPage() {
     setMoveMarker(tempMarker)
     
     // Add click listener to map for placing the marker
-    const moveListener = map?.addListener('click', (event: google.maps.MapMouseEvent) => {
+    const moveListener = map?.addListener('click', (event: MapMouseEvent) => {
       if (event.latLng) {
         tempMarker.setPosition(event.latLng)
       }
@@ -2168,7 +2165,7 @@ export default function MapPage() {
     
     // Store the listener for cleanup
     if (moveListener) {
-      ;(tempMarker as any).moveListener = moveListener
+      ;(tempMarker as { moveListener?: unknown }).moveListener = moveListener
     }
   }
 

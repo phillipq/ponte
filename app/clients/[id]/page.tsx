@@ -1,11 +1,11 @@
 "use client"
 
-import { Button } from "components/Button"
-import Navigation from "components/Navigation"
-import { useSession } from "next-auth/react"
 import Image from "next/image"
 import { useParams, useRouter } from "next/navigation"
+import { useSession } from "next-auth/react"
 import { useEffect, useState } from "react"
+import { Button } from "components/Button"
+import Navigation from "components/Navigation"
 
 interface Client {
   id: string

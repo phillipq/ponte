@@ -1,10 +1,10 @@
 "use client"
 
+import { useRouter } from "next/navigation"
+import { useSession } from "next-auth/react"
+import { useEffect, useState } from "react"
 import { Button } from "components/Button"
 import Navigation from "components/Navigation"
-import { useSession } from "next-auth/react"
-import { useRouter } from "next/navigation"
-import { useEffect, useState } from "react"
 
 export default function ChangePassword() {
   const { data: session, status } = useSession()

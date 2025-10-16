@@ -129,14 +129,14 @@ export default function NewPartnerProperty() {
   })
 
   const [newTag, setNewTag] = useState("")
-  const [geocodingResult, setGeocodingResult] = useState<unknown>(null)
-  const [geocodingLoading, setGeocodingLoading] = useState(false)
+  const [_geocodingResult, _setGeocodingResult] = useState<unknown>(null)
+  const [_geocodingLoading, _setGeocodingLoading] = useState(false)
   const [language, setLanguage] = useState<"en" | "it">("en")
   const [uploadedFiles, setUploadedFiles] = useState<File[]>([])
-  const [uploading, setUploading] = useState(false)
+  const [_uploading, _setUploading] = useState(false)
   const [uploadedPictures, setUploadedPictures] = useState<File[]>([])
   const [picturePreview, setPicturePreview] = useState<string[]>([])
-  const [uploadingPictures, setUploadingPictures] = useState(false)
+  const [_uploadingPictures, _setUploadingPictures] = useState(false)
 
   // Translations
   const translations = {
@@ -308,13 +308,13 @@ export default function NewPartnerProperty() {
     }
   }, [picturePreview])
 
-  const handleGeocode = async () => {
+  const _handleGeocode = async () => {
     if (!formData.streetAddress.trim() || !formData.city.trim()) {
       setError(t.requiredFields)
       return
     }
 
-    setGeocodingLoading(true)
+    _setGeocodingLoading(true)
     setError("")
 
     try {
@@ -330,7 +330,7 @@ export default function NewPartnerProperty() {
       const data = await response.json() as { result?: { latitude: string; longitude: string }; error?: string }
 
       if (response.ok) {
-        setGeocodingResult(data.result)
+        _setGeocodingResult(data.result)
         setFormData(prev => ({
           ...prev,
           latitude: data.result?.latitude || "",
@@ -342,11 +342,11 @@ export default function NewPartnerProperty() {
     } catch {
       setError(t.geocodingError)
     } finally {
-      setGeocodingLoading(false)
+      _setGeocodingLoading(false)
     }
   }
 
-  const addTag = () => {
+  const _addTag = () => {
     if (newTag.trim() && !formData.tags.includes(newTag.trim())) {
       setFormData(prev => ({
         ...prev,
@@ -356,19 +356,19 @@ export default function NewPartnerProperty() {
     }
   }
 
-  const removeTag = (tagToRemove: string) => {
+  const _removeTag = (tagToRemove: string) => {
     setFormData(prev => ({
       ...prev,
       tags: prev.tags.filter(tag => tag !== tagToRemove)
     }))
   }
 
-  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const _handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(event.target.files || [])
     setUploadedFiles(prev => [...prev, ...files])
   }
 
-  const removeFile = (index: number) => {
+  const _removeFile = (index: number) => {
     setUploadedFiles(prev => prev.filter((_, i) => i !== index))
   }
 
@@ -562,7 +562,7 @@ export default function NewPartnerProperty() {
           tags: [],
           pictures: []
         })
-        setGeocodingResult(null)
+        _setGeocodingResult(null)
         setUploadedPictures([])
         setPicturePreview([])
         setUploadedFiles([])

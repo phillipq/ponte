@@ -747,6 +747,9 @@ export default function AnalysisPage() {
                                     setSelectedProperties(selectedProperties.filter(id => id !== property.id))
                                   }
                                 }}
+                                onClick={(e) => {
+                                  e.stopPropagation()
+                                }}
                                 className="rounded"
                               />
                             </td>

@@ -738,6 +738,9 @@ export default function PropertiesPage() {
                               e.stopPropagation()
                               handleSelectProperty(property.id)
                             }}
+                            onClick={(e) => {
+                              e.stopPropagation()
+                            }}
                             className="rounded border-ponte-sand text-ponte-terracotta focus:ring-ponte-terracotta"
                           />
                         </td>

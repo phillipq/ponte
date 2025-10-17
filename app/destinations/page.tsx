@@ -718,6 +718,9 @@ export default function DestinationsPage() {
                             e.stopPropagation()
                             handleSelectDestination(destination.id)
                           }}
+                          onClick={(e) => {
+                            e.stopPropagation()
+                          }}
                           className="rounded border-ponte-sand text-ponte-terracotta focus:ring-ponte-terracotta"
                         />
                       </td>

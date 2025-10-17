@@ -2,8 +2,8 @@
 
 import Image from "next/image"
 import { useRouter } from "next/navigation"
-import { signIn } from "next-auth/react"
-import { useState } from "react"
+import { signIn, useSession } from "next-auth/react"
+import { useEffect, useState } from "react"
 import { Button } from "components/Button"
 
 export default function SignIn() {
@@ -12,6 +12,17 @@ export default function SignIn() {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState("")
   const router = useRouter()
+  const { data: session, status } = useSession()
+
+  // Redirect if already authenticated
+  useEffect(() => {
+    if (status === "authenticated" && session?.user) {
+      router.push("/dashboard")
+    }
+  }, [status, session, router])
+
+  // Show loading when session is being established after successful login
+  const isSessionLoading = status === "loading" && isLoading
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -27,12 +38,17 @@ export default function SignIn() {
 
       if (result?.error) {
         setError("Invalid credentials")
+        setIsLoading(false)
+      } else if (result?.ok) {
+        // Don't redirect immediately - let the useEffect handle it
+        // when the session becomes available
+        console.log("Login successful, waiting for session...")
       } else {
-        router.push("/dashboard")
+        setError("Login failed. Please try again.")
+        setIsLoading(false)
       }
     } catch {
       setError("An error occurred. Please try again.")
-    } finally {
       setIsLoading(false)
     }
   }
@@ -105,10 +121,10 @@ export default function SignIn() {
           <div>
             <Button
               type="submit"
-              disabled={isLoading}
+              disabled={isLoading || isSessionLoading}
               className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-ponte-terracotta hover:bg-accent-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-ponte-terracotta disabled:opacity-50"
             >
-              {isLoading ? "Signing in..." : "Sign in"}
+              {isSessionLoading ? "Establishing session..." : isLoading ? "Signing in..." : "Sign in"}
             </Button>
           </div>
 

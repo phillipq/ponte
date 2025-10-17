@@ -385,8 +385,8 @@ export default function Dashboard() {
 
           <div className="bg-white rounded-lg shadow p-6 border border-ponte-sand">
             <div className="flex items-center">
-              <div className="p-2 bg-green-500 rounded-lg">
-                <span className="text-white text-lg">🏢</span>
+              <div className="p-2 bg-ponte-terracotta rounded-lg">
+                <Image src="/logos/icon-property.png" alt="Partner Properties" width={24} height={24} className="w-6 h-6" />
               </div>
               <div className="ml-4">
                 <p className="text-sm font-medium text-ponte-olive">Partner Properties (30 days)</p>

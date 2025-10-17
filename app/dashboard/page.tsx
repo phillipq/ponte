@@ -53,6 +53,7 @@ export default function Dashboard() {
   const [properties, setProperties] = useState<Property[]>([])
   const [destinations, setDestinations] = useState<Destination[]>([])
   const [clients, setClients] = useState<Client[]>([])
+  const [partnerProperties, setPartnerProperties] = useState<Property[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -68,10 +69,11 @@ export default function Dashboard() {
 
   const fetchData = async () => {
     try {
-      const [propertiesRes, destinationsRes, clientsRes] = await Promise.all([
+      const [propertiesRes, destinationsRes, clientsRes, partnerPropertiesRes] = await Promise.all([
         fetch("/api/properties"),
         fetch("/api/destinations"),
-        fetch("/api/clients")
+        fetch("/api/clients"),
+        fetch("/api/properties?partner=true")
       ])
 
       if (propertiesRes.ok) {
@@ -87,6 +89,11 @@ export default function Dashboard() {
       if (clientsRes.ok) {
         const data = await clientsRes.json() as { clients?: Client[] }
         setClients(data.clients || [])
+      }
+
+      if (partnerPropertiesRes.ok) {
+        const data = await partnerPropertiesRes.json() as { properties?: Property[] }
+        setPartnerProperties(data.properties || [])
       }
     } catch (error) {
       console.error("Error fetching data:", error)
@@ -218,6 +225,16 @@ export default function Dashboard() {
     }
   }
 
+  const getPartnerPropertiesLast30Days = () => {
+    const thirtyDaysAgo = new Date()
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
+    
+    return partnerProperties.filter(property => {
+      const propertyDate = new Date(property.createdAt)
+      return propertyDate >= thirtyDaysAgo
+    }).length
+  }
+
   // Simple pie chart component
   const PieChart = ({ data, title, getInfo }: { data: StatItem[], title: string, getInfo: (item: string) => { label: string, icon: string } }) => {
     const total = data.reduce((sum, item) => sum + item.count, 0)
@@ -317,7 +334,7 @@ export default function Dashboard() {
         </div>
 
         {/* Summary Statistics */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-6 mb-8">
           <div className="bg-white rounded-lg shadow p-6 border border-ponte-sand">
             <div className="flex items-center">
               <div className="p-2 bg-ponte-terracotta rounded-lg">
@@ -362,6 +379,18 @@ export default function Dashboard() {
               <div className="ml-4">
                 <p className="text-sm font-medium text-ponte-olive">Total Clients</p>
                 <p className="text-2xl font-bold text-ponte-black">{getClientStats().totalClients}</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-white rounded-lg shadow p-6 border border-ponte-sand">
+            <div className="flex items-center">
+              <div className="p-2 bg-green-500 rounded-lg">
+                <span className="text-white text-lg">🏢</span>
+              </div>
+              <div className="ml-4">
+                <p className="text-sm font-medium text-ponte-olive">Partner Properties (30 days)</p>
+                <p className="text-2xl font-bold text-ponte-black">{getPartnerPropertiesLast30Days()}</p>
               </div>
             </div>
           </div>

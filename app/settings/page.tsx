@@ -1809,6 +1809,41 @@ export default function SettingsPage() {
                     </div>
                   </div>
 
+                  {/* Partner Login Information */}
+                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+                    <div className="flex items-start">
+                      <div className="flex-shrink-0">
+                        <div className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center">
+                          <span className="text-white text-sm">ℹ️</span>
+                        </div>
+                      </div>
+                      <div className="ml-3">
+                        <h4 className="text-sm font-medium text-blue-900">Partner Login Information</h4>
+                        <div className="mt-2 text-sm text-blue-800">
+                          <p className="mb-2">
+                            <strong>All partner credentials are managed by Ponte.</strong> Share the login URL below with your partners so they can access their accounts.
+                          </p>
+                          <div className="bg-white border border-blue-200 rounded p-3 mt-2">
+                            <p className="text-xs text-blue-600 mb-1">Partner Login URL:</p>
+                            <code className="text-sm font-mono text-blue-900 break-all">
+                              {typeof window !== 'undefined' ? window.location.origin : 'https://ponte-nine.vercel.app'}/partner/login
+                            </code>
+                            <button
+                              onClick={() => {
+                                const url = typeof window !== 'undefined' ? window.location.origin : 'https://ponte-nine.vercel.app'
+                                navigator.clipboard.writeText(`${url}/partner/login`)
+                                alert('Login URL copied to clipboard!')
+                              }}
+                              className="ml-2 text-xs bg-blue-100 hover:bg-blue-200 text-blue-800 px-2 py-1 rounded"
+                            >
+                              Copy
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
                   {/* Realtors List */}
                   <div className="bg-white rounded-lg shadow-lg border border-ponte-sand">
                     <div className="px-6 py-4 border-b border-ponte-sand">

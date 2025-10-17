@@ -202,7 +202,7 @@ const updatePropertySchema = z.object({
 })
 
 // GET /api/properties - Get all properties for the user
-export async function GET(_request: NextRequest) {
+export async function GET(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions)
     
@@ -215,9 +215,21 @@ export async function GET(_request: NextRequest) {
       return NextResponse.json({ error: "User ID not found" }, { status: 401 })
     }
 
+    // Check for partner filter
+    const { searchParams } = new URL(request.url)
+    const partnerFilter = searchParams.get('partner')
+
+    // Build where clause based on filter
+    let whereClause = {}
+    if (partnerFilter === 'true') {
+      whereClause = {
+        partnerId: { not: null }
+      }
+    }
+
     // All users can see all properties
     const properties = await prisma.property.findMany({
-      where: {},
+      where: whereClause,
       include: {
         partner: {
           select: {

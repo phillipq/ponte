@@ -7,6 +7,7 @@ import { prisma } from "lib/prisma"
 const distanceMatrixSchema = z.object({
   propertyId: z.string().min(1, "Property ID is required"),
   destinationIds: z.array(z.string()).min(1, "At least one destination ID is required"),
+  avoidTolls: z.boolean().optional().default(false),
 })
 
 interface DistanceMatrixResult {
@@ -29,7 +30,7 @@ export async function POST(request: NextRequest) {
 
     const userId = (session.user as { id: string }).id
     const body = await request.json()
-    const { propertyId, destinationIds } = distanceMatrixSchema.parse(body)
+    const { propertyId, destinationIds, avoidTolls } = distanceMatrixSchema.parse(body)
 
     const apiKey = process.env.GOOGLE_MAPS_API_KEY || process.env.GOOGLE_MAPS_GEOCODING_API_KEY
     if (!apiKey) {
@@ -95,9 +96,14 @@ export async function POST(request: NextRequest) {
       const origins = `${property.latitude},${property.longitude}`
       const destinationsParam = newDestinations.map((d: unknown) => `${(d as { latitude: number }).latitude},${(d as { longitude: number }).longitude}`).join('|')
       
-      const response = await fetch(
-        `https://maps.googleapis.com/maps/api/distancematrix/json?origins=${origins}&destinations=${destinationsParam}&units=metric&key=${apiKey}`
-      )
+      // Build URL with optional toll avoidance
+      let url = `https://maps.googleapis.com/maps/api/distancematrix/json?origins=${origins}&destinations=${destinationsParam}&units=metric`
+      if (avoidTolls) {
+        url += '&avoid=tolls'
+      }
+      url += `&key=${apiKey}`
+      
+      const response = await fetch(url)
 
       const data = await response.json() as unknown
 

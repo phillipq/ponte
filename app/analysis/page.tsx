@@ -157,6 +157,7 @@ export default function AnalysisPage() {
   const [tourSteps, setTourSteps] = useState<unknown[]>([])
   const [draggedStep, setDraggedStep] = useState<number | null>(null)
   const [optimizeRoute, setOptimizeRoute] = useState(true)
+  const [avoidTolls, setAvoidTolls] = useState(false)
   const [mapInstance, setMapInstance] = useState<unknown>(null)
   const [directionsService, setDirectionsService] = useState<unknown>(null)
   const [directionsRenderer, setDirectionsRenderer] = useState<unknown>(null)
@@ -340,7 +341,7 @@ export default function AnalysisPage() {
       const response = await fetch('/api/tours/calculate-route', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ tourSteps, optimize: optimizeRoute })
+        body: JSON.stringify({ tourSteps, optimize: optimizeRoute, avoidTolls })
       })
 
       if (response.ok) {
@@ -1215,7 +1216,7 @@ export default function AnalysisPage() {
                     <div className="text-sm text-ponte-olive">
                       Drag and drop to reorder your tour route. The first location will be your starting point.
                     </div>
-                    <div className="flex items-center space-x-2">
+                    <div className="flex items-center space-x-4">
                       <label className="flex items-center text-sm text-ponte-black">
                         <input
                           type="checkbox"
@@ -1225,8 +1226,18 @@ export default function AnalysisPage() {
                         />
                         Optimize Route
                       </label>
+                      <label className="flex items-center text-sm text-ponte-black">
+                        <input
+                          type="checkbox"
+                          checked={avoidTolls}
+                          onChange={(e) => setAvoidTolls(e.target.checked)}
+                          className="mr-2 rounded border-ponte-sand text-ponte-terracotta focus:ring-ponte-terracotta"
+                        />
+                        Avoid Tolls
+                      </label>
                       <div className="text-xs text-ponte-olive">
                         {optimizeRoute ? 'Google will find the most efficient order' : 'Use your custom order'}
+                        {avoidTolls && ' • Avoiding toll roads'}
                       </div>
                     </div>
                   </div>

@@ -164,6 +164,7 @@ export default function PropertyDetailPage() {
   const [distances, setDistances] = useState<Distance[]>([])
   const [loadingDistances, setLoadingDistances] = useState(false)
   const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set())
+  const [avoidTolls, setAvoidTolls] = useState(false)
 
   useEffect(() => {
     if (status === "unauthenticated") {
@@ -295,6 +296,46 @@ export default function PropertyDetailPage() {
       console.error('Error fetching distances:', error)
       alert('Failed to fetch distances. Please check your connection and try again.')
       setDistances([])
+    } finally {
+      setLoadingDistances(false)
+    }
+  }
+
+  const calculateDistances = async () => {
+    if (!property || destinations.length === 0) {
+      console.log('Cannot calculate distances: missing property or destinations')
+      return
+    }
+    
+    setLoadingDistances(true)
+    try {
+      console.log('Calculating distances for property:', property.id, 'with toll avoidance:', avoidTolls)
+      
+      const destinationIds = destinations.map(d => d.id)
+      
+      const response = await fetch('/api/distance-matrix', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          propertyId: property.id, 
+          destinationIds,
+          avoidTolls 
+        })
+      })
+      
+      if (response.ok) {
+        const data = await response.json() as { results: unknown[] }
+        console.log('Distance calculation successful:', data.results.length, 'results')
+        // Refresh the distances after calculation
+        await fetchDistances()
+      } else {
+        const errorData = await response.json()
+        console.error('Distance calculation failed:', errorData)
+        alert(`Failed to calculate distances: ${(errorData as { error?: string }).error || 'Unknown error'}`)
+      }
+    } catch (error) {
+      console.error('Error calculating distances:', error)
+      alert('Failed to calculate distances')
     } finally {
       setLoadingDistances(false)
     }
@@ -1342,13 +1383,31 @@ export default function PropertyDetailPage() {
           <div className="bg-white rounded-lg shadow-sm border border-ponte-sand p-6">
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-lg font-semibold text-ponte-black font-body">Distance Details</h3>
-              <button
-                onClick={fetchDistances}
-                disabled={loadingDistances}
-                className="px-4 py-2 bg-ponte-terracotta text-white rounded-md hover:bg-ponte-terracotta/90 disabled:opacity-50 text-sm font-body"
-              >
-                {loadingDistances ? 'Loading...' : 'Refresh Distances'}
-              </button>
+              <div className="flex items-center space-x-3">
+                <label className="flex items-center text-sm text-ponte-black">
+                  <input
+                    type="checkbox"
+                    checked={avoidTolls}
+                    onChange={(e) => setAvoidTolls(e.target.checked)}
+                    className="mr-2 rounded border-ponte-sand text-ponte-terracotta focus:ring-ponte-terracotta"
+                  />
+                  Avoid Tolls
+                </label>
+                <button
+                  onClick={calculateDistances}
+                  disabled={loadingDistances}
+                  className="px-4 py-2 bg-ponte-olive text-white rounded-md hover:bg-ponte-olive/90 disabled:opacity-50 text-sm font-body"
+                >
+                  {loadingDistances ? 'Calculating...' : 'Calculate Distances'}
+                </button>
+                <button
+                  onClick={fetchDistances}
+                  disabled={loadingDistances}
+                  className="px-4 py-2 bg-ponte-terracotta text-white rounded-md hover:bg-ponte-terracotta/90 disabled:opacity-50 text-sm font-body"
+                >
+                  {loadingDistances ? 'Loading...' : 'Refresh Distances'}
+                </button>
+              </div>
             </div>
             
             {loadingDistances ? (

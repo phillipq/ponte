@@ -3,12 +3,15 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from 'lib/auth'
 import { prisma } from 'lib/prisma'
 
-export async function POST(_request: NextRequest) {
+export async function POST(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions)
     if (!session?.user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
+
+    // Get request body for toll avoidance option
+    const { avoidTolls = false } = await request.json() as { avoidTolls?: boolean }
 
     // Get all properties and destinations
     const [properties, destinations] = await Promise.all([
@@ -49,7 +52,8 @@ export async function POST(_request: NextRequest) {
             property.latitude,
             property.longitude,
             destination.latitude,
-            destination.longitude
+            destination.longitude,
+            avoidTolls
           )
 
           if (distance) {
@@ -95,7 +99,8 @@ async function calculateDistance(
   originLat: number,
   originLng: number,
   destLat: number,
-  destLng: number
+  destLng: number,
+  avoidTolls: boolean = false
 ) {
   const googleMapsApiKey = process.env.GOOGLE_MAPS_API_KEY
   if (!googleMapsApiKey) {
@@ -106,10 +111,14 @@ async function calculateDistance(
   const destination = `${destLat},${destLng}`
 
   try {
-    // Calculate driving distance
-    const drivingResponse = await fetch(
-      `https://maps.googleapis.com/maps/api/distancematrix/json?origins=${origin}&destinations=${destination}&mode=driving&key=${googleMapsApiKey}`
-    )
+    // Calculate driving distance (with optional toll avoidance)
+    let drivingUrl = `https://maps.googleapis.com/maps/api/distancematrix/json?origins=${origin}&destinations=${destination}&mode=driving`
+    if (avoidTolls) {
+      drivingUrl += '&avoid=tolls'
+    }
+    drivingUrl += `&key=${googleMapsApiKey}`
+    
+    const drivingResponse = await fetch(drivingUrl)
     const drivingData = await drivingResponse.json() as { rows?: { elements?: { distance?: { value: number; text: string }; duration?: { value: number; text: string } }[] }[] }
 
     // Calculate transit distance

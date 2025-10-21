@@ -132,9 +132,12 @@ async function calculatePropertyDistances(properties: unknown[], destinations: u
         } else {
           // Calculate new distance using Google Distance Matrix API
           console.log(`Calculating new distance for ${(property as { name: string }).name} to ${(destination as { name: string }).name}`)
-          const response = await fetch(
-            `https://maps.googleapis.com/maps/api/distancematrix/json?origins=${(property as { latitude: number }).latitude},${(property as { longitude: number }).longitude}&destinations=${(destination as { latitude: number }).latitude},${(destination as { longitude: number }).longitude}&units=metric&key=${process.env.GOOGLE_MAPS_API_KEY}`
-          )
+          // Build URL with optional toll avoidance (default to false for AI analysis)
+          let url = `https://maps.googleapis.com/maps/api/distancematrix/json?origins=${(property as { latitude: number }).latitude},${(property as { longitude: number }).longitude}&destinations=${(destination as { latitude: number }).latitude},${(destination as { longitude: number }).longitude}&units=metric`
+          // Note: AI analysis uses standard routes (not toll-avoiding) for consistency
+          url += `&key=${process.env.GOOGLE_MAPS_API_KEY}`
+          
+          const response = await fetch(url)
           
           const data = await response.json() as { rows?: { elements?: { status?: string; distance?: { value: number; text: string }; duration?: { value: number; text: string } }[] }[] }
           

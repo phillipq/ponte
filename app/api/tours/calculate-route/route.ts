@@ -11,7 +11,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    const { tourSteps } = await request.json() as { tourSteps?: unknown[] }
+    const { tourSteps, avoidTolls = false } = await request.json() as { tourSteps?: unknown[]; avoidTolls?: boolean }
 
     if (!tourSteps || tourSteps.length < 2) {
       return NextResponse.json({ error: "At least 2 stops required" }, { status: 400 })
@@ -56,13 +56,14 @@ export async function POST(request: NextRequest) {
       const nextStep = validSteps[i + 1] as { latitude: number; longitude: number; name?: string; type?: string; address?: string }
 
       try {
-        // Get driving data
+        // Get driving data (with toll avoidance if requested)
         const drivingData = await calculateDistance(
           currentStep.latitude,
           currentStep.longitude,
           nextStep.latitude,
           nextStep.longitude,
-          'driving'
+          'driving',
+          avoidTolls
         )
 
         // Get transit data
@@ -199,7 +200,8 @@ async function calculateDistance(
   originLng: number,
   destLat: number,
   destLng: number,
-  mode: 'driving' | 'transit' | 'walking'
+  mode: 'driving' | 'transit' | 'walking',
+  avoidTolls: boolean = false
 ): Promise<{ distance: number; duration: number } | null> {
   try {
     const apiKey = process.env.GOOGLE_MAPS_GEOCODING_API_KEY || process.env.GOOGLE_MAPS_API_KEY
@@ -209,7 +211,13 @@ async function calculateDistance(
 
     const origins = `${originLat},${originLng}`
     const destinations = `${destLat},${destLng}`
-    const url = `https://maps.googleapis.com/maps/api/distancematrix/json?origins=${origins}&destinations=${destinations}&units=metric&mode=${mode}&key=${apiKey}`
+    
+    // Build URL with optional toll avoidance
+    let url = `https://maps.googleapis.com/maps/api/distancematrix/json?origins=${origins}&destinations=${destinations}&units=metric&mode=${mode}`
+    if (mode === 'driving' && avoidTolls) {
+      url += '&avoid=tolls'
+    }
+    url += `&key=${apiKey}`
 
     const response = await fetch(url)
 

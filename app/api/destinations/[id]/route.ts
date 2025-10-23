@@ -89,8 +89,7 @@ export async function GET(
 
     const destination = await prisma.destination.findFirst({
       where: {
-        id: destinationId,
-        userId: userId
+        id: destinationId
       }
     })
 
@@ -127,7 +126,6 @@ export async function PUT(
     const existingDestination = await prisma.destination.findFirst({
       where: {
         id: destinationId,
-        userId: userId
       }
     })
 
@@ -191,7 +189,6 @@ export async function DELETE(
     const existingDestination = await prisma.destination.findFirst({
       where: {
         id: destinationId,
-        userId: userId
       }
     })
 

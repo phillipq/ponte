@@ -15,11 +15,6 @@ export async function GET(_request: NextRequest) {
     const userId = (session.user as { id: string }).id
 
     const distances = await prisma.propertyDistance.findMany({
-      where: {
-        property: {
-          userId: userId
-        }
-      },
       include: {
         property: true,
         destination: true

@@ -16,8 +16,7 @@ export async function GET(
     const { id } = await params
     const property = await prisma.property.findFirst({
       where: {
-        id: id,
-        userId: (session.user as { id: string }).id
+        id: id
       }
     })
 
@@ -69,8 +68,7 @@ export async function PUT(
 
     const property = await prisma.property.update({
       where: {
-        id: id,
-        userId: (session.user as { id: string }).id
+        id: id
       },
       data: {
         name,
@@ -147,8 +145,7 @@ export async function DELETE(
     // Delete the property (related PropertyDistance records will be deleted due to onDelete: Cascade)
     await prisma.property.delete({
       where: {
-        id: id,
-        userId: (session.user as { id: string }).id
+        id: id
       }
     })
 

@@ -42,8 +42,7 @@ export async function GET(
     
     const client = await prisma.client.findFirst({
       where: {
-        id,
-        userId: user.id
+        id
       }
     })
 
@@ -89,8 +88,7 @@ export async function PUT(
 
     const client = await prisma.client.updateMany({
       where: {
-        id,
-        userId: user.id
+        id
       },
       data: validatedData
     })
@@ -141,8 +139,7 @@ export async function DELETE(
     const { id } = await params
     const client = await prisma.client.deleteMany({
       where: {
-        id,
-        userId: user.id
+        id
       }
     })
 

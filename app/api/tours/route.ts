@@ -11,7 +11,6 @@ export async function GET() {
     }
 
     const tours = await prisma.tour.findMany({
-      where: { userId: (session.user as { id: string }).id },
       orderBy: { createdAt: "desc" }
     })
 

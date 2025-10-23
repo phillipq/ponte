@@ -15,9 +15,7 @@ export async function POST(request: NextRequest) {
 
     // Get all properties and destinations
     const [properties, destinations] = await Promise.all([
-      prisma.property.findMany({
-        where: { userId: (session.user as { id: string }).id }
-      }),
+      prisma.property.findMany(),
       prisma.destination.findMany()
     ])
 

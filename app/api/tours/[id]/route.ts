@@ -20,11 +20,10 @@ export async function PUT(
       return NextResponse.json({ error: "Tour name is required" }, { status: 400 })
     }
     
-    // Verify tour belongs to user before updating
+    // Check if tour exists
     const tour = await prisma.tour.findFirst({
       where: { 
-        id: id,
-        userId: (session.user as { id: string }).id 
+        id: id
       }
     })
     
@@ -57,11 +56,10 @@ export async function DELETE(
 
     const { id } = await params
     
-    // Verify tour belongs to user before deleting
+    // Check if tour exists
     const tour = await prisma.tour.findFirst({
       where: { 
-        id: id,
-        userId: (session.user as { id: string }).id 
+        id: id
       }
     })
     

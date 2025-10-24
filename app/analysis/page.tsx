@@ -242,9 +242,14 @@ export default function AnalysisPage() {
         
         setMapInstance(newMap)
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        setDirectionsService(new (window as any).google.maps.DirectionsService())
+        const directionsService = new (window as any).google.maps.DirectionsService()
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        setDirectionsRenderer(new (window as any).google.maps.DirectionsRenderer())
+        const directionsRenderer = new (window as any).google.maps.DirectionsRenderer({
+          map: newMap,
+          suppressMarkers: false
+        })
+        setDirectionsService(directionsService)
+        setDirectionsRenderer(directionsRenderer)
         setMapInitializing(false)
         
         console.log("Tour planner: Map created successfully")
@@ -292,7 +297,8 @@ export default function AnalysisPage() {
     try {
       const response = await fetch('/api/analysis/calculate-distances', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' }
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ avoidTolls })
       })
 
       if (response.ok) {
@@ -348,57 +354,7 @@ export default function AnalysisPage() {
         const data = await response.json() as { route: unknown[] }
         setTourRoute((data as { route: unknown[] }).route)
         
-        // Display route on map using Directions API
-        if (mapInstance && directionsService && directionsRenderer && tourSteps.length >= 2) {
-          try {
-            const waypoints = tourSteps.slice(1, -1).map(step => {
-              const stepData = step as { latitude: number; longitude: number }
-              return {
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                location: new (window as any).google.maps.LatLng(stepData.latitude, stepData.longitude),
-                stopover: true
-              }
-            })
-
-            const firstStep = tourSteps[0] as { latitude: number; longitude: number }
-            const lastStep = tourSteps[tourSteps.length - 1] as { latitude: number; longitude: number }
-            
-            const request = {
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              origin: new (window as any).google.maps.LatLng(firstStep.latitude, firstStep.longitude),
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              destination: new (window as any).google.maps.LatLng(lastStep.latitude, lastStep.longitude),
-              waypoints: waypoints,
-              optimizeWaypoints: optimizeRoute && waypoints.length > 0,
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              travelMode: (window as any).google.maps.TravelMode.DRIVING
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            } as any
-
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            (directionsService as any).route(request, (result: any, status: any) => {
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              if (status === (window as any).google.maps.DirectionsStatus.OK && result) {
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                (directionsRenderer as any).setMap(mapInstance)
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                (directionsRenderer as any).setDirections(result)
-                console.log("Tour planner: Route displayed on map successfully")
-              } else {
-                console.error("Tour planner: Directions request failed:", status)
-                // Fallback: show markers instead
-                showMarkersOnMap()
-              }
-            })
-          } catch (error) {
-            console.error("Tour planner: Error displaying route on map:", error)
-            // Fallback: show markers instead
-            showMarkersOnMap()
-          }
-        } else {
-          // Fallback: show markers instead
-          showMarkersOnMap()
-        }
+        // The map will be updated automatically by the useEffect when tourRoute changes
       } else {
         const errorData = await response.json() as { error?: string }
         alert(errorData.error || "Failed to calculate tour route")
@@ -431,6 +387,65 @@ export default function AnalysisPage() {
       showMarkersOnMap()
     }
   }, [mapInstance, tourSteps])
+
+  // Display route on map when tour route changes
+  useEffect(() => {
+    console.log("Map display useEffect triggered:", {
+      mapInstance: !!mapInstance,
+      directionsService: !!directionsService,
+      directionsRenderer: !!directionsRenderer,
+      tourRouteLength: tourRoute.length,
+      tourStepsLength: tourSteps.length
+    })
+    
+    if (mapInstance && directionsService && directionsRenderer && tourRoute.length > 0 && tourSteps.length >= 2) {
+      try {
+        const waypoints = tourSteps.slice(1, -1).map(step => {
+          const stepData = step as { latitude: number; longitude: number }
+          return {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            location: new (window as any).google.maps.LatLng(stepData.latitude, stepData.longitude),
+            stopover: true
+          }
+        })
+
+        const firstStep = tourSteps[0] as { latitude: number; longitude: number }
+        const lastStep = tourSteps[tourSteps.length - 1] as { latitude: number; longitude: number }
+        
+        const request = {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          origin: new (window as any).google.maps.LatLng(firstStep.latitude, firstStep.longitude),
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          destination: new (window as any).google.maps.LatLng(lastStep.latitude, lastStep.longitude),
+          waypoints: waypoints,
+          optimizeWaypoints: optimizeRoute && waypoints.length > 0,
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          travelMode: (window as any).google.maps.TravelMode.DRIVING,
+          avoidHighways: false,
+          avoidTolls: avoidTolls
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        } as any
+
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (directionsService as any).route(request, (result: any, status: any) => {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          if (status === (window as any).google.maps.DirectionsStatus.OK && result) {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            (directionsRenderer as any).setDirections(result)
+            console.log("Tour planner: Route displayed on map successfully")
+          } else {
+            console.error("Tour planner: Directions request failed:", status)
+            // Fallback: show markers instead
+            showMarkersOnMap()
+          }
+        })
+      } catch (error) {
+        console.error("Tour planner: Error displaying route on map:", error)
+        // Fallback: show markers instead
+        showMarkersOnMap()
+      }
+    }
+  }, [mapInstance, directionsService, directionsRenderer, tourRoute, tourSteps, optimizeRoute, avoidTolls])
 
   // Build tour steps when properties or destinations change
   useEffect(() => {
@@ -629,14 +644,25 @@ export default function AnalysisPage() {
               <p className="mt-2 text-ponte-olive">Calculate distances and plan property tours</p>
             </div>
             {activeTab === 'analysis' && (
-              <div className="flex gap-3">
-                <button
-                  onClick={calculateDistances}
-                  disabled={calculating || properties.length === 0 || destinations.length === 0}
-                  className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-ponte-terracotta hover:bg-accent-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-ponte-terracotta disabled:opacity-50"
-                >
-                  {calculating ? "Calculating..." : "Calculate Distances"}
-                </button>
+              <div className="flex flex-col gap-3">
+                <div className="flex items-center gap-4">
+                  <button
+                    onClick={calculateDistances}
+                    disabled={calculating || properties.length === 0 || destinations.length === 0}
+                    className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-ponte-terracotta hover:bg-accent-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-ponte-terracotta disabled:opacity-50"
+                  >
+                    {calculating ? "Calculating..." : "Calculate Distances"}
+                  </button>
+                  <label className="flex items-center text-sm text-ponte-black">
+                    <input
+                      type="checkbox"
+                      checked={avoidTolls}
+                      onChange={(e) => setAvoidTolls(e.target.checked)}
+                      className="mr-2 rounded border-ponte-sand text-ponte-terracotta focus:ring-ponte-terracotta"
+                    />
+                    Avoid Tolls
+                  </label>
+                </div>
                 {calculationProgress && (
                   <div className="text-sm text-ponte-olive mt-2">
                     {calculationProgress}
@@ -908,26 +934,26 @@ export default function AnalysisPage() {
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap">
                               <div className="text-sm text-ponte-black">
-                                {formatDuration(distance.durationMinutes)}
+                                {distance.drivingDuration ? formatDuration(distance.drivingDuration / 60) : 'N/A'}
                               </div>
                               <div className="text-xs text-ponte-olive">
-                                {formatDistance(distance.distanceKm)}
+                                {distance.drivingDistance ? formatDistanceFromMeters(distance.drivingDistance) : 'N/A'}
                               </div>
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap">
                               <div className="text-sm text-ponte-black">
-                                {formatDuration(distance.transitDurationMinutes)}
+                                {distance.transitDuration ? formatDuration(distance.transitDuration / 60) : 'N/A'}
                               </div>
                               <div className="text-xs text-ponte-olive">
-                                {formatDistanceFromMeters(distance.transitDistance)}
+                                {distance.transitDistance ? formatDistanceFromMeters(distance.transitDistance) : 'N/A'}
                               </div>
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap">
                               <div className="text-sm text-ponte-black">
-                                {formatDuration(distance.walkingDurationMinutes)}
+                                {distance.walkingDuration ? formatDuration(distance.walkingDuration / 60) : 'N/A'}
                               </div>
                               <div className="text-xs text-ponte-olive">
-                                {formatDistanceFromMeters(distance.walkingDistance)}
+                                {distance.walkingDistance ? formatDistanceFromMeters(distance.walkingDistance) : 'N/A'}
                               </div>
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap">
@@ -1198,6 +1224,54 @@ export default function AnalysisPage() {
                   </button>
                   <button
                     onClick={() => {
+                      console.log("Manual map display trigger")
+                      if (mapInstance && directionsService && directionsRenderer && tourSteps.length >= 2) {
+                        const waypoints = tourSteps.slice(1, -1).map(step => {
+                          const stepData = step as { latitude: number; longitude: number }
+                          return {
+                            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                            location: new (window as any).google.maps.LatLng(stepData.latitude, stepData.longitude),
+                            stopover: true
+                          }
+                        })
+
+                        const firstStep = tourSteps[0] as { latitude: number; longitude: number }
+                        const lastStep = tourSteps[tourSteps.length - 1] as { latitude: number; longitude: number }
+                        
+                        const request = {
+                          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                          origin: new (window as any).google.maps.LatLng(firstStep.latitude, firstStep.longitude),
+                          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                          destination: new (window as any).google.maps.LatLng(lastStep.latitude, lastStep.longitude),
+                          waypoints: waypoints,
+                          optimizeWaypoints: optimizeRoute && waypoints.length > 0,
+                          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                          travelMode: (window as any).google.maps.TravelMode.DRIVING,
+                          avoidHighways: false,
+                          avoidTolls: avoidTolls
+                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                        } as any
+
+                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                        (directionsService as any).route(request, (result: any, status: any) => {
+                          console.log("Manual route result:", { status, result })
+                          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                          if (status === (window as any).google.maps.DirectionsStatus.OK && result) {
+                            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                            (directionsRenderer as any).setDirections(result)
+                            console.log("Manual route displayed successfully")
+                          } else {
+                            console.error("Manual route failed:", status)
+                          }
+                        })
+                      }
+                    }}
+                    className="inline-flex items-center px-4 py-2 border border-ponte-sand text-sm font-medium rounded-md text-ponte-black bg-ponte-cream hover:bg-ponte-sand focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-ponte-terracotta"
+                  >
+                    Test Map Display
+                  </button>
+                  <button
+                    onClick={() => {
                       setTourProperties([])
                       setTourDestinations([])
                       setTourSteps([])
@@ -1342,6 +1416,14 @@ export default function AnalysisPage() {
                           
                           if (waypoints) {
                             const mapsUrl = `https://www.google.com/maps/dir/${waypoints}`
+                            
+                            // Add a note about toll avoidance if enabled
+                            if (avoidTolls) {
+                              // Note: Google Maps URLs don't support toll avoidance directly
+                              // The user will need to manually enable "Avoid tolls" in Google Maps
+                              alert('Note: To avoid tolls in Google Maps, please enable "Avoid tolls" in the route options after the map opens.')
+                            }
+                            
                             window.open(mapsUrl, '_blank')
                           }
                         }}

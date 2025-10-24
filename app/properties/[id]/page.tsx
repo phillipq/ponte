@@ -165,6 +165,8 @@ export default function PropertyDetailPage() {
   const [loadingDistances, setLoadingDistances] = useState(false)
   const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set())
   const [avoidTolls, setAvoidTolls] = useState(false)
+  const [isEditingName, setIsEditingName] = useState(false)
+  const [editingName, setEditingName] = useState("")
 
   useEffect(() => {
     if (status === "unauthenticated") {
@@ -405,6 +407,46 @@ export default function PropertyDetailPage() {
     return tag?.color || '#D3BFA4'
   }
 
+  // Name editing functions
+  const startEditingName = () => {
+    setEditingName(property?.name || "")
+    setIsEditingName(true)
+  }
+
+  const cancelEditingName = () => {
+    setIsEditingName(false)
+    setEditingName("")
+  }
+
+  const saveName = async () => {
+    if (!property || !editingName.trim()) return
+
+    try {
+      const response = await fetch(`/api/properties/${property.id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          name: editingName.trim()
+        }),
+      })
+
+      if (response.ok) {
+        const updatedProperty = await response.json() as Property
+        setProperty(updatedProperty)
+        setIsEditingName(false)
+        setEditingName("")
+      } else {
+        const errorData = await response.json() as { error: string }
+        alert(`Failed to update property name: ${errorData.error}`)
+      }
+    } catch (error) {
+      console.error("Error updating property name:", error)
+      alert("Failed to update property name")
+    }
+  }
+
   if (loading) return <div>Loading...</div>
   if (error) return <div>Error: {error}</div>
   if (!property) return <div>Property not found</div>
@@ -435,14 +477,65 @@ export default function PropertyDetailPage() {
               )}
               
               <div>
-                <h1 className="text-3xl font-bold text-ponte-black font-header">
-                  {property.propertyNumber && (
-                    <span className="text-ponte-terracotta font-mono text-2xl mr-3">
-                      P-{property.propertyNumber}
-                    </span>
+                <div className="flex items-center space-x-3">
+                  <h1 className="text-3xl font-bold text-ponte-black font-header">
+                    {property.propertyNumber && (
+                      <span className="text-ponte-terracotta font-mono text-2xl mr-3">
+                        P-{property.propertyNumber}
+                      </span>
+                    )}
+                    {isEditingName ? (
+                      <input
+                        type="text"
+                        value={editingName}
+                        onChange={(e) => setEditingName(e.target.value)}
+                        className="text-3xl font-bold text-ponte-black font-header bg-transparent border-b-2 border-ponte-terracotta focus:outline-none focus:border-ponte-olive"
+                        autoFocus
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') {
+                            saveName()
+                          } else if (e.key === 'Escape') {
+                            cancelEditingName()
+                          }
+                        }}
+                      />
+                    ) : (
+                      <span 
+                        onClick={startEditingName}
+                        className="cursor-pointer hover:text-ponte-olive transition-colors"
+                        title="Click to edit name"
+                      >
+                        {property.name || `Property ${property.propertyNumber || property.id.slice(-8)}`}
+                      </span>
+                    )}
+                  </h1>
+                  {isEditingName ? (
+                    <div className="flex space-x-2">
+                      <button
+                        onClick={saveName}
+                        className="px-3 py-1 bg-ponte-olive text-white rounded-md hover:bg-ponte-black transition-colors text-sm"
+                        title="Save name"
+                      >
+                        ✓
+                      </button>
+                      <button
+                        onClick={cancelEditingName}
+                        className="px-3 py-1 bg-ponte-sand text-ponte-black rounded-md hover:bg-ponte-olive transition-colors text-sm"
+                        title="Cancel editing"
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  ) : (
+                    <button
+                      onClick={startEditingName}
+                      className="px-3 py-1 bg-ponte-sand text-ponte-black rounded-md hover:bg-ponte-olive transition-colors text-sm"
+                      title="Edit name"
+                    >
+                      ✏️
+                    </button>
                   )}
-                  {property.name || `Property ${property.propertyNumber || property.id.slice(-8)}`}
-                </h1>
+                </div>
                 <p className="text-sm text-ponte-olive mt-1 font-body">
                   {property.streetAddress && property.city 
                     ? `${property.streetAddress}, ${property.city}` 

@@ -11,7 +11,14 @@ export async function POST(request: NextRequest) {
     }
 
     // Get request body for toll avoidance option
-    const { avoidTolls = false } = await request.json() as { avoidTolls?: boolean }
+    let avoidTolls = false
+    try {
+      const body = await request.json() as { avoidTolls?: boolean }
+      avoidTolls = body?.avoidTolls || false
+    } catch (error) {
+      // If no JSON body or invalid JSON, use default value
+      avoidTolls = false
+    }
 
     // Get all properties and destinations
     const [properties, destinations] = await Promise.all([
@@ -41,8 +48,9 @@ export async function POST(request: NextRequest) {
             }
           })
 
-          if (existingDistance) {
-            continue // Skip if already calculated
+          // Always recalculate if toll avoidance is enabled, or if no existing distance
+          if (existingDistance && !avoidTolls) {
+            continue // Skip if already calculated and not using toll avoidance
           }
 
           // Calculate distance using Google Maps Distance Matrix API
@@ -55,7 +63,14 @@ export async function POST(request: NextRequest) {
           )
 
           if (distance) {
-            // Save to database
+            // Delete existing distance if it exists
+            if (existingDistance) {
+              await prisma.propertyDistance.delete({
+                where: { id: existingDistance.id }
+              })
+            }
+            
+            // Create new distance
             await prisma.propertyDistance.create({
               data: {
                 propertyId: property.id,
@@ -138,16 +153,10 @@ async function calculateDistance(
     return {
       drivingDistance: drivingElement?.distance?.value || 0,
       drivingDuration: drivingElement?.duration?.value || 0,
-      drivingDistanceText: drivingElement?.distance?.text || '',
-      drivingDurationText: drivingElement?.duration?.text || '',
       transitDistance: transitElement?.distance?.value || 0,
       transitDuration: transitElement?.duration?.value || 0,
-      transitDistanceText: transitElement?.distance?.text || '',
-      transitDurationText: transitElement?.duration?.text || '',
       walkingDistance: walkingElement?.distance?.value || 0,
-      walkingDuration: walkingElement?.duration?.value || 0,
-      walkingDistanceText: walkingElement?.distance?.text || '',
-      walkingDurationText: walkingElement?.duration?.text || ''
+      walkingDuration: walkingElement?.duration?.value || 0
     }
   } catch (error) {
     console.error('Error calling Google Maps API:', error)

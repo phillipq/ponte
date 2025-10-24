@@ -35,20 +35,6 @@ export async function POST(request: NextRequest) {
     let totalDuration = 0
     let totalTransitDuration = 0
 
-    // Add starting point
-    const firstStep = validSteps[0] as { name?: string; type?: string; address?: string }
-    routeSteps.push({
-      step: 1,
-      name: firstStep.name || 'Unknown',
-      type: firstStep.type || 'Unknown',
-      address: firstStep.address || 'Unknown',
-      duration: 0,
-      distance: 0,
-      durationText: 'Starting Point',
-      distanceText: '0 km',
-      transitDuration: 0,
-      transitDurationText: 'N/A'
-    })
 
     // Calculate distances between consecutive stops
     for (let i = 0; i < validSteps.length - 1; i++) {
@@ -167,19 +153,6 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Add total summary
-    routeSteps.push({
-      step: routeSteps.length + 1,
-      name: 'Total Tour',
-      type: 'summary',
-      address: '',
-      duration: totalDuration,
-      distance: totalDistance,
-      durationText: formatDuration(totalDuration),
-      distanceText: `${(totalDistance / 1000).toFixed(1)} km`,
-      transitDuration: totalTransitDuration,
-      transitDurationText: formatDuration(totalTransitDuration)
-    })
 
     return NextResponse.json({
       success: true,

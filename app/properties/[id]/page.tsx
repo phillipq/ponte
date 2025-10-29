@@ -30,11 +30,11 @@ interface Destination {
 interface Distance {
   destinationId: string
   drivingDistance?: number
-  drivingDurationText?: string
+  drivingDuration?: number
   transitDistance?: number
-  transitDurationText?: string
+  transitDuration?: number
   walkingDistance?: number
-  walkingDurationText?: string
+  walkingDuration?: number
 }
 
 interface Property {
@@ -147,6 +147,22 @@ interface Property {
   status: string
   createdAt: string
   updatedAt: string
+}
+
+// Helper function to format duration in hours and minutes
+const formatDuration = (minutes: number | null | undefined): string => {
+  if (!minutes || minutes === 0) return 'N/A'
+  
+  const hours = Math.floor(minutes / 60)
+  const remainingMinutes = Math.round(minutes % 60)
+  
+  if (hours === 0) {
+    return `${remainingMinutes} min`
+  } else if (remainingMinutes === 0) {
+    return `${hours} hr`
+  } else {
+    return `${hours} hr ${remainingMinutes} min`
+  }
 }
 
 export default function PropertyDetailPage() {
@@ -1580,7 +1596,7 @@ export default function PropertyDetailPage() {
                                           {distance.drivingDistance ? `${Math.round(distance.drivingDistance / 1000)}km` : 'N/A'}
                                         </span>
                                         <span className="text-ponte-olive">
-                                          {distance.drivingDurationText || 'N/A'}
+                                          {formatDuration(distance.drivingDuration ? distance.drivingDuration / 60 : null)}
                                         </span>
                                       </div>
                                       
@@ -1591,7 +1607,7 @@ export default function PropertyDetailPage() {
                                           {distance.transitDistance ? `${Math.round(distance.transitDistance / 1000)}km` : 'N/A'}
                                         </span>
                                         <span className="text-ponte-olive">
-                                          {distance.transitDurationText || 'N/A'}
+                                          {formatDuration(distance.transitDuration ? distance.transitDuration / 60 : null)}
                                         </span>
                                       </div>
                                       
@@ -1602,7 +1618,7 @@ export default function PropertyDetailPage() {
                                           {distance.walkingDistance ? `${Math.round(distance.walkingDistance / 1000)}km` : 'N/A'}
                                         </span>
                                         <span className="text-ponte-olive">
-                                          {distance.walkingDurationText || 'N/A'}
+                                          {formatDuration(distance.walkingDuration ? distance.walkingDuration / 60 : null)}
                                         </span>
                                       </div>
                                     </div>

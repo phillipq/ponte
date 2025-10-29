@@ -349,6 +349,30 @@ export default function ClientDetailPage() {
     }
   }
 
+  const cancelQuestionnaireInvite = async (inviteId: string) => {
+    if (!confirm("Are you sure you want to cancel this questionnaire invite? This action cannot be undone.")) {
+      return
+    }
+
+    try {
+      const response = await fetch(`/api/questionnaire/invite/${inviteId}`, {
+        method: 'DELETE'
+      })
+
+      if (response.ok) {
+        // Remove the invite from the local state
+        setQuestionnaireInvites(prev => prev.filter(invite => invite.id !== inviteId))
+        alert("Questionnaire invite cancelled successfully!")
+      } else {
+        const error = await response.json() as { error?: string }
+        alert(error.error || "Failed to cancel invite")
+      }
+    } catch (error) {
+      console.error("Error cancelling questionnaire invite:", error)
+      alert("Failed to cancel invite. Please try again.")
+    }
+  }
+
   const _loadAiAnalysis = (analysis: AiAnalysis) => {
     setAiAnalysis({
       id: analysis.id,
@@ -1004,6 +1028,14 @@ export default function ClientDetailPage() {
                               >
                                 Email Link
                               </button>
+                              {invite.status === 'pending' && (
+                                <button
+                                  onClick={() => cancelQuestionnaireInvite(invite.id)}
+                                  className="text-xs bg-red-600 text-white px-3 py-1 rounded hover:bg-red-700"
+                                >
+                                  Cancel
+                                </button>
+                              )}
                             </div>
                           </div>
                         ))}

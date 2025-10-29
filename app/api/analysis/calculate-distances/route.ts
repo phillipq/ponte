@@ -117,7 +117,7 @@ async function calculateDistance(
   destLng: number,
   avoidTolls: boolean = false
 ) {
-  const googleMapsApiKey = process.env.GOOGLE_MAPS_API_KEY
+  const googleMapsApiKey = process.env.GOOGLE_MAPS_GEOCODING_API_KEY || process.env.GOOGLE_MAPS_API_KEY
   if (!googleMapsApiKey) {
     throw new Error('Google Maps API key not configured')
   }

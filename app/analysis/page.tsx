@@ -109,13 +109,6 @@ const getCategoryLabel = (category: string | null | undefined): string => {
   return labelMap[normalized || 'other'] || category
 }
 
-const formatDistance = (distanceKm: number | null | undefined): string => {
-  if (!distanceKm) return 'N/A'
-  const km = distanceKm.toFixed(1)
-  const miles = (distanceKm * 0.621371).toFixed(1)
-  return `${km} km (${miles} mi)`
-}
-
 const formatDistanceFromMeters = (distanceMeters: number | null | undefined): string => {
   if (!distanceMeters) return 'N/A'
   const km = (distanceMeters / 1000).toFixed(1)

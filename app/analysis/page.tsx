@@ -84,6 +84,7 @@ const normalizeCategory = (category: string | null | undefined): string | null =
     'train_station': 'train_station',
     'restaurant': 'restaurant',
     'hotel': 'hotel',
+    'beach': 'beach',
     'other': 'other'
   }
   
@@ -101,6 +102,7 @@ const getCategoryLabel = (category: string | null | undefined): string => {
     'train_station': 'Train Station',
     'restaurant': 'Restaurant',
     'hotel': 'Hotel',
+    'beach': 'Beach',
     'other': 'Other'
   }
   

@@ -54,6 +54,7 @@ export async function POST(request: NextRequest) {
           }
 
           // Calculate distance using Google Maps Distance Matrix API
+          console.log(`Calculating distance from ${property.name} to ${destination.name}`)
           const distance = await calculateDistance(
             property.latitude,
             property.longitude,
@@ -61,6 +62,7 @@ export async function POST(request: NextRequest) {
             destination.longitude,
             avoidTolls
           )
+          console.log(`Distance result:`, distance)
 
           if (distance) {
             // Delete existing distance if it exists
@@ -150,7 +152,11 @@ async function calculateDistance(
     const transitElement = transitData.rows?.[0]?.elements?.[0]
     const walkingElement = walkingData.rows?.[0]?.elements?.[0]
 
-    return {
+    console.log('Driving element:', drivingElement)
+    console.log('Transit element:', transitElement)
+    console.log('Walking element:', walkingElement)
+
+    const result = {
       drivingDistance: drivingElement?.distance?.value || 0,
       drivingDuration: drivingElement?.duration?.value || 0,
       transitDistance: transitElement?.distance?.value || 0,
@@ -158,6 +164,9 @@ async function calculateDistance(
       walkingDistance: walkingElement?.distance?.value || 0,
       walkingDuration: walkingElement?.duration?.value || 0
     }
+    
+    console.log('Final result:', result)
+    return result
   } catch (error) {
     console.error('Error calling Google Maps API:', error)
     throw error

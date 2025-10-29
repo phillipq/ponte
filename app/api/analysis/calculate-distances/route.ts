@@ -135,18 +135,21 @@ async function calculateDistance(
     
     const drivingResponse = await fetch(drivingUrl)
     const drivingData = await drivingResponse.json() as { rows?: { elements?: { distance?: { value: number; text: string }; duration?: { value: number; text: string } }[] }[] }
+    console.log('Driving API response:', JSON.stringify(drivingData, null, 2))
 
     // Calculate transit distance
     const transitResponse = await fetch(
       `https://maps.googleapis.com/maps/api/distancematrix/json?origins=${origin}&destinations=${destination}&mode=transit&key=${googleMapsApiKey}`
     )
     const transitData = await transitResponse.json() as { rows?: { elements?: { distance?: { value: number; text: string }; duration?: { value: number; text: string } }[] }[] }
+    console.log('Transit API response:', JSON.stringify(transitData, null, 2))
 
     // Calculate walking distance
     const walkingResponse = await fetch(
       `https://maps.googleapis.com/maps/api/distancematrix/json?origins=${origin}&destinations=${destination}&mode=walking&key=${googleMapsApiKey}`
     )
     const walkingData = await walkingResponse.json() as { rows?: { elements?: { distance?: { value: number; text: string }; duration?: { value: number; text: string } }[] }[] }
+    console.log('Walking API response:', JSON.stringify(walkingData, null, 2))
 
     const drivingElement = drivingData.rows?.[0]?.elements?.[0]
     const transitElement = transitData.rows?.[0]?.elements?.[0]

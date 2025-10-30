@@ -24,9 +24,9 @@ export default function Navigation() {
   return (
     <nav className="bg-ponte-cream shadow-sm border-b border-ponte-sand">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-3 items-center h-16">
+        <div className="grid grid-cols-[auto,1fr,auto] items-center h-16">
           {/* Left: Logo */}
-          <div className="flex items-center justify-self-start pr-4 md:pr-6">
+          <div className="flex items-center justify-self-start">
               <Link href="/dashboard" className="flex items-center">
                 <Image 
                   src="/logos/ponte_black.png" 
@@ -39,7 +39,7 @@ export default function Navigation() {
               </Link>
             </div>
           {/* Center: Tabs */}
-          <div className="hidden sm:flex justify-center justify-self-center">
+          <div className="hidden sm:flex justify-center justify-self-center w-full">
             <div className="flex space-x-8">
               {navigation.map((item) => (
                 <Link

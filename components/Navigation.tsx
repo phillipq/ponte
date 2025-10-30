@@ -31,9 +31,9 @@ export default function Navigation() {
                 <Image 
                   src="/logos/ponte_black.png" 
                   alt="Ponte" 
-                  width={128}
-                  height={32}
-                  className="h-8 w-auto"
+                  width={141}
+                  height={35}
+                  className="w-auto"
                   priority
                 />
               </Link>

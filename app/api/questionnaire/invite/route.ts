@@ -91,47 +91,6 @@ export async function POST(request: NextRequest) {
   }
 }
 
-// DELETE /api/questionnaire/invite/[id] - Cancel/delete a questionnaire invite
-export async function DELETE(request: NextRequest) {
-  try {
-    const session = await getServerSession(authOptions)
-    if (!(session?.user as { id: string })?.id) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-    }
-
-    const url = new URL(request.url)
-    const inviteId = url.pathname.split('/').pop()
-
-    if (!inviteId) {
-      return NextResponse.json({ error: "Invite ID is required" }, { status: 400 })
-    }
-
-    // Verify invite belongs to user and delete it
-    const deletedInvite = await prisma.questionnaireInvite.deleteMany({
-      where: {
-        id: inviteId,
-        userId: (session?.user as { id: string })?.id
-      }
-    })
-
-    if (deletedInvite.count === 0) {
-      return NextResponse.json({ error: "Invite not found" }, { status: 404 })
-    }
-
-    return NextResponse.json({ 
-      success: true, 
-      message: "Questionnaire invite cancelled successfully" 
-    })
-
-  } catch (error) {
-    console.error("Error cancelling questionnaire invite:", error)
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    )
-  }
-}
-
 // GET /api/questionnaire/invite - Get all invites for the user
 export async function GET(_request: NextRequest) {
   try {

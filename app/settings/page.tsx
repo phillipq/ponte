@@ -586,7 +586,7 @@ export default function SettingsPage() {
 "Villa Toscana","house","Mario Rossi","Via Roma 123","50100","Florence","FI","Italy","43.7696","11.2558","luxury,historic
 "Modern Apartment","apartment","Giulia Bianchi","Corso Italia 45","20100","Milan","MI","Italy","45.4642","9.1900","modern,urban
 "Beach House","estate","Alessandro Verdi","Via del Mare 78","00100","Rome","RM","Italy","41.9028","12.4964","beach,luxury"`
-    } else {
+    } else if (type === "destinations") {
       filename = "destinations_sample.csv"
       csvContent = `name,category,streetAddress,postalCode,city,province,country,latitude,longitude,tags
 "Colosseum","attraction","Piazza del Colosseo 1","00184","Rome","RM","Italy","41.8902","12.4922","historic,landmark
@@ -594,6 +594,12 @@ export default function SettingsPage() {
 "Florence International Airport","int_airport","Via del Termine 11","50127","Florence","FI","Italy","43.8100","11.2050","transportation,international
 "Central Station","train_station","Piazza della Stazione","50123","Florence","FI","Italy","43.7764","11.2480","transportation,urban
 "Bus Terminal","bus_station","Via della Stazione","50123","Florence","FI","Italy","43.7764","11.2480","transportation,urban"`
+    } else if (type === "clients") {
+      filename = "clients_sample.csv"
+      csvContent = `name,email,phone,company,notes
+"John Smith","john@example.com","+1 555-1234","Acme Inc","Interested in properties near Rome"
+"Maria Rossi","maria.rossi@example.it","+39 06 1234567","Rossi SRL","Prefers modern apartments"
+"Alex Brown","alex@brown.co","","","High-level investor notes here"`
     }
 
     const blob = new Blob([csvContent], { type: 'text/csv' })
@@ -1452,9 +1458,9 @@ export default function SettingsPage() {
                 <div>
                   <h2 className="text-lg font-medium text-ponte-black mb-4">Import Data</h2>
                   <div className="bg-ponte-cream p-4 rounded-lg border border-ponte-sand">
-                    <h3 className="text-sm font-medium text-ponte-black mb-3">Import Properties or Destinations</h3>
+                    <h3 className="text-sm font-medium text-ponte-black mb-3">Import Properties, Destinations, or Clients</h3>
                     <p className="text-sm text-ponte-olive mb-4">
-                      Upload a CSV file to import multiple properties or destinations at once
+                      Upload a CSV file to import multiple properties, destinations, or clients at once
                     </p>
                     
                     <form onSubmit={handleImport} className="space-y-4">
@@ -1484,6 +1490,17 @@ export default function SettingsPage() {
                               className="mr-2"
                             />
                             <span className="text-sm text-ponte-black">Destinations</span>
+                          </label>
+                          <label className="flex items-center">
+                            <input
+                              type="radio"
+                              name="importType"
+                              value="clients"
+                              checked={importType === "clients"}
+                              onChange={(e) => setImportType(e.target.value)}
+                              className="mr-2"
+                            />
+                            <span className="text-sm text-ponte-black">Clients</span>
                           </label>
                         </div>
                       </div>
@@ -1550,6 +1567,16 @@ export default function SettingsPage() {
                           <p className="text-xs text-ponte-terracotta mt-2">
                             <strong>Valid categories:</strong> airport, int_airport, train_station, bus_station, attraction, beach, hotel, restaurant, etc.
                           </p>
+                        </div>
+                        <div>
+                          <p className="font-semibold text-ponte-black">Clients CSV - Required Fields:</p>
+                          <ul className="list-disc list-inside ml-4 space-y-1 mt-1">
+                            <li><strong>name</strong> (required) - Client name</li>
+                            <li><strong>email</strong> (required) - Client email</li>
+                            <li><strong>phone</strong> (optional) - Phone number</li>
+                            <li><strong>company</strong> (optional) - Company name</li>
+                            <li><strong>notes</strong> (optional) - Free text notes</li>
+                          </ul>
                         </div>
                         <p className="text-ponte-terracotta font-medium">💡 Download the sample CSV files above to see the exact format!</p>
                       </div>

@@ -54,7 +54,7 @@ export default function Navigation() {
               ))}
             </div>
           </div>
-          <div className="flex items-center space-x-3">
+          <div className="flex items-center space-x-3 ml-8 sm:ml-12 pl-6 border-l border-ponte-sand/60">
             {session?.user?.name && (
               <span className="text-sm font-medium text-ponte-olive">
                 {session.user.name}

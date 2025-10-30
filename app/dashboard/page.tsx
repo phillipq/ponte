@@ -360,9 +360,8 @@ export default function Dashboard() {
                       </div>
                     </div>
 
-          <Link href="/properties" className="block">
-            <div className="bg-white rounded-lg shadow p-6 border border-ponte-sand cursor-pointer hover:border-ponte-terracotta/60 transition-colors">
-              <div className="flex items-center">
+          <div className="bg-white rounded-lg shadow p-6 border border-ponte-sand">
+            <div className="flex items-center">
               <div className="p-2 bg-ponte-sand rounded-lg">
                 <Image src="/logos/icon-distance.png" alt="Types" width={24} height={24} className="w-6 h-6" />
               </div>
@@ -371,8 +370,7 @@ export default function Dashboard() {
                 <p className="text-2xl font-bold text-ponte-black">{getPropertyTypeStats().length}</p>
               </div>
             </div>
-            </div>
-          </Link>
+          </div>
 
           <div className="bg-white rounded-lg shadow p-6 border border-ponte-sand">
             <div className="flex items-center">
@@ -403,7 +401,8 @@ export default function Dashboard() {
         {/* Pie Charts */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
           {/* Property Types Pie Chart */}
-          <div className="bg-white rounded-lg shadow p-6 border border-ponte-sand">
+          <Link href="/properties" className="block">
+            <div className="bg-white rounded-lg shadow p-6 border border-ponte-sand cursor-pointer hover:border-ponte-terracotta/60 transition-colors">
             <h2 className="text-xl font-semibold text-ponte-black mb-6">Property Types</h2>
             {properties.length === 0 ? (
               <div className="text-center py-8">
@@ -417,6 +416,7 @@ export default function Dashboard() {
               />
               )}
             </div>
+          </Link>
 
           {/* Destination Categories Pie Chart */}
           <Link href="/destinations" className="block">

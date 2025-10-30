@@ -371,6 +371,7 @@ export default function Dashboard() {
                 <p className="text-2xl font-bold text-ponte-black">{getPropertyTypeStats().length}</p>
               </div>
             </div>
+            </div>
           </Link>
 
           <div className="bg-white rounded-lg shadow p-6 border border-ponte-sand">

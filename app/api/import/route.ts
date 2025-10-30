@@ -189,6 +189,63 @@ export async function POST(request: NextRequest) {
           // Continue with other records
         }
       }
+    } else if (type === 'clients') {
+      for (const record of records) {
+        try {
+          const recordData = record as {
+            name?: string;
+            email?: string;
+            phone?: string;
+            company?: string;
+            notes?: string;
+          }
+
+          const name = (recordData.name || '').trim()
+          const email = (recordData.email || '').trim()
+
+          // Require name and email
+          if (!name || !email) {
+            console.warn('Skipping client record due to missing required fields (name/email):', record)
+            continue
+          }
+
+          // Create or update existing client by email for this user
+          const existing = await prisma.client.findFirst({
+            where: {
+              email: email,
+              userId: (session.user as { id: string }).id
+            }
+          })
+
+          if (existing) {
+            await prisma.client.update({
+              where: { id: existing.id },
+              data: {
+                name,
+                phone: recordData.phone || existing.phone || null,
+                company: recordData.company || existing.company || null,
+                notes: recordData.notes || existing.notes || null
+              }
+            })
+          } else {
+            await prisma.client.create({
+              data: {
+                name,
+                email,
+                phone: recordData.phone || null,
+                company: recordData.company || null,
+                notes: recordData.notes || null,
+                userId: (session.user as { id: string }).id
+              }
+            })
+          }
+
+          count++
+        } catch (error) {
+          console.error('Error creating/updating client:', error)
+          // Continue processing other records
+        }
+      }
     } else {
       return NextResponse.json({ error: 'Invalid type' }, { status: 400 })
     }

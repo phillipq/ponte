@@ -24,9 +24,9 @@ export default function Navigation() {
   return (
     <nav className="bg-ponte-cream shadow-sm border-b border-ponte-sand">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between h-16">
-          <div className="flex">
-            <div className="flex-shrink-0 flex items-center">
+        <div className="grid grid-cols-3 items-center h-16">
+          {/* Left: Logo */}
+          <div className="flex items-center">
               <Link href="/dashboard" className="flex items-center">
                 <Image 
                   src="/logos/ponte_black.png" 
@@ -38,7 +38,9 @@ export default function Navigation() {
                 />
               </Link>
             </div>
-            <div className="hidden sm:ml-6 sm:flex sm:space-x-8">
+          {/* Center: Tabs */}
+          <div className="hidden sm:flex justify-center">
+            <div className="flex space-x-8">
               {navigation.map((item) => (
                 <Link
                   key={item.name}
@@ -54,7 +56,8 @@ export default function Navigation() {
               ))}
             </div>
           </div>
-          <div className="flex items-center space-x-3 ml-8 sm:ml-12 pl-6 border-l border-ponte-sand/60">
+          {/* Right: User */}
+          <div className="flex items-center justify-end space-x-3">
             {session?.user?.name && (
               <span className="text-sm font-medium text-ponte-olive">
                 {session.user.name}

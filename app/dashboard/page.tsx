@@ -2,6 +2,7 @@
 
 
 import Image from "next/image"
+import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useSession } from "next-auth/react"
 import { useEffect, useState } from "react"
@@ -359,17 +360,18 @@ export default function Dashboard() {
                       </div>
                     </div>
 
-          <div className="bg-white rounded-lg shadow p-6 border border-ponte-sand">
-            <div className="flex items-center">
+          <Link href="/properties" className="block">
+            <div className="bg-white rounded-lg shadow p-6 border border-ponte-sand cursor-pointer hover:border-ponte-terracotta/60 transition-colors">
+              <div className="flex items-center">
               <div className="p-2 bg-ponte-sand rounded-lg">
                 <Image src="/logos/icon-distance.png" alt="Types" width={24} height={24} className="w-6 h-6" />
               </div>
               <div className="ml-4">
                 <p className="text-sm font-medium text-ponte-olive">Property Types</p>
                 <p className="text-2xl font-bold text-ponte-black">{getPropertyTypeStats().length}</p>
-                    </div>
-                  </div>
-                </div>
+              </div>
+            </div>
+          </Link>
 
           <div className="bg-white rounded-lg shadow p-6 border border-ponte-sand">
             <div className="flex items-center">
@@ -416,7 +418,8 @@ export default function Dashboard() {
             </div>
 
           {/* Destination Categories Pie Chart */}
-          <div className="bg-white rounded-lg shadow p-6 border border-ponte-sand">
+          <Link href="/destinations" className="block">
+            <div className="bg-white rounded-lg shadow p-6 border border-ponte-sand cursor-pointer hover:border-ponte-terracotta/60 transition-colors">
             <h2 className="text-xl font-semibold text-ponte-black mb-6">Destination Categories</h2>
             {destinations.length === 0 ? (
               <div className="text-center py-8">
@@ -429,7 +432,8 @@ export default function Dashboard() {
                 getInfo={getCategoryInfo}
               />
             )}
-          </div>
+            </div>
+          </Link>
         </div>
 
         {/* Client Analytics & Missing Calculations */}

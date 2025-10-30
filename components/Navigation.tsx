@@ -39,8 +39,8 @@ export default function Navigation() {
               </Link>
             </div>
           {/* Center: Tabs */}
-          <div className="hidden sm:flex justify-center justify-self-center w-full">
-            <div className="flex space-x-8">
+          <div className="hidden sm:flex justify-center justify-self-center w-full min-w-0 overflow-x-auto whitespace-nowrap px-2">
+            <div className="flex space-x-6">
               {navigation.map((item) => (
                 <Link
                   key={item.name}
